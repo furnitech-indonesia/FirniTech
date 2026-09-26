@@ -12,7 +12,7 @@ import {
   WrenchIcon,
 } from "@phosphor-icons/react/dist/ssr";
 
-import { HeroCockpit } from "@/components/hero-cockpit";
+import { ProductPreview } from "@/components/product-preview";
 import { PricingTable } from "@/components/pricing-table";
 import { SiteHeader } from "@/components/site-header";
 import { PLATFORM_FEE_RATE } from "@/lib/plans";
@@ -39,11 +39,28 @@ import { PLATFORM_FEE_RATE } from "@/lib/plans";
 
 /* --- Konten statis, ditulis di sini agar mudah diaudit --------------- */
 
-const PILLARS = [
+/**
+ * Pilar pertama punya `detail` tambahan karena menempati sel bento 2x2.
+ * Tipe ditulis eksplisit karena `as const` membuat tiap anggota tuple punya
+ * bentuk berbeda, sehingga `detail` tidak bisa di-destructure tanpa error
+ * pada dua anggota yang tidak memilikinya.
+ */
+type Pillar = {
+  icon: typeof TruckIcon;
+  title: string;
+  body: string;
+  detail?: string;
+};
+
+const PILLARS: readonly Pillar[] = [
   {
     icon: TruckIcon,
     title: "Ongkir kargo otomatis per kota",
     body: "Tarif dihitung dari kota tujuan dan berat volumetrik, lalu ditambahkan ke total sebelum pembeli menekan tombol bayar. Tidak ada ongkir yang terlewat saat checkout.",
+    // Pilar pertama menempati sel 2×2, jadi butuh isi lebih banyak. Satu
+    // kalimat tambahan, bukan paragraf kedua — selnya besar, bukan halaman.
+    detail:
+      "Alamat pengiriman disimpan sekali per nomor telepon, jadi pembeli tidak mengetik ulang di pesanan berikutnya.",
   },
   {
     icon: CameraIcon,
@@ -233,41 +250,61 @@ function SpkVisual() {
   return (
     <div className="rounded-2xl border border-border bg-muted/40 p-5 shadow-card">
       <div className="rounded-xl border border-border bg-card p-4">
-        <div className="flex items-center justify-between gap-2 border-b border-border pb-3">
-          <span className="text-title-md text-foreground">SPK-2026-089</span>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border pb-3">
+          <span className="flex items-center gap-2 text-title-md text-foreground">
+            <RulerIcon
+              size={18}
+              weight="light"
+              className="text-primary"
+              aria-hidden
+            />
+            Surat Pesanan Kustom
+          </span>
           <span className="rounded-full bg-status-production-bg px-2 py-0.5 text-label-sm text-status-production">
             Diproses
           </span>
         </div>
 
-        <dl className="mt-3 flex flex-col gap-2.5 text-body-sm">
-          <div className="flex items-center justify-between gap-3">
-            <dt className="text-muted-foreground">Jenis kayu</dt>
-            <dd className="text-secondary">Jati solid</dd>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <dt className="text-muted-foreground">Dimensi (P×L×T)</dt>
-            <dd className="text-code-tabular text-secondary">220×100×76 cm</dd>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <dt className="text-muted-foreground">Finishing</dt>
-            <dd className="text-secondary">Natural oil</dd>
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            <dt className="text-muted-foreground">Jumlah</dt>
-            <dd className="text-code-tabular text-secondary">1 set</dd>
-          </div>
+        {/*
+         * Kolom di bawah sengaja TIDAK diisi nomor pesanan, nama kayu, atau
+         * nominal. Formulir ini menggambarkan strukturnya — mengisinya dengan
+         * "SPK-2026-089" dan "Rp 18.500.000" berarti memamerkan transaksi yang
+         * tidak pernah terjadi, dan itu pemeranan yang sama yang sudah
+         * dihapus dari pratinjau hero. Nilai placeholder ditandai dengan garis
+         * putus-putus supaya jelas bukan data.
+         */}
+        <dl className="mt-4 flex flex-col gap-3 text-body-sm">
+          {[
+            { label: "Jenis kayu", placeholder: "dipilih pengrajin" },
+            { label: "Dimensi (P×L×T)", placeholder: "dalam sentimeter" },
+            { label: "Finishing", placeholder: "dari palet workshop" },
+            { label: "Jumlah", placeholder: "bisa pecahan" },
+          ].map((row) => (
+            <div
+              key={row.label}
+              className="flex items-center justify-between gap-3 border-b border-dashed border-border pb-2"
+            >
+              <dt className="shrink-0 text-muted-foreground">{row.label}</dt>
+              <dd className="truncate text-right text-muted-foreground">
+                {row.placeholder}
+              </dd>
+            </div>
+          ))}
         </dl>
 
-        <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
-          <span className="text-body-sm text-muted-foreground">Total</span>
-          <span className="text-title-md text-foreground">Rp 18.500.000</span>
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <span className="text-body-sm text-muted-foreground">
+            DP, pelunasan, dan total
+          </span>
+          <span className="text-body-sm text-muted-foreground">
+            dihitung otomatis
+          </span>
         </div>
       </div>
 
-      <p className="mt-3 flex items-center gap-2 text-body-sm text-muted-foreground">
-        <RulerIcon size={16} weight="light" aria-hidden />
-        Hitungan DP dan pelunasan muncul otomatis
+      <p className="mt-3 text-body-sm text-muted-foreground">
+        Nilai kolom diisi sendiri oleh pengrajin dan pembeli. Hitungan DP dan
+        pelunasan muncul begitu pesanan disimpan.
       </p>
     </div>
   );
@@ -331,7 +368,7 @@ export default function Home() {
               </p>
             </div>
 
-            <HeroCockpit />
+            <ProductPreview />
           </Container>
         </section>
 
@@ -345,34 +382,67 @@ export default function Home() {
             />
 
             {/*
-             * Grid 3 kolom baru aktif di lg. Di 768px tiga kolom membuat
-             * judul dan paragraf membungkus terlalu sering dan kartu terasa
-             * sempit; dua kolom lebih nyaman dibaca. Kartu ketiga merebut dua
-             * kolom agar barisnya penuh — kalau tidak, ada lubang kosong di
-             * sisi kanan tablet.
+             * BENTO 1+2, bukan tiga kartu sama besar.
+             *
+             * Versi sebelumnya memakai tiga kolom sama besar dengan tinggi
+             * sama. Itu pola yang paling sering keluar dari generator —
+             * taste-skill §9.C menandainya sebagai tanda "AI", dan memang
+             * benar: tiga kotak identik tidak memberi hierarki, mata tidak
+             * tahu harus mulai dari mana.
+             *
+             * Pilar pertama memakai dua kolom DANdua baris, dua pilar
+             * berikutnya mengisi sisanya. Hierarki terbentuk dari ukuran, bukan
+             * dari ketebalan border.
+             *
+             * Sel pertama juga diberi latar amber (satu-satunya sel berwarna
+             * di halaman ini), karena §4.7 mensyaratkan beberapa sel dalam grid
+             * multi-sel punya variasi visual — kalau semua putih di atas
+             * putih, hasilnya terbaca datar.
              */}
             <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {PILLARS.map(({ icon: Icon, title, body }, index) => (
-                <div
-                  key={title}
-                  className={`rounded-2xl border border-border bg-card p-5 shadow-card ${
-                    index === PILLARS.length - 1 ? "sm:col-span-2 lg:col-span-1" : ""
-                  }`}
-                >
-                  <Icon
-                    size={24}
-                    weight="light"
-                    className="text-primary"
-                    aria-hidden
-                  />
-                  <h3 className="mt-3 text-title-md text-foreground">
-                    {title}
-                  </h3>
-                  <p className="mt-2 text-body-md text-muted-foreground text-pretty">
-                    {body}
-                  </p>
-                </div>
-              ))}
+              {PILLARS.map(({ icon: Icon, title, body, detail }, index) => {
+                const lead = index === 0;
+                return (
+                  <div
+                    key={title}
+                    className={`rounded-2xl border p-5 ${
+                      lead
+                        ? "border-accent bg-accent/40 shadow-card sm:col-span-2 lg:col-span-2 lg:row-span-2"
+                        : "border-border bg-card shadow-card"
+                    }`}
+                  >
+                    <Icon
+                      size={lead ? 28 : 24}
+                      weight="light"
+                      className="text-primary"
+                      aria-hidden
+                    />
+                    <h3
+                      className={
+                        lead
+                          ? "mt-4 text-headline-sm text-foreground"
+                          : "mt-3 text-title-md text-foreground"
+                      }
+                    >
+                      {title}
+                    </h3>
+                    <p
+                      className={
+                        lead
+                          ? "mt-3 max-w-md text-body-lg text-secondary text-pretty"
+                          : "mt-2 text-body-md text-muted-foreground text-pretty"
+                      }
+                    >
+                      {body}
+                    </p>
+                    {lead && detail ? (
+                      <p className="mt-4 max-w-md border-t border-accent pt-4 text-body-md text-muted-foreground text-pretty">
+                        {detail}
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
           </Container>
         </section>

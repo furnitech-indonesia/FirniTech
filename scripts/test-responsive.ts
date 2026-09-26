@@ -8,7 +8,7 @@
  *
  * Jalankan: npm run test:responsive
  */
-import { readFileSync, readdirSync, statSync } from "fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 
 type Result = { label: string; ok: boolean; detail: string };
@@ -37,6 +37,18 @@ const libFiles = walk("src/lib");
 const all = [...appFiles, ...compFiles, ...libFiles];
 
 function read(path: string) {
+  // Gagal keras kalau berkas hilang. Versi sebelumnya memakai readFileSync
+  // telanjang, dan ketika hero-cockpit.tsx dihapus, satu pemeriksaan langsung
+  // melempar ENOENT dan 19 pemeriksaan lain tidak pernah jalan — hasil
+  // "lulus" sebelumnya tidak berarti apa-apa. Pesan errornya harus menyebut
+  // berkas mana.
+  if (!existsSync(path)) {
+    throw new Error(
+      `Berkas tidak ada: ${path}\n` +
+        `Unek: nama berkas berubah, tapi test masih menunjuk ke nama lama. ` +
+        `Perbarui pemanggilnya, bukan hanya daftar berkas.`,
+    );
+  }
   return readFileSync(path, "utf-8");
 }
 
@@ -296,7 +308,7 @@ function main() {
   // ---- 15. Halaman publik tidak boleh memakai gambar eksternal (Fase B) ----
   // Stitch menarik foto dari lh3.googleusercontent.com. Itu membatalkan alasan
   // Phosphir dipilih (offline, PWA, Capacitor) — lihat DESIGN.md §5.
-  const publicFiles = [home, read("src/components/hero-cockpit.tsx")];
+  const publicFiles = [home, read("src/components/product-preview.tsx")];
   const remoteImages = publicFiles.filter((f) =>
     /<(img|Image)\b[^>]*src=["']https?:/i.test(f),
   );
@@ -306,6 +318,42 @@ function main() {
     remoteImages.length === 0
       ? "aset lokal / DOM, tanpa permintaan jaringan"
       : remoteImages.join(", "),
+  );
+
+  // Pratinjau hero harus memakai data nyata, bukan nomor pesanan rekaan.
+  // Mockup versi pertama menampilkan "SPK-2026-089" dan "Rp 18.500.000" —
+  // transaksi yang tidak pernah terjadi, dipamerkan di halaman publik.
+  const preview = read("src/components/product-preview.tsx");
+  const invents = [...preview.matchAll(/Rp\s?[\d.]+(?:\.\d{3})+/g)].map(
+    (m) => m[0],
+  );
+  check(
+    "Pratinjau hero tidak mengarang nominal transaksi",
+    invents.length === 0,
+    invents.length === 0
+      ? "tidak ada nominal di luar formatRupiah(PLANS...)"
+      : `nominal rekaan: ${invents.join(", ")}`,
+  );
+  check(
+    "Pratinjau hero membaca sumber data nyata",
+    preview.includes("PROGRESS_STAGE_ORDER") &&
+      preview.includes("PAYOUT_SLOTS") &&
+      preview.includes("PLATFORM_FEE_RATE"),
+    "tahap produksi, jadwal payout, dan fee platform dari kode",
+  );
+
+  // Tiga Pilar: grid 3 kolom sama besar adalah pola yang paling sering
+  // keluar dari generator dan tidak punya hierarki. Sel pertama harus
+  // merebut 2 kolom dan 2 baris di lg.
+  // Jendela 240 karakter terlalu sempit untuk mencapai className-nya.
+  const pillarGrid =
+    home.match(/PILLARS\.map[\s\S]{0,1200}/)?.[0] ?? "";
+  check(
+    "Tiga Pilar memakai bento 1+2, bukan tiga kartu sama besar",
+    /lg:row-span-2/.test(pillarGrid) && /lg:col-span-2/.test(pillarGrid),
+    /lg:row-span-2/.test(pillarGrid)
+      ? "sel pertama 2x2, hierarki dari ukuran"
+      : "grid masih simetris",
   );
 
   const failed = results.filter((r) => !r.ok).length;
