@@ -54,10 +54,34 @@ npm run db:studio
 npm run db:seed       # idempoten
 npm run test:auth     # 11 uji auth & RBAC via HTTP (butuh server jalan)
 npm run test:schemas  # 14 uji skema validasi (guard uang, pesan, id)
-npm run test:responsive # 9 pemeriksaan struktural responsif & token
+npm run test:responsive # 20 pemeriksaan struktural responsif & token
 npm run test:sprint3  # 16 uji halaman & pembatasan role Sprint 3
+npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
 ```
+
+**`test:visual` satu-satunya alat yang bisa melihat halaman.** Semua test lain
+membaca source code; yang ini merender. Yang ia tangkap dan tidak bisa ditangkap
+secara struktural: scroll horizontal di lebar tertentu, target sentuh yang
+melewati 44px, error konsol, aset 404, drawer yang tidak terbuka, Escape yang
+tidak menutup, dan toggle yang tidak mengubah apa pun. Jalankan setiap kali
+menyentuh layout, navigasi, atau token visual.
+
+Dua jebakan yang sudah ditemukan sekali:
+
+- **Playwright harus di-pin ke 1.49.x.** Codespace ini Ubuntu 20.04 (glibc
+  2.31). Playwright 1.50+ menolak chromium di platform itu dengan
+  `ERROR: Playwright does not support chromium on ubuntu20.04-x64`.
+  `npx playwright install --with-deps` juga gagal, dan errornya terlihat seperti
+  masalah permission padahal bukan.
+- **Tunggu transisi sebelum mengukur posisi.** `.skip-link` punya
+  `transition: transform 150ms`. Mengukur `getBoundingClientRect()` langsung
+  setelah `keyboard.press("Tab")` menangkap posisi SEBELUM transisi selesai, dan
+  akan melaporkan elemen yang sebenarnya benar sebagai tersembunyi. Butuh
+  `waitForTimeout`.
+
+Screenshot ditulis ke `screenshots/` yang sudah di-gitignore. Kalau ada bug
+visual, lihat screenshot-nya dulu sebelum menebak penyebabnya.
 
 Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 

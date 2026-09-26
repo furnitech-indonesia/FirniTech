@@ -344,11 +344,20 @@ export default function Home() {
               body="Menjual, memproduksi, dan menerima pembayaran biasanya dikerjakan di tiga aplikasi berbeda. Di sini satu alur."
             />
 
-            <div className="mt-10 grid gap-4 md:grid-cols-3">
-              {PILLARS.map(({ icon: Icon, title, body }) => (
+            {/*
+             * Grid 3 kolom baru aktif di lg. Di 768px tiga kolom membuat
+             * judul dan paragraf membungkus terlalu sering dan kartu terasa
+             * sempit; dua kolom lebih nyaman dibaca. Kartu ketiga merebut dua
+             * kolom agar barisnya penuh — kalau tidak, ada lubang kosong di
+             * sisi kanan tablet.
+             */}
+            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {PILLARS.map(({ icon: Icon, title, body }, index) => (
                 <div
                   key={title}
-                  className="rounded-2xl border border-border bg-card p-5 shadow-card"
+                  className={`rounded-2xl border border-border bg-card p-5 shadow-card ${
+                    index === PILLARS.length - 1 ? "sm:col-span-2 lg:col-span-1" : ""
+                  }`}
                 >
                   <Icon
                     size={24}
@@ -488,25 +497,25 @@ export default function Home() {
                 </p>
                 <Link
                   href="/#fitur"
-                  className="text-body-sm text-secondary hover:text-primary"
+                  className="flex min-h-11 items-center text-body-sm text-secondary hover:text-primary"
                 >
                   Fitur
                 </Link>
                 <Link
                   href="/#spk"
-                  className="text-body-sm text-secondary hover:text-primary"
+                  className="flex min-h-11 items-center text-body-sm text-secondary hover:text-primary"
                 >
                   Pesanan kustom
                 </Link>
                 <Link
                   href="/#domain"
-                  className="text-body-sm text-secondary hover:text-primary"
+                  className="flex min-h-11 items-center text-body-sm text-secondary hover:text-primary"
                 >
                   Custom domain
                 </Link>
                 <Link
                   href="/#harga"
-                  className="text-body-sm text-secondary hover:text-primary"
+                  className="flex min-h-11 items-center text-body-sm text-secondary hover:text-primary"
                 >
                   Harga paket
                 </Link>
@@ -518,19 +527,19 @@ export default function Home() {
                 </p>
                 <Link
                   href="/#faq"
-                  className="text-body-sm text-secondary hover:text-primary"
+                  className="flex min-h-11 items-center text-body-sm text-secondary hover:text-primary"
                 >
                   Pertanyaan umum
                 </Link>
                 <Link
                   href="/t/mebeljaya"
-                  className="text-body-sm text-secondary hover:text-primary"
+                  className="flex min-h-11 items-center text-body-sm text-secondary hover:text-primary"
                 >
                   Contoh toko
                 </Link>
                 <Link
                   href="/login"
-                  className="text-body-sm text-secondary hover:text-primary"
+                  className="flex min-h-11 items-center text-body-sm text-secondary hover:text-primary"
                 >
                   Masuk
                 </Link>

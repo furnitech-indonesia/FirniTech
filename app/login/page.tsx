@@ -32,8 +32,13 @@ export default async function LoginPage({
       </div>
 
       <p className="mt-4 text-sm text-muted-foreground">
-        <Link href="/" className="text-accent-foreground hover:underline">
-          ← Kembali ke beranda
+        {/* min-h-11: target sentuh 44px (PRD §3.1). Teks tautannya 14px,
+            jadi tanpa ini tinggi sebenarnya hanya ~18px. */}
+        <Link
+          href="/"
+          className="flex min-h-11 items-center text-accent-foreground hover:underline"
+        >
+          Kembali ke beranda
         </Link>
       </p>
     </main>

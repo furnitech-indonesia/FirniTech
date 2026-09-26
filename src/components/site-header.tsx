@@ -2,10 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ListIcon } from "@phosphor-icons/react";
 
-import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 /**
  * Header situs publik: brand, navigasi, dan CTA masuk.
@@ -15,28 +21,66 @@ import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "@/com
  * terkunci di dalam panel saat terbuka dan tombol Escape menutupnya — perilaku
  * yang tidak didapat dari elemen HTML.
  *
- * `aria-current` menandai halaman aktif. Menu aktif tidak boleh hanya
- * dibedakan dengan warna: di DESIGN.md §7 warna saja tidak cukup, dan
- * penghuni buta warna tidak akan tahu posisinya.
+ * PENANDAAN HALAMAN AKTIF: memakai scroll spy, bukan perbandingan pathname.
+ * Versi pertama membandingkan `pathname === "/"`, yang membuat KETIGA item
+ * sekaligus terlihat aktif — karena semua link-nya berupa anchor di beranda.
+ * Perbandingan pathname hanya bisa menjawab "halaman mana", tidak "section
+ * mana yang sedang dibaca", dan di halaman satu-scroll itu pertanyaan yang
+ * salah.
  */
 
 const LINKS = [
-  { href: "/#fitur", label: "Fitur" },
-  { href: "/#harga", label: "Harga" },
-  { href: "/#faq", label: "Pertanyaan" },
+  { href: "/#fitur", label: "Fitur", id: "fitur" },
+  { href: "/#harga", label: "Harga", id: "harga" },
+  { href: "/#faq", label: "Pertanyaan", id: "faq" },
 ] as const;
 
-function isActive(pathname: string, href: string): boolean {
-  if (href === "/") return pathname === "/";
-  const target = href.split("#")[0];
-  if (target !== "/") return pathname.startsWith(target);
-  // Anchor di halaman beranda: aktif hanya saat sedang di beranda.
-  return pathname === "/";
+/**
+ * Mengembalikan id section yang sedang terlihat. Section yang paling atas
+ * di viewport yang menang, supaya menunya tidak berkedip-ganti saat dua
+ * section terlihat bersamaan di layar pendek.
+ */
+function useActiveSection(ids: readonly string[]): string | null {
+  const [active, setActive] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (ids.length === 0) return;
+
+    const visible = new Set<string>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) visible.add(entry.target.id);
+          else visible.delete(entry.target.id);
+        }
+
+        const first = ids.find((id) => visible.has(id));
+        setActive(first ?? null);
+      },
+      // rootMargin bawah -55%: section dianggap aktif saat mengisi bagian
+      // atas viewport, bukan sekadar menyentuh satu piksel di tepi bawah.
+      { rootMargin: "0px 0px -55% 0px" },
+    );
+
+    const nodes = ids
+      .map((id) => document.getElementById(id))
+      .filter((n): n is HTMLElement => n !== null);
+
+    for (const node of nodes) observer.observe(node);
+    return () => observer.disconnect();
+  }, [ids]);
+
+  return active;
 }
 
 export function SiteHeader() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const ids = LINKS.map((l) => l.id);
+  const activeSection = useActiveSection(ids);
+
+  const onHome = pathname === "/";
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card shadow-card">
@@ -59,12 +103,12 @@ export function SiteHeader() {
         {/* Navigasi desktop */}
         <nav className="hidden items-center gap-1 md:flex" aria-label="Navigasi utama">
           {LINKS.map((link) => {
-            const active = isActive(pathname, link.href);
+            const active = onHome && activeSection === link.id;
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                aria-current={active ? "page" : undefined}
+                aria-current={active ? "true" : undefined}
                 className={`flex min-h-11 items-center rounded-xl px-3 text-label-lg transition-colors ${
                   active
                     ? "bg-accent text-accent-foreground"
@@ -102,16 +146,18 @@ export function SiteHeader() {
             <SheetContent side="right" className="w-3/4 max-w-80">
               <SheetTitle className="sr-only">Menu navigasi</SheetTitle>
 
-              <nav className="flex flex-col gap-1" aria-label="Navigasi seluler">
+              {/* pt-12: memberi ruang untuk tombol tutup yang menempel di
+                  pojok kanan atas sheet. Tanpa ini item pertama tertutup. */}
+              <nav
+                className="flex flex-col gap-1 pt-12"
+                aria-label="Navigasi seluler"
+              >
                 {LINKS.map((link) => {
-                  const active = isActive(pathname, link.href);
+                  const active = onHome && activeSection === link.id;
                   return (
-                    <SheetClose
-                      key={link.href}
-                      render={<Link href={link.href} />}
-                    >
+                    <SheetClose key={link.href} render={<Link href={link.href} />}>
                       <span
-                        aria-current={active ? "page" : undefined}
+                        aria-current={active ? "true" : undefined}
                         className={`flex min-h-11 items-center rounded-xl px-3 text-label-lg ${
                           active
                             ? "bg-accent text-accent-foreground"

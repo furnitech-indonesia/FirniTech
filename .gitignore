@@ -40,3 +40,6 @@ next-env.d.ts
 # Hasil ekstrak desain Stitch. File zip aslinya sudah ter-commit, jadi folder
 # ini tidak perlu ikut dalam repo.
 /stitch/
+
+# Hasil test:visual — artefak lokal, bukan bagian repo
+/screenshots/

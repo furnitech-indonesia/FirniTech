@@ -94,8 +94,15 @@ export function PricingTable() {
         </div>
       </div>
 
-      <div className="mt-8 grid items-stretch gap-4 md:grid-cols-3">
-        {ORDER.map((id) => {
+      {/*
+       * Tiga kolom hanya di lg. Di 768px tiga kolom membuat nominal dan
+       * daftar fitur membungkus terus, dan tombol "Pilih" jadi tidak
+       * sejajar. Dua kolom dengan kartu terakhir melebar mengisi baris
+       * menjaga perataan tombol tetap rapi, sedangkan satu kolom memaksa
+       * pengguna menggulir panjang tanpa alasan.
+       */}
+      <div className="mt-8 grid items-stretch gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {ORDER.map((id, index) => {
           const plan = PLANS[id];
           const featured = id === "pro";
           const saving = savingFor(plan.priceMonthly, plan.priceYearly);
@@ -108,6 +115,8 @@ export function PricingTable() {
                 featured
                   ? "border-primary shadow-card-hover"
                   : "border-border shadow-card"
+              } ${
+                index === ORDER.length - 1 ? "sm:col-span-2 lg:col-span-1" : ""
               }`}
             >
               <div className="flex items-center justify-between gap-2">
