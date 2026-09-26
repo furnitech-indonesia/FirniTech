@@ -16,6 +16,10 @@
    ===================================================================== */
 
 :root {
+  /* Teks terang di atas permukaan gelap (CTA penutup memakai bg-foreground).
+     --foreground yang gelap tidak terbaca di sana, jadi butuh token sendiri. */
+  --foreground-inverse-muted: #cbd5e1; /* slate-300 */
+
   /* --- Brand: Craft Accent (CTA) — DESIGN.md §2.B --- */
   --primary: #d97706; /* amber-600 */
   --primary-hover: #b45309; /* amber-700 */
@@ -115,6 +119,7 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-foreground-inverse-muted: var(--foreground-inverse-muted);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

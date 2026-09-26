@@ -226,6 +226,10 @@ Aturan yang mengikat sprint ini:
    `type="button"` tanpa handler, sehingga tidak melakukan apa pun.
  * DoD: Pengunjung dapat memahami apa itu FurniTech dalam 10 detik, melihat
    harga yang benar, dan mencapai /login atau /t/<slug> dalam 1 klik.
+ * STATUS: SELESAI (commit 32d651c → hash berikutnya). Struktur mengikuti
+   Stitch; seluruh konten ditulis ulang dari sumber data. Blok statistik dan
+   testimoni Stitch dihapus karena tidak ada datanya. Tombol CTA yang tadinya
+   `type="button"` tanpa handler sekarang tautan sungguhan.
 
 📍 Fase C — Halaman Login
  * Split layout ala Stitch: panel kiri untuk branding dan daftar manfaat,
