@@ -242,6 +242,72 @@ function main() {
     "font-feature-settings tnum",
   );
 
+  // ---- 14. Halaman publik tidak boleh punya tautan mati (Fase B) ----
+  // Dulu nav header menunjuk /harga yang belum ada -> 404. Structural check
+  // saja tidak bisa menangkap ini; yang dicek di sini adalah KONSISTENSI:
+  // setiap anchor internal harus punya target di halaman yang sama.
+  const home = read("app/page.tsx");
+  const homeIds = new Set(
+    [...home.matchAll(/id="([^"]+)"/g)].map((m) => m[1]),
+  );
+  const homeAnchors = new Set(
+    [...home.matchAll(/href="\/#([^"]*)"/g)].map((m) => m[1]),
+  );
+  const brokenAnchors = [...homeAnchors].filter((a) => !homeIds.has(a));
+  check(
+    "Anchor di halaman publik punya target",
+    brokenAnchors.length === 0,
+    brokenAnchors.length === 0
+      ? `${homeAnchors.size} anchor, semua ada targetnya`
+      : `tanpa target: ${brokenAnchors.join(", ")}`,
+  );
+
+  // Harga di landing page WAJIB dibaca dari plans.ts, tidak boleh diketik.
+  // Menyalin harga dari desain Stitch pernah jadi penyebab halaman showed
+  // 240rb/400rb/800rb padahal plans.ts bilang 300rb/500rb/1jt.
+  check(
+    "Harga landing page dibaca dari PLANS, bukan angka hardcoded",
+    home.includes("PricingTable") && !/Rp\s?\d{3}\.[\d]{3}/.test(home),
+    home.includes("PricingTable")
+      ? "harga lewat PricingTable -> plans.ts"
+      : "harga tidak lewat PricingTable",
+  );
+
+  // Diskon tidak boleh ditulis tangan. Stitch menampilkan "Hemat 15%" padahal
+  // selisih harga aslinya 10% — klaim yang tidak bisa dipertanggungjawabkan.
+  // Yang diizinkan: "Hemat {saving}", angka di dalam kurung kurawal JSX.
+  // Yang dilarang: "Hemat 15" dengan angka yang diketik langsung.
+  // Komentar dibuang dulu: PricingTable sendiri menyebut "Hemat 15%" untuk
+  // menjelaskan kenapa angka itu salah, dan itu bukan klaim ke pengguna.
+  const pricing = read("src/components/pricing-table.tsx")
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/\/\/.*$/gm, "");
+  const hardcodedSaving = /Hemat\s+\d/.test(pricing);
+  check(
+    "Diskon dihitung dari plans.ts, bukan ditulis manual",
+    pricing.includes("savingFor") &&
+      !hardcodedSaving &&
+      /Hemat\s*\{saving\}/.test(pricing),
+    hardcodedSaving
+      ? "ada persentase diskon yang diketik langsung"
+      : "savingFor() menghitung selisih bulanan vs tahunan",
+  );
+
+  // ---- 15. Halaman publik tidak boleh memakai gambar eksternal (Fase B) ----
+  // Stitch menarik foto dari lh3.googleusercontent.com. Itu membatalkan alasan
+  // Phosphir dipilih (offline, PWA, Capacitor) — lihat DESIGN.md §5.
+  const publicFiles = [home, read("src/components/hero-cockpit.tsx")];
+  const remoteImages = publicFiles.filter((f) =>
+    /<(img|Image)\b[^>]*src=["']https?:/i.test(f),
+  );
+  check(
+    "Tidak ada <img> dari CDN di halaman publik",
+    remoteImages.length === 0,
+    remoteImages.length === 0
+      ? "aset lokal / DOM, tanpa permintaan jaringan"
+      : remoteImages.join(", "),
+  );
+
   const failed = results.filter((r) => !r.ok).length;
   console.log(
     `\n${results.length - failed}/${results.length} pemeriksaan responsif lulus.\n`,

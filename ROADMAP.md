@@ -226,10 +226,17 @@ Aturan yang mengikat sprint ini:
    `type="button"` tanpa handler, sehingga tidak melakukan apa pun.
  * DoD: Pengunjung dapat memahami apa itu FurniTech dalam 10 detik, melihat
    harga yang benar, dan mencapai /login atau /t/<slug> dalam 1 klik.
- * STATUS: SELESAI (commit 32d651c → hash berikutnya). Struktur mengikuti
-   Stitch; seluruh konten ditulis ulang dari sumber data. Blok statistik dan
-   testimoni Stitch dihapus karena tidak ada datanya. Tombol CTA yang tadinya
-   `type="button"` tanpa handler sekarang tautan sungguhan.
+ * STATUS: SELESAI. Struktur mengikuti Stitch; seluruh konten ditulis ulang dari
+   sumber data. Blok statistik dan testimoni Stitch dihapus karena tidak ada
+   datanya. Tombol CTA yang tadinya `type="button"` tanpa handler sekarang
+   tautan sungguhan.
+ * Revisi kedua memulihkan blok yang hilang di versi pertama: header sticky
+   dengan drawer mobile, mockup cockpit di hero (bento 4/5/3, dibangun dari
+   DOM — bukan `<img>` dari CDN, karena DESIGN.md §5 melarang permintaan
+   jaringan saat luring dan saat dibungkus Capacitor), blok split Custom
+   Domain dan Order Kustom, toggle bulanan/tahunan di harga, dan footer
+   3 kolom. Diskon dihitung `savingFor()` dari `plans.ts`, bukan diketik:
+   Stitch menulis "Hemat 15%" padahal selisih harganya 10%.
 
 📍 Fase C — Halaman Login
  * Split layout ala Stitch: panel kiri untuk branding dan daftar manfaat,

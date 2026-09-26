@@ -357,3 +357,47 @@ body {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
+
+/* =====================================================================
+   ALIAS PENAMAAN MATERIAL 3 — untuk mengadopsi class Stitch apa adanya
+   =====================================================================
+   Desain Stitch ditulis dengan penamaan Material 3 (surface-container-lowest,
+   outline-variant, secondary-fixed, on-primary-container). Repo ini memakai
+   penamaan shadcn (card, border, accent, foreground). Tanpa alias, setiap class
+   Stitch harus ditulis ulang satu per satu — dan justru bagian yang paling
+   sering keliru yang akan ditulis ulang, bukan bagian yang paling penting.
+
+   Alias ini MEMETAKKAN ke token yang sudah ada, tidak menambah warna baru.
+   `--surface-container-lowest` = `--card` karena keduanya putih, dan
+   `--primary-container` = `--foreground` karena Stitch memakai navy solid untuk
+   CTA gelap, persis warna `--foreground` kita.
+
+   Kalau suatu saat DESIGN.md berubah, cukup ubah `:root` — semua alias ikut.
+   `test:responsive` tetap lulus karena tidak ada hex baru di markup.
+   --------------------------------------------------------------------- */
+@theme inline {
+  /* Permukaan: Material 3 punya 6 tingkat, shadcn punya 3. Yang tidak ada
+     dipetakan ke tingkat terdekat, bukan dibuatkan warna baru. */
+  --color-surface-container-lowest: var(--card); /* putih */
+  --color-surface-container-low: var(--card);
+  --color-surface-container: var(--muted); /* slate-100 */
+  --color-surface-container-high: var(--muted);
+  --color-surface-container-highest: var(--border); /* slate-200 */
+  --color-surface: var(--background);
+
+  /* Garis & teks */
+  --color-outline: var(--muted-foreground);
+  --color-outline-variant: var(--border);
+  --color-on-surface: var(--foreground);
+  --color-on-surface-variant: var(--muted-foreground);
+
+  /* Aksen */
+  --color-secondary: var(--primary);
+  --color-secondary-container: var(--primary);
+  --color-on-secondary-container: var(--primary-foreground);
+  --color-secondary-fixed: var(--accent); /* amber-100 */
+  --color-on-secondary-fixed: var(--accent-foreground);
+  --color-secondary-fixed-dim: var(--border);
+  --color-primary-container: var(--foreground); /* navy solid */
+  --color-on-primary-container: var(--muted-foreground);
+}
