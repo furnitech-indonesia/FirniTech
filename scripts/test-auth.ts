@@ -87,10 +87,17 @@ async function main() {
 
   // ---- 2. Halaman login terbuka untuk anon ----
   const loginPage = await get("/login");
+  // Cek form-nya, bukan string judul. Mengunci judul membuat test gagal
+  // setiap kali copy-nya diperbaiki, dan copy itu memang boleh berubah.
+  const hasLoginForm =
+    loginPage.body.includes('name="email"') &&
+    loginPage.body.includes('name="password"');
   check(
-    "Anon /login terbuka",
-    loginPage.status === 200 && loginPage.body.includes("Masuk ke FurniTech"),
-    `status ${loginPage.status}`,
+    "Anon /login terbuka dengan form masuk",
+    loginPage.status === 200 && hasLoginForm,
+    loginPage.status === 200 && hasLoginForm
+      ? "status 200, form ada"
+      : `status ${loginPage.status}, form ${hasLoginForm ? "ada" : "hilang"}`,
   );
 
   // ---- 3. Peran owner ----

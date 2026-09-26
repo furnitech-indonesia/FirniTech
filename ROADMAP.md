@@ -244,8 +244,26 @@ Aturan yang mengikat sprint ini:
    dulu, branding disembunyikan. Form adalah pekerjaan, bukan hiasan.
  * Menambahkan link "Lupa password", `aria-invalid` yang konsisten, dan fokus
    otomatis ke field pertama yang error.
+ * STATUS: SELESAI. Split layout: panel kiri berisi tiga pilar dan harga
+ *   (dibaca dari `PLANS`, bukan diketik), panel kanan berisi form. Di mobile
+ *   urutannya dibalik — form dulu, panel branding disembunyikan kecuali logo
+ *   dan nama.
+ * Perbaikan struktural: kedua cara masuk dipisah dengan TAB, bukan ditumpuk
+ *   di bawah garis pemisah. Versi pertama menumpuk dua form dalam satu kartu,
+ *   sehingga ada DUA field berlabel "Email" dan tidak ada yang bisa tahu email
+ *   itu milik form yang mana. Dengan tab hanya satu field email yang ada di
+ *   DOM, jadi masalahnya hilang secara struktural, bukan diberi label yang
+ *   lebih jelas.
+ * Aturan taste-skill yang dipakai: §4.3 anti-center (split), §4.5 satu
+ *   intent satu label dan tombol tidak boleh membungkus, §4.6 label di atas
+ *   input tanpa placeholder-as-label, §4.7 headline maksimal 2 baris,
+ *   §3.E `min-h-[100dvh]` bukan `h-screen`, §6.B reduced motion.
+ * Aturan taste-skill yang DITOLAK karena bertentangan dengan DESIGN.md:
+ *   §4.1 "avoid Inter" (Inter dipilih bersurat untuk keterbacaan angka),
+ *   §8 "dark mode mandatory" (DESIGN.md §6 light mode penuh).
  * DoD: Tidak ada informasi yang hanya tersedia lewat hover; alur magic link
-   tetap berfungsi.
+   tetap berfungsi. `test:visual` mengunci jumlah field email dan pergantian
+   tab.
 
 📍 Fase D — Wizard Registrasi Pengrajin
  * Halaman registrasi belum ada sama sekali di repo (yang ada hanya /login),

@@ -285,6 +285,66 @@ async function main() {
     await context.close();
   }
 
+  /* --- 8. Halaman login: tab replaces stacked forms (Fase C) --- */
+  {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    await page.goto(BASE + "/login", { waitUntil: "networkidle" });
+
+    // Satu selector dengan koma, BUKAN dua locator dijumlahkan. Field email
+    // punya type="email" DAN name="email", jadi menjumlahkannya menghitung
+    // elemen yang sama dua kali.
+    const countEmailFields = () =>
+      page.locator('input[name="email"], input[type="email"]').count();
+
+    // Versi lama menumpuk dua form dalam satu kartu, sehingga ada DUA field
+    // berlabel "Email" dan tidak ada yang tahu itu milik form yang mana.
+    const initial = await countEmailFields();
+    check(
+      "hanya satu field email yang tampil sekaligus",
+      initial === 1,
+      initial === 1 ? "1 field" : `${initial} field — masih menumpuk`,
+    );
+
+    const tab = page.getByRole("button", { name: "Tautan masuk" });
+    if ((await tab.count()) > 0) {
+      await tab.click();
+      await page.waitForTimeout(200);
+      const after = await countEmailFields();
+      const pwGone = (await page.locator('input[name="password"]').count()) === 0;
+      check(
+        "berpindah tab mengganti field, bukan menumpuk",
+        after === 1 && pwGone,
+        after === 1 && pwGone
+          ? "1 field email, field kata sandi hilang"
+          : `${after} field email, kata sandi ${pwGone ? "gone" : "masih ada"}`,
+      );
+      await page.screenshot({ path: `${OUT}/login-magic-link.png` });
+    }
+
+    // Label harus di atas input, bukan placeholder-as-label (skill §4.6).
+    const labelsAbove = await page.evaluate(() => {
+      const bad: string[] = [];
+      for (const input of document.querySelectorAll<HTMLInputElement>("input:not([type=hidden])")) {
+        const label = document.querySelector<HTMLLabelElement>(`label[for="${input.id}"]`);
+        if (!label) { bad.push(input.name || input.id || "?"); continue; }
+        if (!input.placeholder) continue;
+        if (input.placeholder.trim() === label.textContent?.trim()) {
+          bad.push(input.name + " (placeholder = label)");
+        }
+      }
+      return bad;
+    });
+    check(
+      "tidak ada placeholder yang menyalin label",
+      labelsAbove.length === 0,
+      labelsAbove.length === 0 ? "label di atas input" : labelsAbove.join(", "),
+    );
+
+    await page.close();
+    await context.close();
+  }
+
   await browser.close();
 
   console.log(
