@@ -1,8 +1,11 @@
 Product Requirement Document (PRD) — FurniTech
 Nama Produk: FurniTech
 Tipe Platform: SaaS Multi-Tenant (B2B2C E-Commerce & Internal Operations for Furniture Makers)
-Versi PRD: 1.0
+Versi PRD: 1.1
 Status: Approved for Development
+Catatan Revisi: v1.1 menyelaraskan PRD dengan ROADMAP.md (6 sprint) dan menambahkan
+Modul 5 (Super Admin Panel) yang sebelumnya belum tercantum. ROADMAP.md menjadi acuan cakupan sprint,
+sedangkan PRD ini adalah acuan kebutuhan & aturan bisnis.
 1. Ringkasan Eksekutif & Visi Produk
 FurniTech adalah platform Software-as-a-Service (SaaS) multi-tenant yang dirancang khusus untuk memberdayakan pengrajin dan UMKM mebel/furnitur lokal. Platform ini menyediakan dua fungsionalitas utama dalam satu ekosistem:
  * Front-Office (Toko Online / Storefront): Platform e-commerce dengan custom domain untuk menjual produk mebel dengan kalkulasi ongkir kargo otomatis per kota.
@@ -65,7 +68,7 @@ C. Kebijakan Transaksi & Potongan Biaya (Fees)
 4. Spesifikasi Modul & Fitur Platform
 Modul 1: Toko Online Pembeli (Storefront / Front-Office)
  * Dynamic Tenant Rendering:
-   * Menampilkan toko berdasarkan host akses (namatoko.com atau namatoko.furnitech.com).
+   * Menampilkan toko berdasarkan host akses (namatoko.com atau namatoko.furnitech.id).
  * Katalog Produk & Variansi:
    * Detail dimensi (P \times L \times T), pilihan jenis kayu, warna finishing, dan kain pelapis.
  * Kalkulasi Ongkir Otomatis (All-In Shipping Pricing):
@@ -97,27 +100,62 @@ Modul 4: Integrasi Notifikasi WhatsApp (Fonnte API)
    * Pembayaran Diterima: Konfirmasi pembayaran berhasil dari Midtrans.
    * Update Progres Produksi: Kirim link foto progres pengerjaan mebel yang diunggah oleh tukang.
    * Notifikasi Payout: Kirim bukti transfer pencairan dana IRIS ke WhatsApp Owner Pengrajin (06.00 & 18.00 WIB).
+Modul 5: Super Admin Panel & SaaS Billing Engine (FurniTech sebagai SaaS Owner)
+ * Dashboard Platform:
+   * Direktori seluruh tenant beserta status langganan & domain yang dipakai.
+   * Monitoring MRR, GMV, dan pendapatan Platform Service Fee (1.5%).
+   * Impersonate Login untuk troubleshooting tenant (wajib tercatat di audit log).
+ * SaaS Onboarding & Billing:
+   * Registrasi pengrajin + pemilihan paket (Basic/Pro/Max) dengan pembayaran
+     Midtrans Core di awal pendaftaran. Tetap tanpa free trial.
+   * Riwayat invoice, renewal, serta upgrade/downgrade plan.
+   * Manajemen Custom Domain melalui Cloudflare for SaaS API.
+ * Audit & Keamanan:
+   * Audit log integrasi pihak ketiga (Midtrans Core/IRIS, Cloudflare, Fonnte).
+   * Peran super_admin bersifat global (tenant_id kosong) dan HANYA dapat
+     ditetapkan lewat kode server-side yang tepercaya, tidak boleh berasal dari
+     metadata pendaftaran yang dikirim klien.
 5. Skema Struktur Database (Drizzle ORM & Supabase RLS)
-Rancangan tabel utama dengan isolasi tenant_id:
- * tenants: Memuat data pengrajin, domain, paket langganan (Basic/Pro/Max), status pembayaran langganan, dan data rekening bank IRIS.
- * users: Memuat data pengguna (Owner, Admin Penjualan, Tukang) terhubung ke tenants.id dengan atribut role.
- * products: Katalog mebel terisolasi per tenant_id.
+Rancangan tabel utama dengan isolasi tenant_id. Kolom uang memakai bigint
+(satuan rupiah penuh tanpa desimal) karena Rupiah tidak memakai satuan pecahan;
+stok bahan tetap numeric karena satuannya dapat pecahan (m3, Liter).
+ * tenants: Data pengrajin, domain (slug & custom domain + status verifikasinya),
+   paket langganan (Basic/Pro/Max), periode langganan, dan data rekening bank IRIS.
+ * users: Profil pengguna (Super Admin, Owner, Admin Penjualan, Tukang) terhubung
+   ke auth.users.id; tenant_id kosong untuk super_admin.
+ * products: Katalog mebel terisolasi per tenant_id (dimensi P x L x T, jenis kayu,
+   finishing, harga dasar, galeri foto).
+ * materials: Inventaris bahan baku (kayu, finishing, hardware, busa) + ambang
+   stok minimum untuk Low Stock Alert.
+ * customer_addresses: Alamat pengiriman pembeli agar dapat dipakai ulang.
  * shipping_rates: Matriks tarif kargo per kota/kabupaten milik pengrajin.
- * orders & order_items: Data transaksi pembeli, status pembayaran, dan total harga include ongkir.
- * production_progress: Catatan tahapan pengerjaan dan URL foto progres produksi dari tukang.
- * payout_logs: Riwayat eksekusi IRIS otomatis pada pukul 06.00 & 18.00 WIB.
+ * orders & order_items: Transaksi pembeli, status pembayaran, rincian biaya
+   (subtotal, ongkir, total all-in), DP/pelunasan, fee MDR, fee platform 1.5%,
+   saldo bersih pengrajin, serta referensi transaksi Midtrans.
+ * production_progress: Tahapan pengerjaan + URL foto progres produksi dari tukang.
+ * payout_logs & payout_items: Riwayat eksekusi IRIS pada pukul 06.00 & 18.00 WIB
+   beserta rincian order yang tercakup dalam setiap batch payout.
+ * saas_invoices: Tagihan langganan SaaS (paket, periode, nominal, status, Midtrans).
+ * integration_audit_logs: Jejak integrasi Midtrans, Cloudflare, Fonnte, Firebase.
+ * notification_usage: Pemakaian kuota notifikasi WhatsApp per bulan per tenant.
 6. Milestones & Timeline Pengembangan
- * Sprint 1 — Core Architecture & Authentication:
-   * Setup Next.js, Drizzle ORM, Supabase Auth, & Supabase RLS multi-tenant.
-   * Integration Cloudflare for SaaS API untuk custom domain routing.
- * Sprint 2 — Back-Office & RBAC:
-   * Dashboard Owner, Admin Penjualan, dan antarmuka mobile-friendly untuk Tukang.
-   * Fitur unggah foto progres produksi & manajemen katalog.
- * Sprint 3 — Storefront & Shipping Calculation:
-   * Halaman publik toko online, integrasi tabel alamat Supabase & kalkulasi ongkir per kota.
-   * Integration Midtrans Core API (Escrow Payment).
- * Sprint 4 — IRIS Payout, Fonnte WA, & Cron:
-   * Integration Midtrans IRIS API & Cron Job (06.00 & 18.00 WIB).
-   * Setup trigger notifikasi Fonnte WhatsApp API.
- * Sprint 5 — Phase 1 Release (PWA) & QA:
-   * Pengujian end-to-end transaksi, pengujian PWA, dan deployment Vercel Production.
+Cakupan sprint mengikuti ROADMAP.md (6 sprint); urutan di bawah diselaraskan dengan
+nama sprint di ROADMAP.md.
+ * Sprint 1 — Foundation, DB Schema & Multi-Tenant Routing:
+   * Next.js App Router + Tailwind, skema Drizzle, Supabase Auth, RLS tenant_id.
+   * proxy.ts untuk subdomain & custom domain via Cloudflare for SaaS.
+ * Sprint 2 — Super Admin Panel & SaaS Billing Engine:
+   * Dashboard platform (MRR, GMV, fee 1.5%), registrasi & pembayaran langganan.
+   * Modul custom domain via Cloudflare API.
+ * Sprint 3 — Back-Office (Dashboard, Order, RBAC & Inventory):
+   * Dashboard toko, manajemen katalog & variasi, Custom Order Builder (DP/pelunasan),
+     inventaris bahan baku dengan Low Stock Alert, inbox CS.
+ * Sprint 4 — Visual Progress Tracker & WA Fonnte Engine:
+   * Antarmuka mobile untuk tukang & unggah foto progres.
+   * Trigger notifikasi WhatsApp (checkout, pembayaran, progres, resi, payout).
+ * Sprint 5 — Storefront Public (Catalog, Auto-Ongkir & Checkout Midtrans):
+   * Katalog & filter per tenant, kalkulasi ongkir per kota, checkout escrow,
+     halaman order tracking publik, widget live chat.
+ * Sprint 6 — IRIS Auto-Payout, Cron, PWA & QA:
+   * Engine payout batch IRIS 2x/hari (06.00 & 18.00 WIB) via cron-job.org.
+   * PWA, Firebase push, audit keamanan RLS, dan deployment Vercel Production.

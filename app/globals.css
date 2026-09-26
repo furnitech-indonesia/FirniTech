@@ -1,0 +1,55 @@
+@import "tailwindcss";
+
+/* ==========================================================
+   FurniTech Design Tokens — sumber: DESIGN.md
+   Pendekatan: Modern Tech & Minimalist + aksen kayu (amber).
+   Light mode only, dirancang untuk HP/tablet di bengkel.
+   ========================================================== */
+@theme {
+  /* --- Craft Accent (CTA & highlight) --- */
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+
+  /* --- Netral (app background, surface, border, input) --- */
+  --color-surface-app: #f8fafc; /* slate-50 */
+  --color-surface-card: #ffffff;
+  --color-surface-input: #f1f5f9; /* slate-100 */
+  --color-border-subtle: #e2e8f0; /* slate-200 */
+
+  /* --- Status Indicators (Progress Tracker & order) --- */
+  --color-status-pending: #ca8a04; /* yellow-600 */
+  --color-status-pending-bg: #fef9c3; /* yellow-100 */
+  --color-status-production: #2563eb; /* blue-600  */
+  --color-status-production-bg: #dbeafe; /* blue-100  */
+  --color-status-quality: #9333ea; /* purple-600 */
+  --color-status-quality-bg: #f3e8ff; /* purple-100 */
+  --color-status-settled: #16a34a; /* green-600  */
+  --color-status-settled-bg: #dcfce7; /* green-100  */
+  --color-status-failed: #dc2626; /* red-600    */
+  --color-status-failed-bg: #fee2e2; /* red-100    */
+
+  /* --- Typography --- */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Base: reset sisa template Codespaces (font SF Pro + margin auto) */
+body {
+  background-color: var(--color-surface-app);
+  color: var(--color-slate-900);
+  font-family: var(--font-sans);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Material Symbols dimuat via <link> di app/layout.tsx, bukan next/font
+ * (tidak tersedia di sana). Override ringan agar ketebalan garis konsisten
+ * dengan estetika minimalis DESIGN.md §5.
+ */
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}

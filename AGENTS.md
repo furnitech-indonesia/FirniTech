@@ -1,64 +1,150 @@
 # AGENTS.md
 
-## What this repo actually is right now
+## Apa isi repo ini sekarang
 
-A GitHub Codespaces **template** (single commit, `decd3b8 Initial commit`, no remote) with a Fast Refresh demo page. The FurniTech SaaS product described in `PRD.md` / `ROADMAP.md` is **not implemented yet** — those files are planning artifacts, and they are **untracked in git**.
+FurniTech — SaaS multi-tenant untuk pengrajin mebel. Sprint 1 (Foundation, DB
+Schema & Multi-Tenant Routing) **sudah selesai** dan ter-verifikasi terhadap
+database Supabase sungguhan.
 
-Installed and real:
-- Next.js **16.3.0**, **Pages Router**, plain **JavaScript** (`.js`), CSS Modules (`Button.module.css`, `styles/home.module.css`)
-- React 18.2, Turbopack builds
+Stack yang benar-benar terpasang: **Next.js 16.3 (App Router) + React 19 +
+TypeScript + Tailwind CSS v4 + Drizzle ORM 0.45 + Supabase (PostgreSQL + Auth +
+RLS)**. Halaman demo bawaan template Codespaces (`pages/`, `components/`,
+`styles/`) sudah dihapus.
 
-**Not** installed: TypeScript, Tailwind, Drizzle ORM, Supabase, any test/lint/format tooling. Do not write code that imports them until you add the dependency.
+Dokumen produk (bahasa Indonesia): `PRD.md` (v1.1), `ROADMAP.md` (6 sprint),
+`DESIGN.md` (token). `ROADMAP.md` = acuan cakupan sprint; `PRD.md` = acuan
+kebutuhan & aturan bisnis. **Middleware**: Next 16 tidak punya `middleware.ts` —
+konvensinya `proxy.ts` dengan fungsi `export function proxy` (runtime Node.js only;
+`export const runtime` di sana akan throw).
 
 ## Commands
 
 ```bash
-npm run dev     # dev server, http://localhost:3000
-npm run build   # the ONLY verification step in this repo
-npm run start   # serve the production build
+npm run dev            # http://localhost:3000
+npm run build          # build produksi (Turbopack)
+npm run lint           # ESLint CLI — `next lint` sudah DIHAPUS di Next 16
+npm run typecheck      # tsc --noEmit
 ```
 
-There is no `lint`, `typecheck`, `test`, or `format` script. Do not invent one in a plan/report; `npm run build` is the gate.
+Urutan gerbang: `lint → typecheck → build`. Di Codespaces `npm run dev` sudah
+berjalan otomatis (`postAttachCommand`) dan rebuild menjalankan
+`npm install && npm run build`, jadi **jangan** menyalakan server kedua di port
+3000. Untuk uji end-to-end, `npm run build && npm run start` — tapi matikan
+process-nya lagi (cari PID via `pgrep -f next-server`; jangan pakai
+`pkill -f "next start"`, polanya akan mencocokkan shell itu sendiri).
 
-Quirks:
-- The dev server is **already running** in this codespace (`.devcontainer/devcontainer.json` → `postAttachCommand: npm run dev`, port 3000 forwarded). Do not start a second one; edit files and let Fast Refresh pick it up.
-- Codespace **rebuilds** run `npm install && npm run build`, so a broken build surfaces on every rebuild.
-- `npm run build` prints a harmless warning: Next ignores `package-lock.json` in `/workspaces` (outside the git repo). Do not "fix" it by setting `turbopack.root`.
+`npm run build` mencetak warning `ignored package-lock.json in /workspaces` —
+harmless, karena direktori induk bukan repo git. Jangan "perbaiki" dengan
+`outputFileTracingRoot`.
 
-## Pushing to GitHub (read before the first `git push`)
+## Database — dua koneksi, jangan ditukar
 
-`origin` = `https://github.com/furnitech-indonesia/FirniTech.git` (public, branch `main`).
+| Var | Port | Dipakai untuk |
+|---|---|---|
+| `DATABASE_URL` | 6543 (transaction pooler) | query runtime |
+| `DIRECT_URL` | 5432 (session pooler) | `drizzle-kit migrate` |
 
-The codespace's built-in token (`GITHUB_TOKEN`, a `ghu_` app token) is scoped **only** to `github/codespaces-nextjs`, so plain `git push` fails with `403 Permission denied` even though `gh api` reads work. `/etc/gitconfig` also registers `/.codespaces/bin/gitcredential_github.sh` as the *first* credential helper, which shadows the repo's own helper.
+```bash
+npm run db:generate   # SQL dari src/db/schema
+npm run db:migrate    # WAJIB lewat DIRECT_URL
+npm run db:apply      # sama, tapi menampilkan error SQL apa adanya
+npm run db:verify     # 6 pemeriksaan: tabel, RLS, trigger, kolom uang, anon
+npm run db:test-rls   # 8 uji isolasi tenant dgn JWT pengguna sungguhan
+npm run db:studio
+npm run db:seed       # idempoten
+```
 
-A real PAT lives in `.env` (`GITHUB_TOKEN=ghp_…`, mode 600, gitignored) and in `.git/gh-credentials` (gitignored by construction, mode 600). Always push with the helper list reset — the leading empty `credential.helper=` is what drops the codespaces helper:
+Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
+
+1. **Migrasi lewat port 6543 gagal tanpa pesan error.** drizzle-kit memakai
+   `pg_advisory_lock`, tidak didukung pgbouncer mode transaction; yang terjadi
+   adalah spinner lalu `exit 1` tanpa output. Karena itu `drizzle.config.ts`
+   memakai `DIRECT_URL`, dan `npm run db:apply` ada untuk kasus mirror seperti ini.
+2. **Runtime wajib `prepare: false`** (sudah di-set di `src/db/client.ts`).
+   pgbouncer mode transaction tidak mendukung prepared statement bernama.
+3. **`npm run db:apply` menulis hash ke `drizzle.__drizzle_migrations`** supaya
+   `drizzle-kit migrate` tidak mencoba menerapkan ulang.
+
+## Skema & aturan yang tidak boleh dilanggar
+
+- **Uang = `bigint` (rupiah penuh, tanpa desimal).** Stok bahan tetap `numeric`
+  karena satuannya bisa pecahan (m3, Liter). Jangan balik ke `numeric(_, 2)`
+  untuk uang — itu sumber pembulatan.
+- **Semua waktu = `timestamptz`.** Slot payout IRIS disimpan sebagai enum
+  (`morning`/`evening`) + `scheduledFor` UTC; **jangan** menyimpan `"06:00"`
+  sebagai teks — 06:00 WIB = 23:00 UTC hari sebelumnya.
+- **`users.role` tidak punya default.** Wajib dipilih eksplisit.
+- **Payout itu batch**: `payout_logs` = 1 transfer, rincian order ada di
+  `payout_items`.
+- **Pemetaan `progress_stage` → `order_status` hanya di
+  `src/lib/order-status.ts`.** Dua enum itu tumpang tindih; jangan mulai aturan
+  transisi di tempat lain.
+- `examples-schema.ts` sudah dipindah & dipecah jadi `src/db/schema/*.ts`.
+  Definisi tabel sekarang tinggal di sana.
+
+## RLS & auth — bagian yang paling mudah salah
+
+- Fungsi bantu `current_tenant_id()`, `current_user_role()`, `is_super_admin()`,
+  `is_tenant_staff()` adalah `security definer` + `set search_path = ''`.
+  Itu satu-satunya cara menghindari **rekursi RLS**: policy yang membaca tabel
+  `users` dari dalam policy `users` akan loop. Jangan menggantinya dengan
+  subquery biasa.
+- User postgres (dipakai Drizzle) **bypass** RLS. Setiap query server WAJIB
+  memfilter `tenantId` secara eksplisit. RLS itu lapisan kedua, bukan satu-satunya.
+- Trigger `handle_new_user` **menolak** role dari `raw_user_meta_data` dépassé
+  `admin_penjualan`/`tukang`, dan `tenant_id` selalu NULL saat signup.
+  Onboarding owner hanya boleh lewat kode server-side. Ini sudah diuji.
+- `npm run db:test-rls` membuktikan isolasi dengan JWT asli. Jalankan setelah
+  menyentuh policy.
+
+## Multi-tenant routing
+
+- `proxy.ts` me-rewrite host tenant ke `/t/*`; `app/t/layout.tsx` me-resolve
+  tenant (subdomain `slug` atau custom domain yang `custom_domain_verified`).
+- **Host dibaca dari `x-forwarded-host` → `host`, bukan `request.url`.** Secara
+  lokal `request.url` berisi alamat server (`localhost:3000`) walau Host
+  header-nya domain tenant — dulu ini membuat rewrite diam-diam gagal. Di
+  Vercel `request.url` berisi URL deployment. `getRequestHost()` menangani
+  keduanya.
+- Matcher `proxy.ts` wajib mengecualikan `_next/static`, `_next/image`, dan
+  aset — kalau tidak, CSS/JS/gambar gagal dimuat.
+- **Server Function bukan route terpisah**: matcher yang mengecualikan path akan
+  melewati Server Function di path itu juga. Otorisasi wajib diulang di dalam
+  setiap Server Function/Action, tidak boleh hanya mengandalkan proxy.
+- Deploy ke **Vercel**: setiap domain tenant harus didaftarkan sebagai domain di
+  project Vercel.
+
+## Pushing to GitHub
+
+`origin` = `https://github.com/furnitech-indonesia/FirniTech.git` (branch `main`).
+
+Token bawaan codespace (`GITHUB_TOKEN`, app token `ghu_`) hanya ter-scope ke
+`github/codespaces-nextjs`, jadi `git push` biasa gagal `403`. `/etc/gitconfig`
+juga mendaftarkan `/.codespaces/bin/gitcredential_github.sh` sebagai credential
+helper **pertama**, sehingga menutupi helper repo. PAT ada di `.env` dan
+`.git/gh-credentials` (keduanya 600, `.env` di-gitignore). Selalu push dengan:
 
 ```bash
 git -c credential.helper= -c 'credential.helper=store --file=.git/gh-credentials' push
 ```
 
-Do **not** try to wrap this in a `git config alias` — nested quoting in a `!`-alias breaks the inner `-c` value, and the alias silently falls back to printing git usage.
+Jangan membungkus ini dalam `git config alias` — quoting bersarang di alias `!`
+merusak nilai `-c` di dalamnya dan alias itu diam-diam hanya mencetak git usage.
 
-Rules:
-- **Never** commit `.env`; `.gitignore` now covers `.env` and re-allows `!.env.example`. If you add a real `.env.example`, keep it token-free.
-- Never echo/print the token or run `git credential fill` without redacting — it returns the codespaces token first, not the PAT, which is a misleading way to check auth.
-- Verify a token works with `gh api` / `curl -H "Authorization: Bearer $(sed -n 's/^GITHUB_TOKEN=//p' .env)" …`, not with a push.
+## Env & secrets
 
-## Doc vs. code conflicts (docs describe the target, code is the current state)
+- `.env` = secret asli (600, gitignored). `.env.example` = placeholder, ter-commit.
+  Jaga keduanya tetap sinkron saat menambah variabel.
+- Proyek Supabase `irpweashghfmhzqnunyj`, region **ap-northeast-1**. Kunci
+  berformat baru (`sb_publishable_*` / `sb_secret_*`); JWT lama disimpan sebagai
+  `SUPABASE_ANON_JWT` / `SUPABASE_SERVICE_ROLE_JWT`.
+- `sb_secret_*` (service role) = admin penuh. Tidak boleh masuk `NEXT_PUBLIC_*`
+  maupun kode client. Kalau bocor, rotasi lewat dashboard Supabase.
+- Midtrans (Core + IRIS), Cloudflare, Fonnte, dan Firebase **belum diisi**.
 
-- `PRD.md` / `ROADMAP.md` mandate **App Router + Tailwind CSS + Material Symbols**; the code is **Pages Router + CSS Modules**. Migrating to App Router is an intentional project decision, not an oversight — but it has not happened. Match the surrounding code's router unless the task is the migration.
-- `DESIGN.md` tokens are written as **Tailwind classes** mapped to slate/amber scales (primary `#0F172A`/`#334155`, CTA amber-600 `#D97706`, app bg slate-50, status colors per progress stage). They are not usable until Tailwind exists. `global.css` currently carries an unrelated SF Pro font stack from the template.
-- Env vars: full list at the bottom of `ROADMAP.md`. `.env` (real secrets, mode 600, gitignored) and a committed `.env.example` (placeholders) both exist — keep them in sync when adding a var.
-- Supabase project `irpweashghfmhzqnunyj`, region **ap-northeast-1** (`aws-0-ap-northeast-1.pooler.supabase.com`). `DATABASE_URL` uses the **transaction pooler on port 6543**; no direct (5432) connection string is configured yet.
-- This project uses Supabase's **new API key format** (`sb_publishable_*` / `sb_secret_*`), not the legacy `anon`/`service_role` JWTs. `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` hold the new-style keys; the legacy JWTs are kept alongside in `.env` as `SUPABASE_ANON_JWT` / `SUPABASE_SERVICE_ROLE_JWT` because some tooling still expects them. Verified working: `auth/v1/settings` responds.
-- Midtrans core + IRIS, Cloudflare, Fonnte, and Firebase keys are **still unset** — features depending on them will fail until filled in.
+## Konvensi
 
-## `examples-schema.ts`
-
-A **design reference only**, at the repo root. Nothing imports it and `drizzle-orm` is not installed, so it will not compile as-is. Treat its table/enum names as the source of truth for the data model when the real schema lands (`tenants`, `users`, `products`, `materials`, `orders`, `order_items`, `production_progress`, `payout_logs`, `shipping_rates`; enums `user_role`, `order_status`, `payment_status`, `progress_stage`, `payout_status`, `subscription_plan`). Move it into a proper location and add the dependency before using it. Don't delete it as dead code.
-
-## Conventions
-
-- Product docs (`PRD.md`, `ROADMAP.md`, `DESIGN.md`) are written in **Indonesian**; mirror that when editing them. Code/identifiers stay English.
-- Business rules that are easy to get wrong: no free trial (paid plan at signup), platform fee 1.5%, Midtrans MDR deducted before the craftsman's balance, IRIS payouts at 06:00 and 18:00 WIB, progress stages `bahan_dipotong → perakitan → finishing → packing_qc`.
-- Multi-tenancy is a single database with `tenant_id` isolation + Supabase RLS, resolved by Next middleware (subdomain + Cloudflare for SaaS custom domain). There is no `middleware.ts` yet.
+- Dokumen produk berbahasa Indonesia; kode & identifier bahasa Inggris.
+- Aturan bisnis yang mudah salah: tanpa free trial, platform fee 1.5%, MDR
+  Midtrans dipotong sebelum saldo pengrajin, payout IRIS 06.00 & 18.00 WIB.
+- Batas paket & slot payout: `src/lib/plans.ts` (sumber tunggal).

@@ -25,9 +25,13 @@ Tech Stack Utama: Next.js (App Router), Tailwind CSS, Drizzle ORM, Supabase (Pos
 Fokus Utama: Inisialisasi arsitektur proyek, skema database Drizzle, isolasi tenant Supabase RLS, dan middleware routing Cloudflare SaaS.
  * Deliverables Utama:
    * Setup repositori Next.js (App Router) + Tailwind CSS + Google Material Symbols.
-   * Implementasi SCHEMA.ts Drizzle ORM lengkap (Tabel tenants, users, products, materials, orders, progress_photos, payout_logs, shipping_rates).
+   * Implementasi skema Drizzle ORM lengkap di src/db/schema (Tabel tenants, users,
+     products, materials, orders, order_items, production_progress, payout_logs,
+     payout_items, shipping_rates, customer_addresses, saas_invoices).
    * Konfigurasi Supabase Auth & Row Level Security (RLS) berbasis tenant_id.
-   * Implementasi middleware.ts untuk menangani subdomain (namatoko.furnitech.id) dan custom domain (namatoko.com) via Cloudflare for SaaS.
+   * Implementasi proxy.ts untuk menangani subdomain (namatoko.furnitech.id) dan
+     custom domain (namatoko.com) via Cloudflare for SaaS.
+     Catatan: pada Next.js 16, middleware.ts sudah deprecated dan digantikan proxy.ts.
  * Definition of Done (DoD):
    * Database terhubung via Drizzle ORM dan migrasi berhasil.
    * Middleware sukses mengarahkan domain kustom ke tenant yang sesuai di Supabase.
