@@ -207,6 +207,33 @@ git -c credential.helper= -c 'credential.helper=store --file=.git/gh-credentials
 Jangan membungkus ini dalam `git config alias` — quoting bersarang di alias `!`
 merusak nilai `-c` di dalamnya dan alias itu diam-diam hanya mencetak git usage.
 
+## Skill UI/UX (.opencode/skills/)
+
+Terpasang lewat `npx ui-ux-pro-max-cli init --ai opencode` (CLI `ui-ux-pro-max-cli`,
+perintah `uipro`): 7 skill di `.opencode/skills/` — `ui-ux-pro-max`, `design`,
+`ui-styling`, `design-system`, `brand`, `banner-design`, `slides`. Butuh Python 3
+untuk skrip search-nya (sudah ada di codespace ini).
+
+**Aturan presedensi — penting:** `DESIGN.md` adalah brand identity yang sudah
+disetujui dan itu yang jadi acuan. Skill ini berguna untuk accessibilitas,
+anti-pattern, tipografi, dan review — bukan untuk mengganti warna atau font.
+Sebagai bukti: `search.py "furniture workshop SaaS dashboard" --design-system`
+menghasilkan biru `#2563EB` + aksen oranye `#EA580C` + Plus Jakarta Sans +
+Glassmorphism, yang **bertentangan** dengan DESIGN.md (slate + amber `#D97706`
++ Inter + tampilan clean tanpa efek kaca). Jangan menimpa token yang sudah
+dipetakan di `app/globals.css` dengan hasil generator.
+
+Skill juga menyarankan Material Symbols diganti Phosphor, dan `ui-styling`
+menyarankan shadcn/ui. Keduanya belum tentu benar untuk repo ini —
+Material Symbols sudah jadi keputusan DESIGN.md §5, dan menambah shadcn berarti
+menambah Radix. Putuskan eksplisit sebelum berubah.
+
+Penggunaan dasar:
+```bash
+python3 .opencode/skills/ui-ux-pro-max/scripts/search.py "keyword" --design-system -f markdown
+python3 .opencode/skills/ui-ux-pro-max/scripts/search.py "form validation" --stack react
+```
+
 ## Env & secrets
 
 - `.env` = secret asli (600, gitignored). `.env.example` = placeholder, ter-commit.
