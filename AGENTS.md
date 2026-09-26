@@ -48,7 +48,10 @@ Rules:
 
 - `PRD.md` / `ROADMAP.md` mandate **App Router + Tailwind CSS + Material Symbols**; the code is **Pages Router + CSS Modules**. Migrating to App Router is an intentional project decision, not an oversight — but it has not happened. Match the surrounding code's router unless the task is the migration.
 - `DESIGN.md` tokens are written as **Tailwind classes** mapped to slate/amber scales (primary `#0F172A`/`#334155`, CTA amber-600 `#D97706`, app bg slate-50, status colors per progress stage). They are not usable until Tailwind exists. `global.css` currently carries an unrelated SF Pro font stack from the template.
-- Required env vars are listed at the bottom of `ROADMAP.md` (Supabase, `DATABASE_URL`, Midtrans core + IRIS, Cloudflare, Fonnte, Firebase). `.env*.local` is gitignored; no `.env.example` exists yet.
+- Env vars: full list at the bottom of `ROADMAP.md`. `.env` (real secrets, mode 600, gitignored) and a committed `.env.example` (placeholders) both exist — keep them in sync when adding a var.
+- Supabase project `irpweashghfmhzqnunyj`, region **ap-northeast-1** (`aws-0-ap-northeast-1.pooler.supabase.com`). `DATABASE_URL` uses the **transaction pooler on port 6543**; no direct (5432) connection string is configured yet.
+- This project uses Supabase's **new API key format** (`sb_publishable_*` / `sb_secret_*`), not the legacy `anon`/`service_role` JWTs. `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` hold the new-style keys; the legacy JWTs are kept alongside in `.env` as `SUPABASE_ANON_JWT` / `SUPABASE_SERVICE_ROLE_JWT` because some tooling still expects them. Verified working: `auth/v1/settings` responds.
+- Midtrans core + IRIS, Cloudflare, Fonnte, and Firebase keys are **still unset** — features depending on them will fail until filled in.
 
 ## `examples-schema.ts`
 
