@@ -36,3 +36,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Hasil ekstrak desain Stitch. File zip aslinya sudah ter-commit, jadi folder
+# ini tidak perlu ikut dalam repo.
+/stitch/

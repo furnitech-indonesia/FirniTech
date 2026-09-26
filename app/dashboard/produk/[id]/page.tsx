@@ -47,7 +47,7 @@ export default async function ProductDetailPage({
   const canEdit = actor.role === "owner" || actor.role === "admin_penjualan";
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-10">
+    <main id="konten-utama" className="mx-auto max-w-5xl px-4 py-10">
       <p className="text-sm">
         <Link href="/dashboard/produk" className="text-accent-foreground hover:underline">
           ← Kembali ke katalog

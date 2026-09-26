@@ -1,7 +1,8 @@
 ROADMAP.md — FurniTech SaaS Development Roadmap
 Proyek: FurniTech (Multi-Tenant SaaS for Furniture Craftsmen)
 Target Rilis: Phase 1 (PWA) & Phase 2 (Hybrid Mobile Native: Android + iOS via Capacitor)
-Status: Sprint 1–3 selesai. Sprint 4–6 (PWA) dan Sprint 7–8 (Native) menyusul.
+Status: Sprint 1–3 selesai. Sprint 10 Fase A–D (UI Redesign) sedang dikerjakan.
+Sprint 4–6 (PWA) dan Sprint 7–8 (Native) menyusul.
 Tech Stack Utama: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4,
 shadcn/ui (Base UI), Phosphor Icons, Drizzle ORM + Zod, Supabase (PostgreSQL +
 Auth + RLS + Storage), Midtrans (Core + IRIS), Cloudflare for SaaS, Fonnte WA
@@ -23,6 +24,20 @@ API, Firebase FCM, cron-job.org, Vercel, Capacitor (Android & iOS).
    │
    ▼
 [Sprint 6] Midtrans IRIS Auto-Payout, Cron, PWA Optimization & QA
+   │
+   ▼
+[Sprint 10] UI/UX Redesign — Stitch Design System
+   │      (Fase A token → B landing → C login → D wizard registrasi)
+   │
+   ▼
+[Sprint 7] Android Native App (Capacitor)
+   │
+   ▼
+[Sprint 8] iOS Native App (Capacitor) & Rilis Produksi
+
+Catatan urutan: Sprint 10 diletakkan setelah Sprint 6 karena redesign tidak
+bergantung pada fitur bisnis apa pun — justru menambah risikonya kalau
+dilakukan sebelum landing & login beres.
 
 🏃 Sprint Breakdown & Execution Plan
 📍 Sprint 1: Foundation, DB Schema & Multi-Tenant Routing
@@ -164,6 +179,83 @@ Fokus Utama: Kemampuan luring penuh untuk tukang di bengkel tanpa sinyal.
  * Perlu dua prasyarat — RLS sudah benar (sudah, sejak Sprint 1) dan
    operasi khusus server (payout IRIS, resolusi custom domain, signed URL
    storage) dipindah ke Edge Function terlebih dahulu.
+
+🎨 Sprint 10: UI/UX Redesign — Penerapan Stitch Design System
+Fokus Utama: Meningkatkan kualitas tampilan seluruh aplikasi dari tingkat
+"fungsional" menjadi "profesional", memakai sistem desain yang sudah disetujui
+(Stitch, lihat
+`stitch/stitch_furnitech_furniture_saas_platform/furnitech_saas_system/DESIGN.md`).
+Sprint ini TIDAK menambah fitur bisnis — tujuannya murni kualitas tampilan,
+kecuali Fase D yang membangun alur registrasi yang memang belum ada.
+
+Aturan yang mengikat sprint ini:
+ * `DESIGN.md` (brand identity) tetap menjadi induk. Stitch adalah turunan dari
+   brief yang sama, jadi 95% isinya sudah sama. Kalau Stitch bertentangan dengan
+   DESIGN.md atau PRD, DESIGN.md/PRD yang menang.
+ * Skill `taste-skill` (`.agents/skills/`) TIDAK dipakai. Arah estetikanya
+   (font survivors, GSAP, bento, material brutalis) bertentangan dengan
+   DESIGN.md dan dengan sifat aplikasi ini — dashboard operasional untuk
+   pengrajin yang memakainya di bengkel, bukan halaman marketing. Yang diambil
+   darinya hanya checklist aksesibilitas (skip-link, focus ring, reduced-motion,
+   empty/loading/error state).
+ * Konten tidak boleh dikarang. Tidak ada statistik fiktif, testimonial fiktif,
+   promo fiktif, atau harga yang tidak ada di `src/lib/plans.ts`. Halaman publik
+   yang menampilkan angka tidak berdasar = kebohongan yang bisa jadi masalah hukum.
+
+📍 Fase A — Merge Token Stitch ke Design System (fondasi Fase B & C)
+ * Mengganti sumber nilai di `app/globals.css` dengan nilai dari Stitch:
+   skala tipografi eksplisit (display 40/48, headline-lg 32/40,
+   headline-lg-mobile 26/34, title-md 16/24, body-md 14/20, label-sm 11/14),
+   tiga level bayangan (card / card-hover / overlay), tiga level surface
+   (container-low / high / highest), dan `font-feature-settings: "tnum" 1`
+   agar kolom rupiah & dimensi rata vertikal.
+ * Token status `pending` diubah dari kuning (yellow-600) menjadi amber
+   (amber-600) mengikuti Stitch.
+ * Menambahkan `prefers-reduced-motion` dan skip-to-content link.
+ * Menyinkronkan `DESIGN.md` §2–§4 dengan nilai final supaya dokumen dan kode
+   tidak berbeda.
+ * DoD: `lint → typecheck → build` bersih dan 66 test tetap lulus; tidak ada
+   perubahan visual selain angka, bayangan, dan density teks.
+
+📍 Fase B — Landing Page Publik (/)
+ * Struktur mengikuti desain Stitch; 100% konten ditulis ulang dari
+   `src/lib/plans.ts`, `PRD.md`, dan `ROADMAP.md`.
+ * Yang dibuang: bar promo fiktif, blok 4 statistik (belum ada pelanggan),
+   dan blok testimonial (tidak ada pelanggan sungguhan).
+ * CTA harus benar-benar bekerja — tombol CTA di halaman `/` saat ini
+   `type="button"` tanpa handler, sehingga tidak melakukan apa pun.
+ * DoD: Pengunjung dapat memahami apa itu FurniTech dalam 10 detik, melihat
+   harga yang benar, dan mencapai /login atau /t/<slug> dalam 1 klik.
+
+📍 Fase C — Halaman Login
+ * Split layout ala Stitch: panel kiri untuk branding dan daftar manfaat,
+   panel kanan untuk form. Di mobile urutannya dibalik — form muncul lebih
+   dulu, branding disembunyikan. Form adalah pekerjaan, bukan hiasan.
+ * Menambahkan link "Lupa password", `aria-invalid` yang konsisten, dan fokus
+   otomatis ke field pertama yang error.
+ * DoD: Tidak ada informasi yang hanya tersedia lewat hover; alur magic link
+   tetap berfungsi.
+
+📍 Fase D — Wizard Registrasi Pengrajin
+ * Halaman registrasi belum ada sama sekali di repo (yang ada hanya /login),
+   meski `tenants`, `saas_invoices`, dan enum terkait sudah lengkap di
+   `src/db/schema/`. Sprint ini membangun kodenya, bukan tabelnya.
+ * Empat langkah: (1) Akun, (2) Workshop, (3) Paket, (4) Bayar.
+ * `provisionOwner()` di `src/lib/auth/actions.ts`: membuat user Supabase
+   dengan `role: owner` yang ditetapkan DI SERVER (trigger `handle_new_user`
+   menolak role tinggi dari metadata, dan `tenant_id` selalu NULL saat signup),
+   lalu menulis `tenants` + `users` dengan `tenantId` yang sama, lalu
+   `saas_invoices` berstatus `pending`.
+ * Slug workshop divalidasi unik terhadap `tenant_slug_idx`, dengan live
+   preview URL `/t/<slug>` saat pengetikan.
+ * Perlu migrasi: `subscriptionStatusEnum` belum punya nilai "menunggu bayar".
+   Tanpa itu tenant yang belum membayar akan otomatis `active`.
+ * Terblokir: kredensial Midtrans Core belum diisi (lihat bagian Environment).
+   Kode charge akan ditulis, tetapi langkah 4 tidak dapat diuji end-to-end
+   sampai kredensial asli tersedia. `tenants.isActive` dinyalakan oleh
+   webhook Midtrans.
+ * DoD: Pengrajin baru dapat mendaftar, memilih paket, dan tenant-nya aktif
+   hanya setelah pembayaran terverifikasi.
 
 ⚙️ Environment Variables Required (.env.example)
 

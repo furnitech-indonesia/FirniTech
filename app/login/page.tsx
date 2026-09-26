@@ -21,7 +21,7 @@ export default async function LoginPage({
   const { next } = await searchParams;
 
   return (
-    <main className="mx-auto max-w-md px-4 py-16">
+    <main id="konten-utama" className="mx-auto max-w-md px-4 py-16">
       <h1 className="text-2xl font-bold text-foreground">Masuk ke FurniTech</h1>
       <p className="mt-1 text-sm text-secondary">
         Akun pengrajin, staf produksi, atau super admin platform.

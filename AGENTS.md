@@ -248,10 +248,32 @@ merusak nilai `-c` di dalamnya dan alias itu diam-diam hanya mencetak git usage.
 
 ## Design system, ikon & komponen
 
-- **Token satu arah: `DESIGN.md` → `:root` → `@theme inline`.** Nilai warna
-  ada di `app/globals.css` bagian `:root`, lalu dipetakan ke utilitas Tailwind.
-  JANGAN menulis utilitas warna langsung di markup — `test:responsive` akan
-  gagal. `DESIGN.md` tetap sumber kebenaran.
+- **Token satu arah: `DESIGN.md` → `app/globals.css` → utilitas Tailwind.**
+  Nilai warna ada di bagian `:root`, lalu dipetakan ke utilitas lewat
+  `@theme inline`. JANGAN menulis utilitas warna langsung di markup —
+  `test:responsive` akan gagal. `DESIGN.md` tetap sumber kebenaran.
+- **Skala tipografi, elevasi, dan permukaan tambahan ada di blok `@theme`
+  (NON-inline), bukan `@theme inline`.** Stitch §Typography memberi 12 peran teks
+  (`text-display` … `text-code-tabular`), 3 level bayangan (`shadow-card`,
+  `shadow-card-hover`, `shadow-overlay`), dan 2 permukaan (`bg-surface-sunken`,
+  `bg-surface-overlay`).
+  - **Jangan** memindahkannya ke `@theme inline` dengan `var()` yang menunjuk
+    nama variabelnya sendiri (`--text-display: var(--text-display)`). Itu
+    referensi melingkar dan Tailwind **diam-diam tidak menghasilkan
+    utility-nya** — tidak ada error, build tetap hijau, `.text-display` hilang
+    dari CSS. Sudah pernah terjadi sekali. `test:responsive` memeriksa
+    keberadaan blok `@theme` non-inline karena itu.
+  - Token `@theme` hanya jadi utility kalau **dipakai**. Kalau menambah peran
+    teks baru, ia tidak akan muncul di CSS sampai ada yang memakainya — itu
+    normal, bukan bug.
+- **Skill `.agents/skills/` (taste-skill) TIDAK dipakai untuk arah estetika.**
+  Arahnya bertentangan dengan `DESIGN.md`: mengganti Inter, GSAP/bento, material
+  brütalis. Yang diambil hanya checklist aksesibilitas (skip-link, focus ring,
+  `prefers-reduced-motion`, empty/loading/error state). Jangan menambah dependency
+  dari skill itu tanpa alasan.
+- **Skip-to-content wajib ada.** `<a className="skip-link" href="#konten-utama">`
+  di `app/layout.tsx`, dan setiap `page.tsx` punya `<main id="konten-utama">`.
+  `test:responsive` menegakinya.
 - Token status (pending/production/quality/settled/failed) dipakai lewat
   `bg-status-*` / `text-status-*`, bukan `bg-yellow-100` langsung.
 - **shadcn/ui adalah pemilik TUNGGAL primitif** di `src/components/ui/`

@@ -40,7 +40,7 @@ export default async function ConversationPage({
   const messages = await listMessages(id);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
+    <main id="konten-utama" className="mx-auto max-w-3xl px-4 py-10">
       <p className="text-sm">
         <Link href="/dashboard/chat" className="text-accent-foreground hover:underline">
           ← Kembali ke inbox

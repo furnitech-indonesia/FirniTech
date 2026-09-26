@@ -51,7 +51,7 @@ export default async function ProductsPage() {
   const canEdit = actor.role === "owner" || actor.role === "admin_penjualan";
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10">
+    <main id="konten-utama" className="mx-auto max-w-6xl px-4 py-10">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Katalog Produk</h1>

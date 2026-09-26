@@ -2,7 +2,7 @@ import { ArmchairIcon, StorefrontIcon } from "@phosphor-icons/react/dist/ssr";
 
 export default function Home() {
   return (
-    <main className="mx-auto max-w-3xl px-4 py-12">
+    <main id="konten-utama" className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="text-3xl font-bold text-foreground">FurniTech</h1>
       <p className="mt-2 text-secondary">
         Sprint 1 — Foundation, DB Schema &amp; Multi-Tenant Routing.

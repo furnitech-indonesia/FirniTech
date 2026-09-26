@@ -16,7 +16,7 @@ export default async function DashboardHome() {
 
   if (!tenantId) {
     return (
-      <main className="mx-auto max-w-6xl px-4 py-10">
+      <main id="konten-utama" className="mx-auto max-w-6xl px-4 py-10">
         <h1 className="text-2xl font-bold text-foreground">Ringkasan</h1>
         <p className="mt-2 text-secondary">
           Akun ini belum terhubung ke tenant mana pun. Hubungi admin platform.

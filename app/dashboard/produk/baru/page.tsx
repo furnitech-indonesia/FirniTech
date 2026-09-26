@@ -9,7 +9,7 @@ export default async function NewProductPage() {
   await requireTenantWrite(["owner", "admin_penjualan"]);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
+    <main id="konten-utama" className="mx-auto max-w-3xl px-4 py-10">
       <p className="text-sm">
         <Link
           href="/dashboard/produk"

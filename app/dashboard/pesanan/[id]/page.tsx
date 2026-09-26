@@ -78,7 +78,7 @@ export default async function OrderDetailPage({
   const remaining = Math.max(0, total - dp);
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10">
+    <main id="konten-utama" className="mx-auto max-w-6xl px-4 py-10">
       <p className="text-sm">
         <Link href="/dashboard/pesanan" className="text-accent-foreground hover:underline">
           ← Kembali ke daftar pesanan

@@ -187,6 +187,61 @@ function main() {
       : actionFormWithInput.join(", "),
   );
 
+  // ---- 12. Token Stitch WAJIB terpakai (Fase A ROADMAP Sprint 10) ----
+  // Skala tipografi & elevasi Stitch baru berarti kalau dipakai. Kalau
+  // utility-nya tidak muncul di CSS build, token itu dekorasi.
+  const globals = read("app/globals.css");
+  const stitchTokens = [
+    "--text-display", "--text-headline-lg", "--text-headline-md",
+    "--text-headline-sm", "--text-title-md", "--text-body-lg",
+    "--text-body-md", "--text-body-sm", "--text-label-lg",
+    "--text-label-md", "--text-label-sm", "--text-code-tabular",
+    "--shadow-card", "--shadow-card-hover", "--shadow-overlay",
+    "--color-surface-sunken",
+  ];
+  const missingTokens = stitchTokens.filter((t) => !globals.includes(t));
+  check(
+    "Token Stitch lengkap di app/globals.css",
+    missingTokens.length === 0,
+    missingTokens.length === 0
+      ? `${stitchTokens.length} token terdaftar`
+      : `hilang: ${missingTokens.join(", ")}`,
+  );
+
+  // Skala tipografi Stitch harus berada di blok @theme NON-inline. Kalau
+  // ditaruh di @theme inline dengan var() yang menunjuk dirinya sendiri,
+  // Tailwind diam-diam tidak menghasilkan utility-nya — ini pernah terjadi.
+  const themeBlock = globals.match(/@theme\s*\{([\s\S]*?)\n\}/);
+  const inNonInline = themeBlock ? stitchTokens.every((t) => themeBlock[1].includes(t)) : false;
+  check(
+    "Token Stitch ada di blok @theme (bukan @theme inline)",
+    inNonInline,
+    inNonInline
+      ? "utility Tailwind terbentuk"
+      : "token Stitch tidak ada di blok @theme non-inline",
+  );
+
+  // ---- 13. Aksesibilitas dasar yang tidak boleh hilang (Fase A) ----
+  check(
+    "Skip-to-content ada di layout dan dituju setiap halaman",
+    layout.includes("skip-link") &&
+      layout.includes("#konten-utama") &&
+      all.filter((f) => f.endsWith("page.tsx")).every((f) =>
+        read(f).includes('id="konten-utama"'),
+      ),
+    "link + target di 16 halaman",
+  );
+  check(
+    "prefers-reduced-motion dihormati",
+    globals.includes("prefers-reduced-motion: reduce"),
+    "transisi dimatikan untuk pengguna yang memerlukannya",
+  );
+  check(
+    "Angka tabular aktif (tnum) agar kolom rupiah sejajar",
+    globals.includes('"tnum" 1'),
+    "font-feature-settings tnum",
+  );
+
   const failed = results.filter((r) => !r.ok).length;
   console.log(
     `\n${results.length - failed}/${results.length} pemeriksaan responsif lulus.\n`,

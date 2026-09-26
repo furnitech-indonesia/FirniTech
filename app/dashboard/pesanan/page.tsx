@@ -52,7 +52,7 @@ export default async function OrdersPage() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-10">
+    <main id="konten-utama" className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-10">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Pesanan</h1>

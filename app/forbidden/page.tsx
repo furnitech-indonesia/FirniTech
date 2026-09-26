@@ -14,7 +14,7 @@ export default async function ForbiddenPage() {
   const session = await getSession();
 
   return (
-    <main className="mx-auto max-w-md px-4 py-20 text-center">
+    <main id="konten-utama" className="mx-auto max-w-md px-4 py-20 text-center">
       <LockIcon size={56} weight="light" className="text-primary" aria-hidden />
       <h1 className="mt-4 text-2xl font-bold text-foreground">
         Akses tidak diizinkan
