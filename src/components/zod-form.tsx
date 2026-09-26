@@ -1,19 +1,37 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
-import { useForm, type UseFormRegister, type FieldValues } from "react-hook-form";
+import { useState, type ReactNode } from "react";
+import {
+  FormProvider,
+  useForm,
+  type FieldValues,
+  type UseFormRegister,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 
 import { Alert, SubmitButton } from "@/components/ui";
 import type { FormState } from "./action-form";
 
+/**
+ * Konteks form untuk komponen anak.
+ *
+ * Sengaja TIDAK menyertakan `watch`. `watch()` milik react-hook-form adalah
+ * fungsi biasa, bukan hook: memanggilnya saat render membuat React Compiler
+ * melewati memoisasi komponen (peringatan `react-hooks/incompatible-library`)
+ * dan nilainya bisa stale di dalam subtree yang sudah di-memoize.
+ *
+ * Komponen yang butuh nilai langsung memakai `useWatch` — itu hook sungguhan,
+ * dan di situ `useFormContext()` membacanya. Lihat
+ * `src/components/payment-breakdown-live.tsx` untuk contohnya.
+ */
 export type ZodFormContext = {
   register: UseFormRegister<FieldValues>;
   errors: Record<string, { message?: string }>;
-  watch: (name: string) => unknown;
   setValue: (name: string, value: unknown) => void;
 };
+
+export type ZodFormSchema = z.ZodType;
 
 /**
  * Form dengan validasi per field di browser.
@@ -33,7 +51,7 @@ export type ZodFormContext = {
  * file sengaja TIDAK terdaftar karena divalidasi terpisah di
  * src/lib/storage.ts.
  */
-export function ZodForm<S extends z.ZodType>({
+export function ZodForm<S extends ZodFormSchema>({
   schema,
   action,
   hidden,
@@ -54,18 +72,9 @@ export function ZodForm<S extends z.ZodType>({
   children: (ctx: ZodFormContext) => ReactNode;
   onSuccess?: (state: FormState) => void;
 }) {
-  const formRef = useRef<HTMLFormElement>(null);
   const [state, setState] = useState<FormState>({});
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setError,
-    watch,
-    setValue,
-    formState: { errors, isSubmitting },
-  } = useForm<FieldValues>({
+  const methods = useForm<FieldValues>({
     // zodResolver Infer antara tipe input dan output zod; cast di sini
     // karena FieldValues membuat keduanya jadi unknown.
     resolver: zodResolver(schema as never) as never,
@@ -73,9 +82,21 @@ export function ZodForm<S extends z.ZodType>({
     mode: "onBlur",
   });
 
-  const onSubmit = handleSubmit(async () => {
-    // FormData diambil dari elemen form supaya input file ikut terbawa.
-    const formData = new FormData(formRef.current!);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setError,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = methods;
+
+  const onSubmit = handleSubmit(async (_values, event) => {
+    // Form diambil dari event submit, bukan dari ref. Selain lebih langsung,
+    // ini menghindari react-hooks/refs: pembacaan ref.current di dalam
+    // callback tak bisa dibuktikan compiler hanya terjadi saat submit.
+    const form = event?.target as HTMLFormElement | undefined;
+    const formData = new FormData(form!);
     const result = await action({}, formData);
 
     if (result.fieldErrors) {
@@ -91,39 +112,46 @@ export function ZodForm<S extends z.ZodType>({
 
     setState(result);
     onSuccess?.(result);
+    // reset() membersihkan nilai input teks; form.reset() juga mengosongkan
+    // input file yang tidak diurus react-hook-form.
     reset();
-    formRef.current?.reset();
+    form?.reset();
   });
 
   return (
-    <form
-      ref={formRef}
-      onSubmit={onSubmit}
-      noValidate
-      className={className ?? "grid gap-4"}
-    >
-      {hidden
-        ? Object.entries(hidden)
-            .filter(([, value]) => value !== undefined && value !== "")
-            .map(([name, value]) => (
-              <input key={name} type="hidden" name={name} value={String(value)} />
-            ))
-        : null}
+    <FormProvider {...methods}>
+      <form
+        onSubmit={onSubmit}
+        noValidate
+        className={className ?? "grid gap-4"}
+      >
+        {hidden
+          ? Object.entries(hidden)
+              .filter(([, value]) => value !== undefined && value !== "")
+              .map(([name, value]) => (
+                <input
+                  key={name}
+                  type="hidden"
+                  name={name}
+                  value={String(value)}
+                />
+              ))
+          : null}
 
-      {children({
-        register,
-        errors: errors as Record<string, { message?: string }>,
-        watch: (name: string) => watch(name),
-        setValue: (name: string, value: unknown) =>
-          setValue(name as never, value as never),
-      })}
+        {children({
+          register,
+          errors: errors as Record<string, { message?: string }>,
+          setValue: (name: string, value: unknown) =>
+            setValue(name as never, value as never),
+        })}
 
-      {state.error ? <Alert tone="error">{state.error}</Alert> : null}
-      {state.message ? <Alert tone="success">{state.message}</Alert> : null}
+        {state.error ? <Alert tone="error">{state.error}</Alert> : null}
+        {state.message ? <Alert tone="success">{state.message}</Alert> : null}
 
-      <SubmitButton pending={isSubmitting} tone={tone}>
-        {submitLabel}
-      </SubmitButton>
-    </form>
+        <SubmitButton pending={isSubmitting} tone={tone}>
+          {submitLabel}
+        </SubmitButton>
+      </form>
+    </FormProvider>
   );
 }

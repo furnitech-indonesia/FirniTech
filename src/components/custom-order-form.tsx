@@ -2,10 +2,9 @@
 
 import { ZodForm } from "@/components/zod-form";
 import { FormSection, TextAreaField, TextField } from "@/components/rhf-fields";
-import { PaymentBreakdown } from "@/components/payment-breakdown";
+import { PaymentBreakdownLive } from "@/components/payment-breakdown-live";
 import { customOrderSchema } from "@/lib/schemas/order";
 import { createCustomOrder } from "@/lib/actions/orders";
-import { PLATFORM_FEE_RATE } from "@/lib/plans";
 
 /**
  * Custom Order Builder (ROADMAP Sprint 3).
@@ -40,12 +39,6 @@ export function CustomOrderForm() {
       }}
     >
       {(ctx) => {
-        const toNumber = (name: string, fallback: number) => {
-          const raw = ctx.watch(name);
-          if (typeof raw !== "string" || !/[0-9]/.test(raw)) return fallback;
-          return Number(raw.replace(/[^0-9.]/g, ""));
-        };
-
         return (
           <>
             <FormSection title="Data pelanggan">
@@ -156,13 +149,9 @@ export function CustomOrderForm() {
                 />
               </div>
 
-              <PaymentBreakdown
-                itemPrice={toNumber("price", 0)}
-                quantity={toNumber("quantity", 1)}
-                shippingFee={toNumber("shippingFee", 0)}
-                dpAmount={toNumber("dpAmount", 0)}
-                platformFeeRate={PLATFORM_FEE_RATE}
-              />
+              {/* Membaca form context sendiri dengan useWatch, bukan lewat
+                  ctx.watch — lihat komentar di payment-breakdown-live.tsx. */}
+              <PaymentBreakdownLive />
 
               <TextField ctx={ctx} label="Catatan internal" name="notes" />
             </FormSection>

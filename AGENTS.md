@@ -157,6 +157,14 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   `src/lib/storage.ts` (MIME + ukuran).
 - `ActionForm` (useActionState) hanya untuk aksi tanpa input: ubah status,
   tandai dibaca, hapus. Jangan dipakai untuk form berisi input.
+- **Jangan pernah memanggil `watch()` milik react-hook-form saat render.**
+  `watch` adalah fungsi biasa, bukan hook; memanggilnya membuat React Compiler
+  melewati memoisasi dan nilainya bisa stale. Komponen yang butuh nilai langsung
+  memakai `useWatch` + `useFormContext` di dalam `<FormProvider>` — lihat
+  `src/components/payment-breakdown-live.tsx`.
+- `FormData` diambil dari `event.target` pada handler submit, BUKAN dari
+  `useRef`. Membaca `ref.current` di dalam callback memicu
+  `react-hooks/refs`.
 - `src/lib/parse.ts` (parsing FormData manual) sudah superseded oleh skema.
   Jangan menambah fungsi parsing baru di sana.
 
