@@ -9,19 +9,41 @@ import "server-only";
  *      (hanya setelah customDomainVerified = true, yaitu setelah Cloudflare
  *       for SaaS memverifikasi CNAME-nya)
  *
- * Header `x-tenant-slug` diteruskan dari proxy.ts ke server component.
+ * KETIKA DOMAIN BELUM ADA (kondisi sekarang): FurniTech masih di-host di
+ * Vercel memakai subdomain `*.vercel.app`, jadi tidak ada root domain milik
+ * sendiri untuk pola `slug.root-domain`. Selama NEXT_PUBLIC_ROOT_DOMAIN belum
+ * diisi, SEMUA host diperlakukan sebagai host platform dan tenant routing
+ * dimatikan — memakai path `/t/<slug>` sebagai gantinya. Ini penting:
+ * tanpa guard, host `apa saja.vercel.app` akan dianggap subdomain tenant lalu
+ * berakhir di 404 untuk semua halaman.
  */
 
-export const ROOT_DOMAIN =
-  process.env.NEXT_PUBLIC_ROOT_DOMAIN?.replace(/^https?:\/\//, "").replace(
-    /\/$/,
-    "",
-  ) ?? "furnitech.id";
+/** Host milik Vercel — tidak pernah diperlakukan sebagai subdomain tenant. */
+const VERCEL_HOST_SUFFIXES = [".vercel.app", ".vercel-dns.com"];
+
+function normalizeRootDomain(value: string | undefined): string | null {
+  const cleaned = value
+    ?.replace(/^https?:\/\//, "")
+    .replace(/\/.*$/, "")
+    .trim()
+    .toLowerCase();
+  return cleaned ? cleaned : null;
+}
+
+export const ROOT_DOMAIN = normalizeRootDomain(
+  process.env.NEXT_PUBLIC_ROOT_DOMAIN,
+);
+
+/** True bila domain raíz sudah siap dan subdomain routing bisa diaktifkan. */
+export const TENANT_ROUTING_ENABLED = ROOT_DOMAIN !== null;
+
+function isVercelHost(hostname: string): boolean {
+  return VERCEL_HOST_SUFFIXES.some((suffix) => hostname.endsWith(suffix));
+}
 
 /** Host yang milik platform, bukan tenant. */
 const PLATFORM_HOSTS = new Set([
-  ROOT_DOMAIN,
-  `www.${ROOT_DOMAIN}`,
+  ...(ROOT_DOMAIN ? [ROOT_DOMAIN, `www.${ROOT_DOMAIN}`] : []),
   "localhost",
 ]);
 
@@ -61,7 +83,12 @@ export function getRequestHost(headers: Headers, requestUrl: string): string {
 export function resolveTenantFromHost(host: string): TenantResolution {
   const hostname = host.toLowerCase();
 
-  if (PLATFORM_HOSTS.has(hostname)) {
+  // Domain raíz belum ada → tidak ada pola subdomain yang bisa ditafsirkan.
+  if (!ROOT_DOMAIN) {
+    return { kind: "platform", host: hostname };
+  }
+
+  if (PLATFORM_HOSTS.has(hostname) || isVercelHost(hostname)) {
     return { kind: "platform", host: hostname };
   }
 

@@ -69,14 +69,24 @@ Dua koneksi berbeda, dan itu disengaja:
 
 Single database, isolasi lewat `tenant_id` + Supabase RLS.
 
-- `proxy.ts` (Next 16: `middleware.ts` sudah deprecated) me-rewrite host tenant
-  ke `/t/*`. Host dibaca dari `x-forwarded-host` → `host`, **bukan** `request.url`.
-- `app/t/layout.tsx` resolve tenant: subdomain `slug.furnitech.id` atau custom
-  domain yang sudah terverifikasi.
+Dua mode akses tenant, dipilih otomatis:
+
+| Mode | Kapan | Cara akses |
+|---|---|---|
+| path-based | `NEXT_PUBLIC_ROOT_DOMAIN` kosong (kondisi sekarang) | `/t/<slug>` |
+| host-based | root domain diisi | `slug.furnitech.id` atau custom domain terverifikasi |
+
+- `proxy.ts` (Next 16: `middleware.ts` sudah deprecated) me-rewrite ke `/t/*`.
+  Host dibaca dari `x-forwarded-host` → `host`, **bukan** `request.url`.
+- Tenant di-resolve di page (bukan layout — `params` layout tidak menerima
+  segmen anak), dibungkus React `cache()` agar satu query per request.
+- `NEXT_PUBLIC_ROOT_DOMAIN` di-inline Next saat build: mengubahnya butuh
+  `npm run build` ulang, bukan hanya restart.
 - User postgres (dipakai Drizzle) **bypass** RLS, jadi setiap query server
   wajib memfilter `tenantId` secara eksplisit. RLS adalah lapisan kedua.
 
 ## Deployment
 
 Vercel. Setiap domain tenant harus ditambahkan sebagai domain di project Vercel;
-`proxy.ts` membaca `x-forwarded-host` yang diisi Vercel.
+`proxy.ts` membaca `x-forwarded-host` yang diisi Vercel. Host `*.vercel.app`
+selalu diperlakukan sebagai host platform.

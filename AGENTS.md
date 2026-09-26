@@ -81,6 +81,11 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   transisi di tempat lain.
 - `examples-schema.ts` sudah dipindah & dipecah jadi `src/db/schema/*.ts`.
   Definisi tabel sekarang tinggal di sana.
+- **Alamat pembeli WAJIB tersimpan**: `customer_addresses` (key per
+  `(tenant_id, customer_phone)`, satu alamat default per nomor thanks partial
+  unique index). `orders.customer_address_id` menunjuk ke sana, TETAPI kolom
+  alamat di `orders` tetap di-snapshot — histori order tidak boleh berubah
+  saat pembeli mengedit alamatnya.
 
 ## RLS & auth — bagian yang paling mudah salah
 
@@ -99,8 +104,24 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 
 ## Multi-tenant routing
 
-- `proxy.ts` me-rewrite host tenant ke `/t/*`; `app/t/layout.tsx` me-resolve
-  tenant (subdomain `slug` atau custom domain yang `custom_domain_verified`).
+Dua mode, dipilih otomatis oleh ada/tidaknya root domain:
+
+| Mode | Kapan | Cara akses tenant |
+|---|---|---|
+| path-based | `NEXT_PUBLIC_ROOT_DOMAIN` kosong (kondisi sekarang) | `/t/<slug>`, mis. `/t/mebeljaya` |
+| host-based | root domain diisi | `slug.furnitech.id` atau custom domain terverifikasi |
+
+- `proxy.ts` me-rewrite request ke `/t/*`; tenant di-resolve di **page**, bukan
+  layout. `params` pada layout hanya berisi segmen dinamis di jalur layout itu
+  sendiri, jadi `app/t/layout.tsx` selalu menerima `params = undefined` —
+  segmen `[[...slug]]` ada di bawahnya. Resolusi di-page tetap hanya satu query
+  per request karena dibungkus React `cache()`.
+- **`NEXT_PUBLIC_*` di-inline Next saat BUILD.** Mengubah
+  `NEXT_PUBLIC_ROOT_DOMAIN` lalu hanya restart TIDAK berpengaruh; harus
+  `npm run build` ulang. Gejalanya: proxy tidak pernah rewrite, semua host
+  dilayani halaman platform, dan tidak ada error sama sekali.
+- Host `*.vercel.app` / `*.vercel-dns.com` selalu diperlakukan sebagai host
+  platform, tidak boleh jadi subdomain tenant.
 - **Host dibaca dari `x-forwarded-host` → `host`, bukan `request.url`.** Secara
   lokal `request.url` berisi alamat server (`localhost:3000`) walau Host
   header-nya domain tenant — dulu ini membuat rewrite diam-diam gagal. Di
@@ -135,6 +156,15 @@ merusak nilai `-c` di dalamnya dan alias itu diam-diam hanya mencetak git usage.
 
 - `.env` = secret asli (600, gitignored). `.env.example` = placeholder, ter-commit.
   Jaga keduanya tetap sinkron saat menambah variabel.
+- **Root domain belum ada.** `NEXT_PUBLIC_ROOT_DOMAIN` sengaja dikosongkan, jadi
+  tenant routing berbasis host MATI dan yang aktif adalah mode path-based
+  `/t/<slug>` (mis. `/t/mebeljaya`). Begitu domain diisi, subdomain routing
+  langsung aktif — TAPI perlu `npm run build` ulang, karena `NEXT_PUBLIC_*`
+  di-inline saat build. Jangan isi `furnitech.id` sebagai default
+  hanya agar terlihat "benar" — itu membuat `*.vercel.app` tertafsir sebagai
+  subdomain tenant dan seluruh halaman jadi 404.
+- Kredensial akun uji tersimpan di `.env` (`TEST_SUPERADMIN_EMAIL`,
+  `TEST_OWNER_EMAIL`, `TEST_ACCOUNT_PASSWORD`). **Hapus sebelum produksi.**
 - Proyek Supabase `irpweashghfmhzqnunyj`, region **ap-northeast-1**. Kunci
   berformat baru (`sb_publishable_*` / `sb_secret_*`); JWT lama disimpan sebagai
   `SUPABASE_ANON_JWT` / `SUPABASE_SERVICE_ROLE_JWT`.

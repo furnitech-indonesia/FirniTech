@@ -85,7 +85,18 @@ Modul 2: Dashboard Internal Pengrajin (Back-Office)
    * Admin Penjualan: Kelola katalog produk, chat, dan status pesanan.
    * Tukang / Tim Produksi: Tampilan ringkas di HP untuk melihat antrean produksi & mengunggah foto progres pengerjaan (Visual Progress Tracker).
  * Visual Progress Tracker:
-   * Tim tukang mengubah status pesanan (Bahan Dipotong \rightarrow Perakitan \rightarrow Finishing \rightarrow Pengemasan) disertai unggahan foto bukti dari tempat kerja.
+   * Tim tukang mengubah status pesanan memakai LIMA tahap, disertai unggahan
+     foto bukti dari tempat kerja:
+     1. Bahan Dipotong (bahan_dipotong) — bahan sudah dipotong sesuai ukuran.
+     2. Perakitan (perakitan) — komponen disambung, belum finishing.
+     3. Finishing (finishing) — cat/pelapis dan penyelesaian permukaan sudah diterapkan.
+     4. Quality Control (qc) — pemeriksaan mutu hasil pengerjaan.
+     5. Packing (packing) — dikemas siap kirim.
+   * Pemetaan tahap ke status pesanan ditetapkan di satu berkas kode
+     (src/lib/order-status.ts) agar tidak bercabang di beberapa tempat:
+     bahan_dipotong & perakitan → in_production, finishing & qc → quality_control,
+     packing → ready_to_ship.
+   * Warna indikator tiap tahap mengikuti DESIGN.md §3.
  * Pencatatan Pesanan Kustom:
    * Modul input spesifikasi khusus jika ada permintaan ukuran/desain luar katalog standar.
 Modul 3: Otomatisasi Payout (Midtrans IRIS) & Cron

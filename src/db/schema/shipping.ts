@@ -76,6 +76,11 @@ export const customerAddresses = pgTable(
   },
   (table) => [
     index("address_tenant_phone_idx").on(table.tenantId, table.customerPhone),
+    // Satu alamat default per pembeli per tenant: initializing ulang
+    // is_default untuk nomor yang sama dijamin unik oleh constraint ini.
+    uniqueIndex("address_default_per_phone_uniq")
+      .on(table.tenantId, table.customerPhone)
+      .where(sql`${table.isDefault} = true`),
   ],
 );
 

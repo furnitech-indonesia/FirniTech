@@ -67,7 +67,8 @@ Fokus Utama: Antarmuka khusus tukang kayu dan otomatisasi notifikasi WhatsApp.
  * Deliverables Utama:
    * Carpenter Mobile Interface:
      * Layout mobile-first khusus tukang kayu (antrean pekerjaan & detail dimensi mebel).
-     * Fitur unggah foto progres produksi (Bahan Dipotong \rightarrow Perakitan \rightarrow Finishing \rightarrow QC/Packing).
+     * Fitur unggah foto progres produksi, 5 tahap: Bahan Dipotong \rightarrow Perakitan \rightarrow
+       Finishing \rightarrow QC \rightarrow Packing (pemetaan ke status pesanan di src/lib/order-status.ts).
    * WhatsApp Notification Engine (Fonnte API):
      * Handler pemicu notifikasi otomatis saat checkout, konfirmasi pembayaran, update foto progres pengerjaan, dan pengiriman resi kargo.
  * Definition of Done (DoD):

@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { orderStatusEnum, paymentStatusEnum } from "./enums";
 import { products } from "./catalog";
+import { customerAddresses } from "./shipping";
 import { tenants, users } from "./tenants";
 
 const timestamps = {
@@ -41,7 +42,14 @@ export const orders = pgTable(
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
 
-    // Data pelanggan (snapshot, tidak bergantung tabel customer)
+    // Data pelanggan
+    // Alamat disimpan di customer_addresses agar bisa dipakai ulang
+    // ("kirim lagi ke alamat lama"), lalu tetap DI-SNAPSHOT ke baris di bawah
+    // supaya histori order tidak berubah bila pembeli mengedit alamatnya.
+    customerAddressId: uuid("customer_address_id").references(
+      () => customerAddresses.id,
+      { onDelete: "set null" },
+    ),
     customerName: text("customer_name").notNull(),
     customerPhone: text("customer_phone").notNull(),
     customerAddress: text("customer_address").notNull(),
@@ -98,6 +106,7 @@ export const orders = pgTable(
   (table) => [
     index("order_tenant_idx").on(table.tenantId),
     index("order_tenant_status_idx").on(table.tenantId, table.orderStatus),
+    index("order_customer_addr_idx").on(table.customerAddressId),
     uniqueIndex("order_code_idx").on(table.orderCode),
     uniqueIndex("order_midtrans_idx").on(table.midtransOrderId),
   ],
