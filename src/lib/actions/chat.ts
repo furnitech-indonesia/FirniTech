@@ -6,7 +6,12 @@ import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { chatMessages, conversations, users } from "@/db/schema";
 import { requireTenantWrite, guard } from "@/lib/auth/guard";
-import { requiredStr } from "@/lib/parse";
+import { parseForm } from "@/lib/schemas/primitives";
+import {
+  conversationIdSchema,
+  replySchema,
+  setConversationStatusSchema,
+} from "@/lib/schemas/chat";
 
 /**
  * Inbox Customer Service (ROADMAP Sprint 3).
@@ -19,7 +24,11 @@ import { requiredStr } from "@/lib/parse";
 
 const STAFF_ROLES = ["owner", "admin_penjualan"] as const;
 
-export type ChatFormState = { error?: string; message?: string };
+export type ChatFormState = {
+  error?: string;
+  message?: string;
+  fieldErrors?: Record<string, string>;
+};
 
 export async function replyToConversation(
   _prev: ChatFormState,
@@ -28,8 +37,12 @@ export async function replyToConversation(
   return guard<ChatFormState>(
     async () => {
       const actor = await requireTenantWrite(STAFF_ROLES);
-      const conversationId = requiredStr(formData, "conversationId");
-      const body = requiredStr(formData, "body");
+
+      const parsed = parseForm(replySchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const { conversationId, body } = parsed.data;
 
       const [conversation] = await db
         .select({ id: conversations.id, status: conversations.status })
@@ -78,7 +91,12 @@ export async function markConversationRead(
   return guard<ChatFormState>(
     async () => {
       const actor = await requireTenantWrite(STAFF_ROLES);
-      const conversationId = requiredStr(formData, "conversationId");
+
+      const parsed = parseForm(conversationIdSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const { conversationId } = parsed.data;
 
       const [conversation] = await db
         .select({ id: conversations.id })
@@ -124,16 +142,16 @@ export async function setConversationStatus(
   return guard<ChatFormState>(
     async () => {
       const actor = await requireTenantWrite(STAFF_ROLES);
-      const conversationId = requiredStr(formData, "conversationId");
-      const status = requiredStr(formData, "status");
 
-      if (!(["open", "pending", "resolved"] as const).includes(status as never)) {
-        return { error: "Status percakapan tidak valid." };
+      const parsed = parseForm(setConversationStatusSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
       }
+      const { conversationId, status } = parsed.data;
 
       await db
         .update(conversations)
-        .set({ status: status as "open" | "pending" | "resolved" })
+        .set({ status })
         .where(
           and(
             eq(conversations.id, conversationId),

@@ -6,29 +6,36 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { productVariants, products } from "@/db/schema";
 import { requireTenantWrite, guard } from "@/lib/auth/guard";
+import { parseForm } from "@/lib/schemas/primitives";
 import {
-  parseInt10,
-  parseOptionalInt,
-  parseRupiah,
-  requiredStr,
-  slugify,
-  str,
-} from "@/lib/parse";
-import { createProductImageSignedUrl, uploadProductImage } from "@/lib/storage";
+  deleteVariantSchema,
+  productIdSchema,
+  productSchema,
+  variantSchema,
+} from "@/lib/schemas/product";
+import { slugify } from "@/lib/parse";
+import { uploadProductImage } from "@/lib/storage";
 
 /**
  * Katalog produk & variasi (ROADMAP Sprint 3).
  *
- * Dua aturan yang berlaku di SELURUH file ini:
+ * Empat aturan berlaku di seluruh file ini:
  *   1. `tenantId` selalu dari `requireTenantWrite`, TIDAK PERNAH dari FormData.
- *   2. Baris yang di-update/di-hapus diverifikasi ulang tenantId-nya, karena
- *      knowing an id alone tidak cukup — tanpa cek ini user bisa mengedit
- *      produk tenant lain hanya dengan menebak UUID.
+ *   2. Baris yang di-update/di-hapus diverifikasi ulang tenantId-nya —
+ *      knowing an UUID saja tidak cukup.
+ *   3. Otorisasi (guard) SELALU lebih dulu, baru validasi skema. Kalau validasi
+ *      didahulukan, server membocorkan bentuk data yang diterima ke pemanggil
+ *      yang tidak berhak.
+ *   4. Upload file tervalidasi terpisah di src/lib/storage.ts.
  */
 
 const WRITE_ROLES = ["owner", "admin_penjualan"] as const;
 
-export type ProductFormState = { error?: string; message?: string };
+export type ProductFormState = {
+  error?: string;
+  message?: string;
+  fieldErrors?: Record<string, string>;
+};
 
 function revalidate(tenantSlugHint?: string) {
   revalidatePath("/dashboard/produk");
@@ -43,9 +50,15 @@ export async function createProduct(
     async () => {
       const actor = await requireTenantWrite(WRITE_ROLES);
 
-      const name = requiredStr(formData, "name");
-      let slug = slugify(str(formData, "slug") || name);
-      if (!slug) return { error: "Slug tidak valid." };
+      const parsed = parseForm(productSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const data = parsed.data;
+
+      // Slug dari input, atau diturunkan dari nama.
+      let slug = data.slug ?? slugify(data.name);
+      if (!slug) return { error: "Slug tidak valid.", fieldErrors: { name: "Slug tidak valid." } };
 
       // Slug unik per tenant; kalau bentrok, tambahkan sufiks acak.
       const [clash] = await db
@@ -59,33 +72,32 @@ export async function createProduct(
       const file = formData.get("image");
       let images: string[] = [];
       if (file instanceof File && file.size > 0) {
-        const path = await uploadProductImage({
-          tenantId: actor.tenantId,
-          productSlug: slug,
-          file,
-        });
-        images = [path];
+        images = [
+          await uploadProductImage({
+            tenantId: actor.tenantId,
+            productSlug: slug,
+            file,
+          }),
+        ];
       }
 
-      await db
-        .insert(products)
-        .values({
-          tenantId: actor.tenantId,
-          name,
-          slug,
-          description: str(formData, "description") || null,
-          lengthCm: parseInt10(formData.get("lengthCm"), { min: 1 }),
-          widthCm: parseInt10(formData.get("widthCm"), { min: 1 }),
-          heightCm: parseInt10(formData.get("heightCm"), { min: 1 }),
-          woodType: requiredStr(formData, "woodType"),
-          finishingType: requiredStr(formData, "finishingType"),
-          basePrice: parseRupiah(formData.get("basePrice")),
-          isPublished: formData.get("isPublished") !== null,
-          images,
-        });
+      await db.insert(products).values({
+        tenantId: actor.tenantId,
+        name: data.name,
+        slug,
+        description: data.description,
+        lengthCm: data.lengthCm,
+        widthCm: data.widthCm,
+        heightCm: data.heightCm,
+        woodType: data.woodType,
+        finishingType: data.finishingType,
+        basePrice: data.basePrice,
+        isPublished: data.isPublished,
+        images,
+      });
 
       revalidate();
-      return { message: `Produk "${name}" tersimpan.` };
+      return { message: `Produk "${data.name}" tersimpan.` };
     },
     (error) => ({ error }),
   );
@@ -98,7 +110,12 @@ export async function updateProduct(
   return guard<ProductFormState>(
     async () => {
       const actor = await requireTenantWrite(WRITE_ROLES);
-      const id = requiredStr(formData, "id");
+
+      const parsed = parseForm(productSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const { id, ...data } = parsed.data;
 
       // Verifikasi kepemilikan sebelum update.
       const [owned] = await db
@@ -108,23 +125,9 @@ export async function updateProduct(
         .limit(1);
       if (!owned) return { error: "Produk tidak ditemukan." };
 
-      const slug = slugify(str(formData, "slug") || requiredStr(formData, "name"));
-      if (!slug) return { error: "Slug tidak valid." };
-
       await db
         .update(products)
-        .set({
-          name: requiredStr(formData, "name"),
-          slug,
-          description: str(formData, "description") || null,
-          lengthCm: parseInt10(formData.get("lengthCm"), { min: 1 }),
-          widthCm: parseInt10(formData.get("widthCm"), { min: 1 }),
-          heightCm: parseInt10(formData.get("heightCm"), { min: 1 }),
-          woodType: requiredStr(formData, "woodType"),
-          finishingType: requiredStr(formData, "finishingType"),
-          basePrice: parseRupiah(formData.get("basePrice")),
-          isPublished: formData.get("isPublished") !== null,
-        })
+        .set({ ...data, slug: data.slug ?? slugify(data.name) })
         .where(eq(products.id, id));
 
       revalidate();
@@ -141,11 +144,20 @@ export async function deleteProduct(
   return guard<ProductFormState>(
     async () => {
       const actor = await requireTenantWrite(["owner"]); // hapus = owner saja
-      const id = requiredStr(formData, "id");
+
+      const parsed = parseForm(productIdSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
 
       const deleted = await db
         .delete(products)
-        .where(and(eq(products.id, id), eq(products.tenantId, actor.tenantId)))
+        .where(
+          and(
+            eq(products.id, parsed.data.id),
+            eq(products.tenantId, actor.tenantId),
+          ),
+        )
         .returning({ id: products.id });
 
       if (deleted.length === 0) {
@@ -168,37 +180,37 @@ export async function createVariant(
   return guard<ProductFormState>(
     async () => {
       const actor = await requireTenantWrite(WRITE_ROLES);
-      const productId = requiredStr(formData, "productId");
+
+      const parsed = parseForm(variantSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const data = parsed.data;
 
       const [owned] = await db
         .select({ id: products.id })
         .from(products)
         .where(
-          and(
-            eq(products.id, productId),
-            eq(products.tenantId, actor.tenantId),
-          ),
+          and(eq(products.id, data.productId), eq(products.tenantId, actor.tenantId)),
         )
         .limit(1);
       if (!owned) return { error: "Produk tidak ditemukan." };
 
-      const price = parseRupiah(formData.get("price"));
-
       await db.insert(productVariants).values({
-        productId,
-        name: requiredStr(formData, "name"),
-        sku: str(formData, "sku") || null,
-        lengthCm: parseOptionalInt(formData.get("lengthCm")),
-        widthCm: parseOptionalInt(formData.get("widthCm")),
-        heightCm: parseOptionalInt(formData.get("heightCm")),
-        woodType: str(formData, "woodType") || null,
-        finishingType: str(formData, "finishingType") || null,
-        // Harga 0 berarti "pakai harga dasar", jadi simpan null.
-        price: price > 0 ? price : null,
+        productId: data.productId,
+        name: data.name,
+        sku: data.sku,
+        lengthCm: data.lengthCm,
+        widthCm: data.widthCm,
+        heightCm: data.heightCm,
+        woodType: data.woodType,
+        finishingType: data.finishingType,
+        // null = pakai harga dasar produk.
+        price: data.price,
       });
 
       revalidatePath("/dashboard/produk");
-      revalidatePath(`/dashboard/produk/${productId}`);
+      revalidatePath(`/dashboard/produk/${data.productId}`);
       return { message: "Variasi ditambahkan." };
     },
     (error) => ({ error }),
@@ -212,8 +224,12 @@ export async function deleteVariant(
   return guard<ProductFormState>(
     async () => {
       const actor = await requireTenantWrite(WRITE_ROLES);
-      const variantId = requiredStr(formData, "variantId");
-      const productId = requiredStr(formData, "productId");
+
+      const parsed = parseForm(deleteVariantSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const { variantId, productId } = parsed.data;
 
       const [owned] = await db
         .select({ id: products.id })
@@ -238,9 +254,4 @@ export async function deleteVariant(
     },
     (error) => ({ error }),
   );
-}
-
-/** Signed URL untuk foto produk (bucket privat). Dipakai Server Component. */
-export async function getProductImageUrl(path: string): Promise<string | null> {
-  return createProductImageSignedUrl(path);
 }

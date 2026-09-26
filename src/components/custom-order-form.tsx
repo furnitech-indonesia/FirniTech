@@ -1,198 +1,174 @@
 "use client";
 
-import { useActionState, useState } from "react";
-
-import { Alert, SubmitButton } from "@/components/ui";
+import { ZodForm } from "@/components/zod-form";
+import { FormSection, TextAreaField, TextField } from "@/components/rhf-fields";
 import { PaymentBreakdown } from "@/components/payment-breakdown";
-import { createCustomOrder, type OrderFormState } from "@/lib/actions/orders";
+import { customOrderSchema } from "@/lib/schemas/order";
+import { createCustomOrder } from "@/lib/actions/orders";
 import { PLATFORM_FEE_RATE } from "@/lib/plans";
 
 /**
  * Custom Order Builder (ROADMAP Sprint 3).
  *
- * Form ini interaktif karena menampilkan pratinjau sisa tagihan. Nilai yang
- * dikirim ke server tetap apa yang ada di form; server menghitung ulang sendiri
- * dan mengabaikan angka pratinjau.
+ * Ringkasan biaya di bawah reacting dari nilai form. Angka itu HANYA untuk
+ * tampilan — server menghitung ulang sendiri (lihat createCustomOrder), jadi
+ * angka yang tampil tidak pernah dipercaya begitu saja.
  */
 export function CustomOrderForm() {
-  const [state, formAction, pending] = useActionState<OrderFormState, FormData>(
-    createCustomOrder,
-    {},
-  );
-
-  const [itemPrice, setItemPrice] = useState(0);
-  const [quantity, setQuantity] = useState(1);
-  const [shippingFee, setShippingFee] = useState(0);
-  const [dpAmount, setDpAmount] = useState(0);
-
   return (
-    <form action={formAction} className="grid gap-4">
-      <fieldset className="grid gap-3">
-        <legend className="text-sm font-semibold text-slate-900">
-          Data pelanggan
-        </legend>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <TextInput label="Nama pelanggan" name="customerName" required />
-          <TextInput label="No. HP / WhatsApp" name="customerPhone" required />
-        </div>
-        <TextInput label="Alamat lengkap" name="customerAddress" required />
-        <TextInput
-          label="Kota / Kabupaten tujuan"
-          name="destinationCity"
-          required
-          hint="Dipakai untuk mencari tarif ongkir di shipping_rates."
-        />
-      </fieldset>
+    <ZodForm
+      schema={customOrderSchema}
+      action={createCustomOrder}
+      submitLabel="Simpan pesanan kustom"
+      defaultValues={{
+        customerName: "",
+        customerPhone: "",
+        customerAddress: "",
+        destinationCity: "",
+        itemName: "",
+        price: "",
+        quantity: "1",
+        shippingFee: "",
+        dpAmount: "",
+        lengthCm: "",
+        widthCm: "",
+        heightCm: "",
+        woodType: "",
+        finishingType: "",
+        specNotes: "",
+        notes: "",
+      }}
+    >
+      {(ctx) => {
+        const toNumber = (name: string, fallback: number) => {
+          const raw = ctx.watch(name);
+          if (typeof raw !== "string" || !/[0-9]/.test(raw)) return fallback;
+          return Number(raw.replace(/[^0-9.]/g, ""));
+        };
 
-      <fieldset className="grid gap-3">
-        <legend className="text-sm font-semibold text-slate-900">
-          Spesifikasi pesanan kustom
-        </legend>
-        <TextInput
-          label="Nama mebel"
-          name="itemName"
-          required
-          placeholder="Meja makan jati custom 200 cm"
-        />
-        <div className="grid gap-4 sm:grid-cols-3">
-          <TextInput label="Panjang (cm)" name="lengthCm" type="number" />
-          <TextInput label="Lebar (cm)" name="widthCm" type="number" />
-          <TextInput label="Tinggi (cm)" name="heightCm" type="number" />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <TextInput label="Jenis kayu" name="woodType" placeholder="Kayu Jati" />
-          <TextInput
-            label="Finishing"
-            name="finishingType"
-            placeholder="Natural Matte"
-          />
-        </div>
-        <TextInput label="Catatan spesifikasi" name="specNotes" />
+        return (
+          <>
+            <FormSection title="Data pelanggan">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField
+                  ctx={ctx}
+                  label="Nama pelanggan"
+                  name="customerName"
+                  required
+                />
+                <TextField
+                  ctx={ctx}
+                  label="No. HP / WhatsApp"
+                  name="customerPhone"
+                  type="tel"
+                  required
+                />
+              </div>
+              <TextField
+                ctx={ctx}
+                label="Alamat lengkap"
+                name="customerAddress"
+                required
+              />
+              <TextField
+                ctx={ctx}
+                label="Kota / Kabupaten tujuan"
+                name="destinationCity"
+                required
+                hint="Dipakai untuk mencari tarif ongkir di shipping_rates."
+              />
+            </FormSection>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <NumberInput
-            label="Harga satuan (Rp)"
-            name="price"
-            required
-            min={0}
-            onChange={setItemPrice}
-          />
-          <NumberInput
-            label="Jumlah"
-            name="quantity"
-            required
-            min={1}
-            value={quantity}
-            onChange={setQuantity}
-          />
-        </div>
-      </fieldset>
+            <FormSection title="Spesifikasi pesanan kustom">
+              <TextField
+                ctx={ctx}
+                label="Nama mebel"
+                name="itemName"
+                required
+                placeholder="Meja makan jati custom 200 cm"
+              />
+              <div className="grid gap-4 sm:grid-cols-3">
+                <TextField
+                  ctx={ctx}
+                  label="Panjang (cm)"
+                  name="lengthCm"
+                  type="number"
+                  min="1"
+                />
+                <TextField
+                  ctx={ctx}
+                  label="Lebar (cm)"
+                  name="widthCm"
+                  type="number"
+                  min="1"
+                />
+                <TextField
+                  ctx={ctx}
+                  label="Tinggi (cm)"
+                  name="heightCm"
+                  type="number"
+                  min="1"
+                />
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField ctx={ctx} label="Jenis kayu" name="woodType" />
+                <TextField ctx={ctx} label="Finishing" name="finishingType" />
+              </div>
+              <TextAreaField
+                ctx={ctx}
+                label="Catatan spesifikasi"
+                name="specNotes"
+                rows={2}
+              />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField
+                  ctx={ctx}
+                  label="Harga satuan (Rp)"
+                  name="price"
+                  required
+                  placeholder="9500000"
+                  hint="Rupiah penuh, tanpa pemisah ribuan."
+                />
+                <TextField
+                  ctx={ctx}
+                  label="Jumlah"
+                  name="quantity"
+                  type="number"
+                  min="1"
+                  required
+                />
+              </div>
+            </FormSection>
 
-      <fieldset className="grid gap-3">
-        <legend className="text-sm font-semibold text-slate-900">
-          Biaya &amp; DP
-        </legend>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <NumberInput
-            label="Ongkir kargo (Rp)"
-            name="shippingFee"
-            min={0}
-            onChange={setShippingFee}
-          />
-          <NumberInput
-            label="DP yang diterima (Rp)"
-            name="dpAmount"
-            min={0}
-            onChange={setDpAmount}
-          />
-        </div>
+            <FormSection title="Biaya & DP">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <TextField
+                  ctx={ctx}
+                  label="Ongkir kargo (Rp)"
+                  name="shippingFee"
+                  placeholder="450000"
+                />
+                <TextField
+                  ctx={ctx}
+                  label="DP yang diterima (Rp)"
+                  name="dpAmount"
+                  placeholder="4000000"
+                />
+              </div>
 
-        <PaymentBreakdown
-          itemPrice={itemPrice}
-          quantity={quantity}
-          shippingFee={shippingFee}
-          dpAmount={dpAmount}
-          platformFeeRate={PLATFORM_FEE_RATE}
-        />
+              <PaymentBreakdown
+                itemPrice={toNumber("price", 0)}
+                quantity={toNumber("quantity", 1)}
+                shippingFee={toNumber("shippingFee", 0)}
+                dpAmount={toNumber("dpAmount", 0)}
+                platformFeeRate={PLATFORM_FEE_RATE}
+              />
 
-        <TextInput label="Catatan internal" name="notes" />
-      </fieldset>
-
-      {state?.error ? <Alert tone="error">{state.error}</Alert> : null}
-      {state?.message ? <Alert tone="success">{state.message}</Alert> : null}
-
-      <SubmitButton pending={pending}>Simpan pesanan kustom</SubmitButton>
-    </form>
-  );
-}
-
-type FieldProps = {
-  label: string;
-  name: string;
-  required?: boolean;
-  placeholder?: string;
-  hint?: string;
-  type?: string;
-  min?: number;
-  value?: number;
-  onChange?: (value: number) => void;
-};
-
-function TextInput({
-  label,
-  name,
-  required,
-  placeholder,
-  hint,
-  type = "text",
-}: FieldProps) {
-  return (
-    <div className="grid gap-1">
-      <label htmlFor={name} className="text-sm font-medium text-slate-700">
-        {label}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type={type}
-        required={required}
-        placeholder={placeholder}
-        className="w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-slate-900 outline-none focus:border-amber-600 focus:bg-white"
-      />
-      {hint ? <p className="text-xs text-slate-500">{hint}</p> : null}
-    </div>
-  );
-}
-
-function NumberInput({
-  label,
-  name,
-  required,
-  placeholder,
-  min = 0,
-  value,
-  onChange,
-}: FieldProps) {
-  return (
-    <div className="grid gap-1">
-      <label htmlFor={name} className="text-sm font-medium text-slate-700">
-        {label}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type="number"
-        min={min}
-        step="1"
-        required={required}
-        placeholder={placeholder}
-        value={value}
-        onChange={(event) => {
-          const next = Number(event.target.value);
-          onChange?.(Number.isFinite(next) ? next : 0);
-        }}
-        className="w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-slate-900 outline-none focus:border-amber-600 focus:bg-white"
-      />
-    </div>
+              <TextField ctx={ctx} label="Catatan internal" name="notes" />
+            </FormSection>
+          </>
+        );
+      }}
+    </ZodForm>
   );
 }

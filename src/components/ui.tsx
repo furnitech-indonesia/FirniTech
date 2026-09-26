@@ -4,10 +4,19 @@ import type { ReactNode } from "react";
  * Primitif UI bersama untuk form back-office.
  * Sengaja tanpa dependency eksternal: DESIGN.md hanya butuh radius, warna, dan
  * tipografi — menambah library komponen baru belum perlu di fase ini.
+ *
+ * Kolom Input/Textarea/Select menerima `error` untuk pesan per field yang
+ * berasal dari zod (lihat docs/validasi.md).
  */
 
 const INPUT_CLASS =
-  "w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-slate-900 outline-none focus:border-amber-600 focus:bg-white";
+  "w-full rounded-xl border bg-slate-100 px-3 py-2 text-slate-900 outline-none focus:bg-white";
+
+function inputClass(error?: string) {
+  return error
+    ? `${INPUT_CLASS} border-red-400 focus:border-red-500`
+    : `${INPUT_CLASS} border-slate-200 focus:border-amber-600`;
+}
 
 export function Card({
   title,
@@ -48,6 +57,16 @@ export function Card({
   );
 }
 
+/** Pesan error per field, terhubung ke input lewat aria-describedby. */
+function FieldError({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p id={id} role="alert" className="text-xs text-red-600">
+      {message}
+    </p>
+  );
+}
+
 export function Field({
   label,
   name,
@@ -57,7 +76,9 @@ export function Field({
   required,
   step,
   min,
+  max,
   hint,
+  error,
   className,
 }: {
   label: string;
@@ -68,9 +89,12 @@ export function Field({
   required?: boolean;
   step?: string;
   min?: string;
+  max?: string;
   hint?: string;
+  error?: string;
   className?: string;
 }) {
+  const errorId = `${name}-error`;
   return (
     <div className={`grid gap-1 ${className ?? ""}`}>
       <label htmlFor={name} className="text-sm font-medium text-slate-700">
@@ -82,12 +106,19 @@ export function Field({
         type={type}
         step={step}
         min={min}
+        max={max}
         required={required}
         placeholder={placeholder}
         defaultValue={defaultValue}
-        className={INPUT_CLASS}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
+        className={inputClass(error)}
       />
-      {hint ? <p className="text-xs text-slate-500">{hint}</p> : null}
+      {error ? (
+        <FieldError id={errorId} message={error} />
+      ) : hint ? (
+        <p className="text-xs text-slate-500">{hint}</p>
+      ) : null}
     </div>
   );
 }
@@ -99,6 +130,7 @@ export function Textarea({
   rows = 3,
   required,
   placeholder,
+  error,
 }: {
   label: string;
   name: string;
@@ -106,7 +138,9 @@ export function Textarea({
   rows?: number;
   required?: boolean;
   placeholder?: string;
+  error?: string;
 }) {
+  const errorId = `${name}-error`;
   return (
     <div className="grid gap-1">
       <label htmlFor={name} className="text-sm font-medium text-slate-700">
@@ -119,8 +153,11 @@ export function Textarea({
         required={required}
         placeholder={placeholder}
         defaultValue={defaultValue}
-        className={INPUT_CLASS}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
+        className={inputClass(error)}
       />
+      <FieldError id={errorId} message={error} />
     </div>
   );
 }
@@ -131,13 +168,16 @@ export function Select({
   options,
   defaultValue,
   required,
+  error,
 }: {
   label: string;
   name: string;
   options: ReadonlyArray<{ value: string; label: string }>;
   defaultValue?: string;
   required?: boolean;
+  error?: string;
 }) {
+  const errorId = `${name}-error`;
   return (
     <div className="grid gap-1">
       <label htmlFor={name} className="text-sm font-medium text-slate-700">
@@ -148,7 +188,9 @@ export function Select({
         name={name}
         required={required}
         defaultValue={defaultValue}
-        className={INPUT_CLASS}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
+        className={inputClass(error)}
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>
@@ -156,6 +198,7 @@ export function Select({
           </option>
         ))}
       </select>
+      <FieldError id={errorId} message={error} />
     </div>
   );
 }

@@ -7,17 +7,25 @@ import { db } from "@/db";
 import { orderItems, orders, productionProgress, users } from "@/db/schema";
 import type { OrderStatus, ProgressStage } from "@/lib/order-status";
 import {
-  PROGRESS_STAGE_ORDER,
   STAGE_TO_ORDER_STATUS,
   canTransition,
 } from "@/lib/order-status";
 import { PLATFORM_FEE_RATE } from "@/lib/plans";
 import { requireTenantWrite, guard } from "@/lib/auth/guard";
-import { parseInt10, parseRupiah, requiredStr, str } from "@/lib/parse";
+import { parseForm } from "@/lib/schemas/primitives";
+import {
+  addProgressSchema,
+  assignCarpenterSchema,
+  customOrderSchema,
+  recordPaymentSchema,
+  setTrackingSchema,
+  transitionStatusSchema,
+} from "@/lib/schemas/order";
 import { uploadProductImage } from "@/lib/storage";
 
 /**
- * Pesanan: transisi status, penugasan tukang, dan Custom Order Builder.
+ * Pesanan: transisi status, penugasan tukang, Custom Order Builder, pembayaran,
+ * resi, dan progres produksi.
  *
  * Transisi status memakai `canTransition` dari src/lib/order-status.ts — satu
  * sumber kebenaran, bukan daftar if/else yang tersebar.
@@ -50,7 +58,11 @@ const ROLE_ALLOWED_TARGETS: Record<string, readonly OrderStatus[]> = {
   tukang: ["in_production", "quality_control"],
 };
 
-export type OrderFormState = { error?: string; message?: string };
+export type OrderFormState = {
+  error?: string;
+  message?: string;
+  fieldErrors?: Record<string, string>;
+};
 
 /** Kode pesanan unik tanpa sequence: prefix + timestamp base36 + acak. */
 function generateOrderCode(): string {
@@ -67,15 +79,14 @@ export async function createCustomOrder(
     async () => {
       const actor = await requireTenantWrite(WRITE_ROLES);
 
-      const itemName = requiredStr(formData, "itemName");
-      const price = parseRupiah(formData.get("price"));
-      const quantity = parseInt10(formData.get("quantity"), { min: 1, fallback: 1 });
-      const shippingFee = parseRupiah(formData.get("shippingFee"));
+      const parsed = parseForm(customOrderSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const data = parsed.data;
 
-      if (price <= 0) return { error: "Harga item harus lebih dari nol." };
-
-      const itemsSubtotal = price * quantity;
-      const totalAmount = itemsSubtotal + shippingFee;
+      const itemsSubtotal = data.price * data.quantity;
+      const totalAmount = itemsSubtotal + data.shippingFee;
 
       // Fee platform 1.5% dari total all-in. Untuk pesanan manual (bayar di
       // luar Midtrans) MDR dianggap nol; MDR baru diisi saat pembayaran lewat
@@ -84,20 +95,19 @@ export async function createCustomOrder(
       const midtransMdrFee = 0;
       const netTenantAmount = totalAmount - midtransMdrFee - platformServiceFee;
 
-      const dpAmount = parseRupiah(formData.get("dpAmount"));
-      if (dpAmount > totalAmount) {
-        return { error: "DP tidak boleh melebihi total pesanan." };
+      if (data.dpAmount > totalAmount) {
+        return {
+          error: "DP tidak boleh melebihi total pesanan.",
+          fieldErrors: { dpAmount: "DP lebih besar dari total pesanan." },
+        };
       }
+
       const paymentStatus =
-        dpAmount === 0
+        data.dpAmount === 0
           ? "unpaid"
-          : dpAmount >= totalAmount
+          : data.dpAmount >= totalAmount
             ? "fully_paid"
             : "dp_paid";
-
-      const lengthCm = parseInt10(formData.get("lengthCm"), { min: 0 });
-      const widthCm = parseInt10(formData.get("widthCm"), { min: 0 });
-      const heightCm = parseInt10(formData.get("heightCm"), { min: 0 });
 
       const created = await db.transaction(async (tx) => {
         const [order] = await tx
@@ -106,39 +116,37 @@ export async function createCustomOrder(
             orderCode: generateOrderCode(),
             tenantId: actor.tenantId,
             source: "manual",
-            customerName: requiredStr(formData, "customerName"),
-            customerPhone: requiredStr(formData, "customerPhone"),
-            customerAddress: requiredStr(formData, "customerAddress"),
-            destinationCity: requiredStr(formData, "destinationCity"),
+            customerName: data.customerName,
+            customerPhone: data.customerPhone,
+            customerAddress: data.customerAddress,
+            destinationCity: data.destinationCity,
             itemsSubtotal,
-            shippingFee,
+            shippingFee: data.shippingFee,
             totalAmount,
             midtransMdrFee,
             platformServiceFee,
             netTenantAmount,
-            dpAmount,
+            dpAmount: data.dpAmount,
             paymentStatus,
             orderStatus: "pending_dp",
-            notes: str(formData, "notes") || null,
+            notes: data.notes,
           })
           .returning();
 
         await tx.insert(orderItems).values({
           orderId: order!.id,
           // productId sengaja null: pesanan ini di luar katalog standar.
-          productName: itemName,
+          productName: data.itemName,
           customSpecs: {
-            ...(lengthCm ? { lengthCm } : {}),
-            ...(widthCm ? { widthCm } : {}),
-            ...(heightCm ? { heightCm } : {}),
-            ...(str(formData, "woodType") ? { woodType: str(formData, "woodType") } : {}),
-            ...(str(formData, "finishingType")
-              ? { finishingType: str(formData, "finishingType") }
-              : {}),
-            ...(str(formData, "specNotes") ? { notes: str(formData, "specNotes") } : {}),
+            ...(data.lengthCm ? { lengthCm: data.lengthCm } : {}),
+            ...(data.widthCm ? { widthCm: data.widthCm } : {}),
+            ...(data.heightCm ? { heightCm: data.heightCm } : {}),
+            ...(data.woodType ? { woodType: data.woodType } : {}),
+            ...(data.finishingType ? { finishingType: data.finishingType } : {}),
+            ...(data.specNotes ? { notes: data.specNotes } : {}),
           },
-          price,
-          quantity,
+          price: data.price,
+          quantity: data.quantity,
         });
 
         return order!;
@@ -158,16 +166,23 @@ export async function transitionOrderStatus(
 ): Promise<OrderFormState> {
   return guard<OrderFormState>(
     async () => {
-      const actor = await requireTenantWrite(["owner", "admin_penjualan", "tukang"]);
-      const orderId = requiredStr(formData, "orderId");
-      const target = requiredStr(formData, "target") as OrderStatus;
+      const actor = await requireTenantWrite([
+        "owner",
+        "admin_penjualan",
+        "tukang",
+      ]);
+
+      const parsed = parseForm(transitionStatusSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const { orderId, target } = parsed.data;
 
       const [order] = await db
         .select({
           id: orders.id,
           orderCode: orders.orderCode,
           orderStatus: orders.orderStatus,
-          tenantId: orders.tenantId,
         })
         .from(orders)
         .where(
@@ -208,8 +223,12 @@ export async function assignCarpenter(
   return guard<OrderFormState>(
     async () => {
       const actor = await requireTenantWrite(WRITE_ROLES);
-      const orderId = requiredStr(formData, "orderId");
-      const carpenterId = str(formData, "carpenterId");
+
+      const parsed = parseForm(assignCarpenterSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const { orderId, carpenterId } = parsed.data;
 
       const [order] = await db
         .select({ id: orders.id })
@@ -229,7 +248,7 @@ export async function assignCarpenter(
         return { message: "Tukang dilepas dari pesanan." };
       }
 
-      // Tukang yang ditugaskan WAJIB dari tenant yang sama.
+      // Tukang yang ditugaskan WAJIB dari tenant yang sama dan berstatus aktif.
       const [carpenter] = await db
         .select({ id: users.id })
         .from(users)
@@ -263,8 +282,12 @@ export async function recordPayment(
   return guard<OrderFormState>(
     async () => {
       const actor = await requireTenantWrite(WRITE_ROLES);
-      const orderId = requiredStr(formData, "orderId");
-      const mode = requiredStr(formData, "mode"); // "dp" | "lunas"
+
+      const parsed = parseForm(recordPaymentSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const { orderId, mode, amount } = parsed.data;
 
       const [order] = await db
         .select({
@@ -288,10 +311,15 @@ export async function recordPayment(
       const dp = Number(order.dpAmount);
 
       // Pelunasan = total − DP yang sudah tercatat, bukan total penuh.
-      const amount = mode === "lunas" ? total - dp : parseRupiah(formData.get("amount"));
-      if (amount <= 0) return { error: "Nominal tidak valid." };
+      const value = mode === "lunas" ? total - dp : amount;
+      if (value <= 0) {
+        return {
+          error: "Nominal tidak valid.",
+          fieldErrors: { amount: "Nominal harus lebih dari nol." },
+        };
+      }
 
-      const nextDp = dp + amount;
+      const nextDp = dp + value;
       const nextStatus = nextDp >= total ? "fully_paid" : "dp_paid";
 
       await db
@@ -323,7 +351,12 @@ export async function setTracking(
   return guard<OrderFormState>(
     async () => {
       const actor = await requireTenantWrite(WRITE_ROLES);
-      const orderId = requiredStr(formData, "orderId");
+
+      const parsed = parseForm(setTrackingSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const { orderId, cargoName, trackingNumber } = parsed.data;
 
       const [order] = await db
         .select({ id: orders.id, orderStatus: orders.orderStatus })
@@ -335,16 +368,17 @@ export async function setTracking(
       if (!order) return { error: "Pesanan tidak ditemukan." };
 
       // Resi hanya relevan setelah barang siap dikirim.
-      if (!(["ready_to_ship", "shipped", "completed"] as string[]).includes(order.orderStatus)) {
+      if (
+        !(["ready_to_ship", "shipped", "completed"] as string[]).includes(
+          order.orderStatus,
+        )
+      ) {
         return { error: "Resi hanya bisa diisi saat pesanan siap dikirim." };
       }
 
       await db
         .update(orders)
-        .set({
-          cargoName: str(formData, "cargoName") || null,
-          trackingNumber: str(formData, "trackingNumber") || null,
-        })
+        .set({ cargoName, trackingNumber })
         .where(eq(orders.id, orderId));
 
       revalidatePath(`/dashboard/pesanan/${orderId}`);
@@ -365,13 +399,12 @@ export async function addProductionProgress(
         "admin_penjualan",
         "tukang",
       ]);
-      const orderId = requiredStr(formData, "orderId");
-      const stage = requiredStr(formData, "stage") as ProgressStage;
-      const file = formData.get("photo");
 
-      if (!(PROGRESS_STAGE_ORDER as readonly string[]).includes(stage)) {
-        return { error: "Tahap produksi tidak valid." };
+      const parsed = parseForm(addProgressSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
       }
+      const { orderId, stage, notes } = parsed.data;
 
       const [order] = await db
         .select({
@@ -386,7 +419,9 @@ export async function addProductionProgress(
         .limit(1);
       if (!order) return { error: "Pesanan tidak ditemukan." };
 
-      let photoUrl = str(formData, "photoUrl");
+      // Foto wajib; MIME & ukuran divalidasi di src/lib/storage.ts.
+      const file = formData.get("photo");
+      let photoUrl = parsed.data.photoUrl ?? "";
       if (file instanceof File && file.size > 0) {
         photoUrl = await uploadProductImage({
           tenantId: actor.tenantId,
@@ -394,20 +429,25 @@ export async function addProductionProgress(
           file,
         });
       }
-      if (!photoUrl) return { error: "Foto progres wajib diunggah." };
+      if (!photoUrl) {
+        return {
+          error: "Foto progres wajib diunggah.",
+          fieldErrors: { photo: "Pilih foto bukti." },
+        };
+      }
 
       await db.insert(productionProgress).values({
         orderId,
         carpenterId: actor.role === "tukang" ? actor.userId : null,
         carpenterName: actor.fullName,
-        stage,
+        stage: stage as ProgressStage,
         photoUrl,
-        notes: str(formData, "notes") || null,
+        notes,
       });
 
       // Status pesanan mengikuti tahap yang baru diunggah. Aturan transisinya
       // tetap milik src/lib/order-status.ts, bukan diulang di sini.
-      const target = STAGE_TO_ORDER_STATUS[stage];
+      const target = STAGE_TO_ORDER_STATUS[stage as ProgressStage];
       if (canTransition(order.orderStatus as OrderStatus, target)) {
         await db
           .update(orders)

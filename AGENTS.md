@@ -53,6 +53,7 @@ npm run db:test-rls   # 8 uji isolasi tenant dgn JWT pengguna sungguhan
 npm run db:studio
 npm run db:seed       # idempoten
 npm run test:auth     # 11 uji auth & RBAC via HTTP (butuh server jalan)
+npm run test:schemas  # 14 uji skema validasi (guard uang, pesan, id)
 npm run test:sprint3  # 16 uji halaman & pembatasan role Sprint 3
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
 ```
@@ -128,6 +129,35 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   men-olah form yang diinside.
 - Navigasi per peran di `src/lib/nav.ts` (tukang hanya melihat antrean
   produksi). Menyembunyikan menu BUKAN otorisasi — guard tetap berlaku.
+
+## Validasi form (zod + react-hook-form)
+
+- Satu skema dipakai DUA kali: browser (react-hook-form) untuk umpan balik
+  instan, lalu Server Action lagi sebagai lapis kedua. Dokumentasi lengkap di
+  `docs/validasi.md`.
+- **Otorisasi selalu lebih dulu, baru validasi.** Kalau validasi didahulukan,
+  server membocorkan bentuk data yang diterima ke pemanggil yang tidak berhak.
+- **Dua skema per form**: `*FormSchema` (field yang diketik pengguna) dan
+  skema penuh yang menambahkan `id` milik server. Skema form TIDAK boleh
+  memuat id — nilainya disuntikkan server sebagai input tersembunyi.
+- **Skema zod TIDAK bisa dikirim dari Server Component ke Client Component**
+  (tidak serializable). Karena itu `ZodForm` menerima skema sebagai impor di
+  dalam file Client Component, bukan sebagai prop. Kalau sebuah form
+  "dilewatkan" skema lewat prop, itu salah arsitektur.
+- **Transformasi angka wajib ber-guard.** `Number("abc".replace(/\D/g,""))` → 0,
+  jadi input buruk diam-diam jadi valid. `rupiah` menolak string tanpa digit
+  dan tanda minus di depan. `decimalInput` menerima "+10" (form penyesuaian
+  stok menyuruh mengetik begitu) tapi menolak "+ 10" dengan spasi.
+- **Pesan zod bawaan berbahasa Inggris** ("Invalid input: expected string…")
+  diterjemahkan di `parseForm()`. Pesan itu tidak boleh sampai tampil ke
+  pengguna — ada test-nya.
+- **Input file tidak didaftarkan ke RHF.** RHF tidak mengurus File; nilainya
+  diambil dari `new FormData(formElement)` lalu divalidasi di
+  `src/lib/storage.ts` (MIME + ukuran).
+- `ActionForm` (useActionState) hanya untuk aksi tanpa input: ubah status,
+  tandai dibaca, hapus. Jangan dipakai untuk form berisi input.
+- `src/lib/parse.ts` (parsing FormData manual) sudah superseded oleh skema.
+  Jangan menambah fungsi parsing baru di sana.
 
 ## Auth & RBAC
 

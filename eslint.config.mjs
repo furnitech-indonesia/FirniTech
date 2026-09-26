@@ -19,6 +19,8 @@ const eslintConfig = [
       "node_modules/**",
       "drizzle/**",
       "next-env.d.ts",
+      // Konten skill pihak ketiga (dipasang via uipro init) — bukan kode kita.
+      ".opencode/**",
     ],
   },
 ];

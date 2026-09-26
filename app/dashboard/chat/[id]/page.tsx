@@ -8,13 +8,13 @@ import { requireTenantWrite } from "@/lib/auth/guard";
 import {
   listMessages,
   markConversationRead,
-  replyToConversation,
   setConversationStatus,
 } from "@/lib/actions/chat";
+import { ChatReplyForm } from "@/components/chat-reply-form";
 import { formatDateID } from "@/lib/format";
 import { CONVERSATION_STATUS_LABELS } from "@/lib/labels";
 import { ActionForm } from "@/components/action-form";
-import { Badge, Card, Select, Textarea } from "@/components/ui";
+import { Badge, Card, Select } from "@/components/ui";
 
 export default async function ConversationPage({
   params,
@@ -93,13 +93,7 @@ export default async function ConversationPage({
 
       <div className="mt-6 grid gap-4">
         <Card title="Balas">
-          <ActionForm
-            action={replyToConversation}
-            hidden={{ conversationId: id }}
-            submitLabel="Kirim balasan"
-          >
-            <Textarea label="Pesan" name="body" required rows={3} />
-          </ActionForm>
+          <ChatReplyForm conversationId={id} />
         </Card>
 
         <Card title="Tindakan">

@@ -5,16 +5,13 @@ import { asc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { productVariants, products } from "@/db/schema";
 import { requireTenantWrite } from "@/lib/auth/guard";
-import {
-  createVariant,
-  deleteProduct,
-  deleteVariant,
-  updateProduct,
-} from "@/lib/actions/products";
+import { deleteProduct, deleteVariant } from "@/lib/actions/products";
+import { ProductForm } from "@/components/product-form";
+import { VariantForm } from "@/components/variant-form";
 import { createSignedUrls } from "@/lib/storage";
 import { formatRupiah } from "@/lib/format";
 import { ActionForm } from "@/components/action-form";
-import { Card, Field, Textarea } from "@/components/ui";
+import { Card } from "@/components/ui";
 
 /**
  * Detail produk: ubah data dasar, kelola variasi, dan hapus.
@@ -88,64 +85,22 @@ export default async function ProductDetailPage({
       <div className="grid gap-6">
         {canEdit ? (
           <Card title="Ubah data produk" description="Harga tetap dalam rupiah penuh.">
-            <ActionForm
-              action={updateProduct}
-              hidden={{ id: product.id }}
-              submitLabel="Simpan perubahan"
-            >
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  label="Nama produk"
-                  name="name"
-                  defaultValue={product.name}
-                  required
-                  className="sm:col-span-2"
-                />
-                <Field
-                  label="Slug"
-                  name="slug"
-                  defaultValue={product.slug}
-                  required
-                  className="sm:col-span-2"
-                />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Field label="Panjang" name="lengthCm" type="number" min="1" defaultValue={product.lengthCm} required />
-                <Field label="Lebar" name="widthCm" type="number" min="1" defaultValue={product.widthCm} required />
-                <Field label="Tinggi" name="heightCm" type="number" min="1" defaultValue={product.heightCm} required />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Jenis kayu" name="woodType" defaultValue={product.woodType} required />
-                <Field
-                  label="Finishing"
-                  name="finishingType"
-                  defaultValue={product.finishingType}
-                  required
-                />
-              </div>
-              <Field
-                label="Harga dasar (Rp)"
-                name="basePrice"
-                type="number"
-                min="0"
-                defaultValue={Number(product.basePrice)}
-                required
-              />
-              <Textarea
-                label="Deskripsi"
-                name="description"
-                defaultValue={product.description ?? ""}
-              />
-              <label className="flex items-center gap-2 text-sm text-slate-700">
-                <input
-                  type="checkbox"
-                  name="isPublished"
-                  defaultChecked={product.isPublished}
-                  className="h-4 w-4 rounded border-slate-300"
-                />
-                Tayangkan di storefront
-              </label>
-            </ActionForm>
+            <ProductForm
+              mode="edit"
+              product={{
+                id: product.id,
+                name: product.name,
+                slug: product.slug,
+                description: product.description,
+                lengthCm: product.lengthCm,
+                widthCm: product.widthCm,
+                heightCm: product.heightCm,
+                woodType: product.woodType,
+                finishingType: product.finishingType,
+                basePrice: Number(product.basePrice),
+                isPublished: product.isPublished,
+              }}
+            />
           </Card>
         ) : (
           <Card title="Data produk">
@@ -205,32 +160,7 @@ export default async function ProductDetailPage({
               </ul>
             )}
 
-            <ActionForm
-              action={createVariant}
-              hidden={{ productId: product.id }}
-              submitLabel="Tambah variasi"
-            >
-              <Field label="Nama variasi" name="name" required placeholder="Ukuran Jumbo" />
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Field label="Panjang (cm)" name="lengthCm" type="number" min="0" />
-                <Field label="Lebar (cm)" name="widthCm" type="number" min="0" />
-                <Field label="Tinggi (cm)" name="heightCm" type="number" min="0" />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Jenis kayu" name="woodType" />
-                <Field label="Finishing" name="finishingType" />
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field
-                  label="Harga (Rp)"
-                  name="price"
-                  type="number"
-                  min="0"
-                  hint="Kosongkan untuk memakai harga dasar."
-                />
-                <Field label="SKU" name="sku" />
-              </div>
-            </ActionForm>
+            <VariantForm productId={product.id} />
           </Card>
         ) : null}
 

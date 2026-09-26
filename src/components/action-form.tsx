@@ -4,19 +4,22 @@ import { useActionState, type ReactNode } from "react";
 
 import { Alert, SubmitButton } from "@/components/ui";
 
-export type FormState = { error?: string; message?: string };
+export type FormState = {
+  error?: string;
+  message?: string;
+  fieldErrors?: Record<string, string>;
+};
 
 /**
- * Pembungkus form untuk Server Action.
+ * Form sederhana untuk aksi tanpa input: tombol ubah status, tandai dibaca,
+ * hapus, tugaskan. Tidak ada input yang perlu divalidasi di browser.
  *
- * `useActionState` adalah hook, jadi komponen ini harus "use client";
- * aksinya tetap Server Action yang didefinisikan di server. `children`
- * berisi field yang dirender di server, sehingga tidak ada duplikasi antara
- * nilai default dan nama field.
+ * Untuk form dengan input, JANGAN memakai ini — pakai `ZodForm`
+ * (src/components/zod-form.tsx) yang memvalidasi per field di browser dengan
+ * skema zod yang sama seperti di server.
  *
- * Field tersembunyi (mis. id) lewat prop `hidden`. Nilainya WAJIB di-hardcode
- * dari server — jangan pernah meneruskan nilai yang berasal dari klien ke sini
- * tanpa memverifikasinya lebih dulu.
+ * Field tersembunyi lewat prop `hidden`. Nilainya WAJIB di-hardcode dari
+ * server; jangan pernah meneruskan nilai dari klien tanpa memverifikasi.
  */
 export function ActionForm({
   action,
@@ -26,7 +29,6 @@ export function ActionForm({
   tone = "primary",
   encType,
   className,
-  onSuccess,
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   children?: ReactNode;
@@ -35,14 +37,9 @@ export function ActionForm({
   tone?: "primary" | "ghost" | "danger";
   encType?: "multipart/form-data";
   className?: string;
-  onSuccess?: (state: FormState) => void;
 }) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(
-    async (prev, formData) => {
-      const next = await action(prev, formData);
-      if (!next.error) onSuccess?.(next);
-      return next;
-    },
+    action,
     {},
   );
 

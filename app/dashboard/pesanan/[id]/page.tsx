@@ -11,12 +11,12 @@ import {
 } from "@/db/schema";
 import { requireTenantWrite } from "@/lib/auth/guard";
 import {
-  addProductionProgress,
   assignCarpenter,
   recordPayment,
   setTracking,
   transitionOrderStatus,
 } from "@/lib/actions/orders";
+import { ProgressForm } from "@/components/progress-form";
 import { formatDateID, formatRupiah } from "@/lib/format";
 import { createSignedUrls } from "@/lib/storage";
 import { ALLOWED_TRANSITIONS, PROGRESS_STAGE_ORDER } from "@/lib/order-status";
@@ -28,7 +28,7 @@ import {
   type OrderStatus,
 } from "@/lib/labels";
 import { ActionForm } from "@/components/action-form";
-import { Badge, Card, Field, Select, Textarea } from "@/components/ui";
+import { Badge, Card, Field, Select } from "@/components/ui";
 
 export default async function OrderDetailPage({
   params,
@@ -194,32 +194,13 @@ export default async function OrderDetailPage({
               </ol>
             )}
 
-            <ActionForm
-              action={addProductionProgress}
-              hidden={{ orderId: order.id }}
-              submitLabel="Simpan progres"
-              encType="multipart/form-data"
-            >
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Select
-                  label="Tahap"
-                  name="stage"
-                  options={PROGRESS_STAGE_ORDER.map((stage) => ({
-                    value: stage,
-                    label: PROGRESS_STAGE_LABELS[stage],
-                  }))}
-                  required
-                />
-                <Field
-                  label="Foto bukti"
-                  name="photo"
-                  type="file"
-                  required
-                  hint="JPEG/PNG/WebP/AVIF, maksimal 5 MB."
-                />
-              </div>
-              <Textarea label="Catatan" name="notes" rows={2} />
-            </ActionForm>
+            <ProgressForm
+              orderId={order.id}
+              stageOptions={PROGRESS_STAGE_ORDER.map((stage) => ({
+                value: stage,
+                label: PROGRESS_STAGE_LABELS[stage],
+              }))}
+            />
           </Card>
         </div>
 

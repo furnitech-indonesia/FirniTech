@@ -6,28 +6,30 @@ import { and, eq, lte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { materialAdjustments, materials } from "@/db/schema";
 import { requireTenantWrite, guard } from "@/lib/auth/guard";
-import { parseDecimal, requiredStr, str } from "@/lib/parse";
+import { parseForm } from "@/lib/schemas/primitives";
+import {
+  adjustStockSchema,
+  createMaterialSchema,
+  materialIdSchema,
+  updateMaterialSchema,
+} from "@/lib/schemas/material";
 
 /**
  * Inventaris bahan baku (ROADMAP Sprint 3) + Low Stock Alert.
  *
  * Aturan stok: kolom `materials.quantity` HANYA boleh berubah lewat penyesuaian
- * yang tercatat di `material_adjustments`. Penambahan/pengurangan langsung
- * tanpa jejak tidak diizinkan di sini — kalau ada, riwayatnya tidak bisa
+ * yang tercatat di `material_adjustments`. Perubahan langsung tanpa jejak
+ * tidak diizinkan di sini — kalau ada, riwayatnya tidak bisa
  * dipertanggungjawabkan saat stock opname.
  */
 
 const WRITE_ROLES = ["owner", "admin_penjualan"] as const;
-const REASONS = [
-  "pembelian",
-  "pemakaian",
-  "rusak",
-  "koreksi",
-  "retur",
-] as const;
-type Reason = (typeof REASONS)[number];
 
-export type MaterialFormState = { error?: string; message?: string };
+export type MaterialFormState = {
+  error?: string;
+  message?: string;
+  fieldErrors?: Record<string, string>;
+};
 
 export async function createMaterial(
   _prev: MaterialFormState,
@@ -37,28 +39,31 @@ export async function createMaterial(
     async () => {
       const actor = await requireTenantWrite(WRITE_ROLES);
 
-      const name = requiredStr(formData, "name");
-      const initialQty = parseDecimal(formData.get("quantity"), 0);
+      const parsed = parseForm(createMaterialSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const data = parsed.data;
 
       const [created] = await db
         .insert(materials)
         .values({
           tenantId: actor.tenantId,
-          name,
-          category: requiredStr(formData, "category"),
-          unit: requiredStr(formData, "unit"),
-          // Kolom numeric di Drizzle bertipe string; kirim sebagai teks.
-          minStockAlert: String(parseDecimal(formData.get("minStockAlert"), 5)),
-          quantity: String(initialQty),
+          name: data.name,
+          category: data.category,
+          unit: data.unit,
+          // Kolom numeric di Drizzle bertipe string.
+          minStockAlert: String(data.minStockAlert),
+          quantity: String(data.quantity),
         })
         .returning({ id: materials.id });
 
       // Stok awal dicatat sebagai penyesuaian agar quantity selalu punya jejak.
-      if (initialQty !== 0) {
+      if (data.quantity !== 0) {
         await db.insert(materialAdjustments).values({
           tenantId: actor.tenantId,
           materialId: created!.id,
-          delta: String(initialQty),
+          delta: String(data.quantity),
           reason: "pembelian",
           note: "Stok awal saat bahan dibuat",
           createdByUserId: actor.userId,
@@ -66,7 +71,7 @@ export async function createMaterial(
       }
 
       revalidatePath("/dashboard/materials");
-      return { message: `Bahan "${name}" ditambahkan.` };
+      return { message: `Bahan "${data.name}" ditambahkan.` };
     },
     (error) => ({ error }),
   );
@@ -79,7 +84,12 @@ export async function updateMaterial(
   return guard<MaterialFormState>(
     async () => {
       const actor = await requireTenantWrite(WRITE_ROLES);
-      const id = requiredStr(formData, "id");
+
+      const parsed = parseForm(updateMaterialSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const { id, ...data } = parsed.data;
 
       const [owned] = await db
         .select({ id: materials.id })
@@ -93,10 +103,10 @@ export async function updateMaterial(
       await db
         .update(materials)
         .set({
-          name: requiredStr(formData, "name"),
-          category: requiredStr(formData, "category"),
-          unit: requiredStr(formData, "unit"),
-          minStockAlert: String(parseDecimal(formData.get("minStockAlert"), 5)),
+          name: data.name,
+          category: data.category,
+          unit: data.unit,
+          minStockAlert: String(data.minStockAlert),
         })
         .where(eq(materials.id, id));
 
@@ -118,12 +128,12 @@ export async function adjustStock(
   return guard<MaterialFormState>(
     async () => {
       const actor = await requireTenantWrite(WRITE_ROLES);
-      const materialId = requiredStr(formData, "materialId");
-      const reasonRaw = requiredStr(formData, "reason") as Reason;
 
-      if (!REASONS.includes(reasonRaw)) {
-        return { error: "Alasan penyesuaian tidak valid." };
+      const parsed = parseForm(adjustStockSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
       }
+      const { materialId, delta, reason, note } = parsed.data;
 
       const [material] = await db
         .select({
@@ -142,17 +152,12 @@ export async function adjustStock(
 
       if (!material) return { error: "Bahan tidak ditemukan." };
 
-      // Stok masuk ("+5") dan stok keluar ("-2") memakai satu kolom agar form
-      // tetap sederhana.
-      const raw = str(formData, "delta");
-      const delta = parseDecimal(raw.startsWith("+") ? raw.slice(1) : raw, 0);
-      if (delta === 0) return { error: "Jumlah perubahan tidak boleh nol." };
-
       const current = Number(material.quantity);
       const next = current + delta;
       if (next < 0) {
         return {
           error: `Stok tidak boleh minus. Saat ini ${current} ${material.unit}.`,
+          fieldErrors: { delta: "Stok akan menjadi negatif." },
         };
       }
 
@@ -166,8 +171,8 @@ export async function adjustStock(
           tenantId: actor.tenantId,
           materialId,
           delta: String(delta),
-          reason: reasonRaw,
-          note: str(formData, "note") || null,
+          reason,
+          note,
           createdByUserId: actor.userId,
         });
       });
@@ -186,12 +191,19 @@ export async function deleteMaterial(
   return guard<MaterialFormState>(
     async () => {
       const actor = await requireTenantWrite(["owner"]);
-      const id = requiredStr(formData, "id");
+
+      const parsed = parseForm(materialIdSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
 
       const deleted = await db
         .delete(materials)
         .where(
-          and(eq(materials.id, id), eq(materials.tenantId, actor.tenantId)),
+          and(
+            eq(materials.id, parsed.data.id),
+            eq(materials.tenantId, actor.tenantId),
+          ),
         )
         .returning({ id: materials.id });
 
@@ -217,10 +229,7 @@ export async function getLowStockMaterials(tenantId: string) {
     .where(
       and(
         eq(materials.tenantId, tenantId),
-        lte(
-          sql`${materials.quantity}`,
-          sql`${materials.minStockAlert}`,
-        ),
+        lte(sql`${materials.quantity}`, sql`${materials.minStockAlert}`),
       ),
     );
 }

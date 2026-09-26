@@ -1,26 +1,14 @@
-import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { materialAdjustments, materials } from "@/db/schema";
-import { requireTenantWrite } from "@/lib/auth/guard";
-import {
-  adjustStock,
-  createMaterial,
-  deleteMaterial,
-  updateMaterial,
-} from "@/lib/actions/materials";
-import { formatDateID } from "@/lib/format";
 import { ActionForm } from "@/components/action-form";
-import { Badge, Card, Field, Select } from "@/components/ui";
-
-const REASON_OPTIONS = [
-  { value: "pembelian", label: "Pembelian (stok masuk)" },
-  { value: "pemakaian", label: "Pemakaian (stok keluar)" },
-  { value: "rusak", label: "Rusak / cacat" },
-  { value: "koreksi", label: "Koreksi hasil hitung fisik" },
-  { value: "retur", label: "Retur pelanggan" },
-];
+import { AdjustStockForm, CreateMaterialForm } from "@/components/material-forms";
+import { EditMaterialForm } from "@/components/edit-material-form";
+import { Badge, Card } from "@/components/ui";
+import { requireTenantWrite } from "@/lib/auth/guard";
+import { deleteMaterial } from "@/lib/actions/materials";
+import { formatDateID } from "@/lib/format";
 
 /** Inventaris bahan baku + Low Stock Alert (ROADMAP Sprint 3). */
 export default async function MaterialsPage() {
@@ -111,96 +99,43 @@ export default async function MaterialsPage() {
                     ) : (
                       <Badge tone="settled">aman</Badge>
                     )}
-                    {canEdit ? (
-                      <Link
-                        href={`/dashboard/materials#bahan-${material.id}`}
-                        className="rounded-xl border border-slate-200 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
-                      >
-                        Ubah
-                      </Link>
-                    ) : null}
                   </div>
                 </div>
 
                 {canEdit ? (
                   <div className="grid gap-4 border-t border-slate-100 p-4 lg:grid-cols-2">
-                    <ActionForm
-                      action={adjustStock}
-                      hidden={{ materialId: material.id }}
-                      submitLabel="Simpan penyesuaian"
-                    >
+                    <div className="grid gap-3">
                       <p className="text-sm font-medium text-slate-700">
                         Penyesuaian stok
                       </p>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <Field
-                          label="Jumlah"
-                          name="delta"
-                          type="number"
-                          step="0.001"
-                          required
-                          placeholder="+10 atau -2"
-                          hint="Gunakan tanda plus untuk stok masuk."
-                        />
-                        <Select
-                          label="Alasan"
-                          name="reason"
-                          options={REASON_OPTIONS}
-                          required
-                        />
-                      </div>
-                      <Field label="Catatan" name="note" />
-                    </ActionForm>
+                      <AdjustStockForm materialId={material.id} />
+                    </div>
 
-                    <ActionForm
-                      action={updateMaterial}
-                      hidden={{ id: material.id }}
-                      submitLabel="Simpan data bahan"
-                    >
-                      <div id={`bahan-${material.id}`} />
+                    <div className="grid gap-3">
                       <p className="text-sm font-medium text-slate-700">
                         Data bahan
                       </p>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <Field
-                          label="Nama"
-                          name="name"
-                          defaultValue={material.name}
-                          required
-                        />
-                        <Field
-                          label="Kategori"
-                          name="category"
-                          defaultValue={material.category}
-                          required
-                        />
-                        <Field
-                          label="Satuan"
-                          name="unit"
-                          defaultValue={material.unit}
-                          required
-                        />
-                        <Field
-                          label="Ambang minimum"
-                          name="minStockAlert"
-                          type="number"
-                          step="0.001"
-                          defaultValue={min}
-                          required
-                        />
-                      </div>
-                    </ActionForm>
+                      <EditMaterialForm
+                        material={{
+                          id: material.id,
+                          name: material.name,
+                          category: material.category,
+                          unit: material.unit,
+                          minStockAlert: String(min),
+                        }}
+                      />
+                    </div>
 
                     {isOwner ? (
-                      // Form hapus HARUS di luar form update: HTML tidak
-                      // mengizinkan <form> bersarang dan browser akan
-                      // men-olah formnya sendiri.
+                      // Form hapus berada di luar dua form di atas: HTML
+                      // tidak mengizinkan <form> bersarang, dan browser akan
+                      // merusak form yang ada di dalamnya.
                       <ActionForm
                         action={deleteMaterial}
                         hidden={{ id: material.id }}
                         submitLabel="Hapus bahan"
                         tone="danger"
-                        className="mt-4 border-t border-slate-100 pt-4"
+                        className="border-t border-slate-100 pt-4 lg:col-span-2"
                       >
                         <p className="text-sm text-slate-700">
                           Menghapus bahan juga menghapus riwayat penyesuaiannya.
@@ -216,32 +151,7 @@ export default async function MaterialsPage() {
 
         {canEdit ? (
           <Card title="Tambah bahan baku">
-            <ActionForm action={createMaterial} submitLabel="Tambah bahan">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Nama bahan" name="name" required placeholder="Papan Kayu Jati 200x20" />
-                <Field
-                  label="Kategori"
-                  name="category"
-                  required
-                  placeholder="Kayu / Finishing / Hardware / Busa"
-                />
-                <Field label="Satuan" name="unit" required placeholder="m3, Liter, Pcs" />
-                <Field
-                  label="Stok awal"
-                  name="quantity"
-                  type="number"
-                  step="0.001"
-                  defaultValue={0}
-                />
-                <Field
-                  label="Ambang minimum"
-                  name="minStockAlert"
-                  type="number"
-                  step="0.001"
-                  defaultValue={5}
-                />
-              </div>
-            </ActionForm>
+            <CreateMaterialForm />
           </Card>
         ) : null}
 
@@ -255,7 +165,9 @@ export default async function MaterialsPage() {
                     {Number(a.delta) > 0 ? "+" : ""}
                     {a.delta} ({a.reason})
                   </span>
-                  <span className="text-slate-500">{formatDateID(a.createdAt)}</span>
+                  <span className="text-slate-500">
+                    {formatDateID(a.createdAt)}
+                  </span>
                 </li>
               ))}
             </ul>
