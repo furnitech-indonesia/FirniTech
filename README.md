@@ -43,7 +43,8 @@ npm run db:verify    # cek tabel, RLS, trigger, kolom uang, isolasi anon
 npm run db:test-rls  # uji isolasi tenant dgn JWT pengguna sungguhan
 
 # butuh server jalan: npm run build && npm run start
-npm run test:auth   # 11 uji auth & RBAC (login, 403, redirect per role)
+npm run test:auth    # 11 uji auth & RBAC (login, 403, redirect per role)
+npm run test:sprint3 # 16 uji halaman back-office & pembatasan role
 ```
 
 Urutannya: `lint → typecheck → build`, lalu `db:verify` bila ada perubahan
@@ -57,7 +58,8 @@ npm run db:generate   # buat SQL migration dari src/db/schema
 npm run db:migrate    # terapkan (wajib lewat DIRECT_URL, port 5432)
 npm run db:apply      # sama seperti migrate, tapi menampilkan error SQL apa adanya
 npm run db:studio     # inspeksi visual
-npm run db:seed       # tenant + produk + tarif contoh (idempoten)
+npm run db:seed        # tenant + produk + tarif contoh (idempoten)
+npm run db:seed:sprint3 # bahan, variasi, pesanan kustom, percakapan contoh
 ```
 
 Dua koneksi berbeda, dan itu disengaja:
@@ -67,6 +69,19 @@ Dua koneksi berbeda, dan itu disengaja:
 - `DIRECT_URL` — session pooler, port **5432**. Dipakai `drizzle-kit migrate`
   karena drizzle-kit memakai `pg_advisory_lock` yang tidak didukung transaction
   mode. Memakai 6543 untuk migrasi akan gagal tanpa pesan error yang jelas.
+
+## Modul back-office (Sprint 3)
+
+| Modul | Rute | Isi |
+|---|---|---|
+| Katalog & variasi | `/dashboard/produk` | CRUD produk, variasi (ukuran/kayu/finishing), upload foto |
+| Inventaris | `/dashboard/materials` | CRUD bahan, penyesuaian stok, Low Stock Alert |
+| Pesanan | `/dashboard/pesanan` | daftar, detail, transisi status, pembayaran, resi |
+| Custom Order Builder | `/dashboard/pesanan/baru` | catat pesanan di luar katalog + hitung DP/pelunasan |
+| Inbox CS | `/dashboard/chat` | percakapan pembeli, balas, tandai terbaca, ubah status |
+
+Tukang hanya melihat antrean produksi: katalog, inventaris, dan inbox
+disembunyikan dari navigasinya — dan tetap ditolak bila diakses langsung.
 
 ## Auth & RBAC
 

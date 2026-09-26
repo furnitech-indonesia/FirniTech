@@ -5,14 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { signOut } from "@/lib/auth/actions";
+import type { NavItem } from "@/lib/nav";
 
 /**
  * Navigasi area dalam (back-office / super admin).
- * Item yang tampil ditentukan server-side lewat `items`, bukan dari role di
- * client — supaya UI tidak bisa "dibuka" dengan cara memanipulasi state.
+ *
+ * Item yang tampil dikirim dari server (lihat navForRole), bukan dihitung dari
+ * role di browser — jadi UI tidak bisa "dibuka" dengan memanipulasi state.
  */
-export type NavItem = { href: string; label: string; icon: string };
-
 export function DashboardNav({
   items,
   home,
@@ -30,30 +30,34 @@ export function DashboardNav({
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-          <span className="text-lg font-semibold text-slate-900">FurniTech</span>
+          <Link href={home} className="text-lg font-semibold text-slate-900">
+            FurniTech
+          </Link>
 
-          <nav className="flex flex-wrap items-center gap-1">
-            {items.map((item) => {
-              const active =
-                pathname === item.href || pathname.startsWith(`${item.href}/`);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-sm font-medium ${
-                    active
-                      ? "bg-amber-100 text-amber-700"
-                      : "text-slate-700 hover:bg-slate-100"
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-base">
-                    {item.icon}
-                  </span>
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
+          {items.length > 0 ? (
+            <nav className="flex flex-wrap items-center gap-1">
+              {items.map((item) => {
+                const active =
+                  pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-1 rounded-xl px-3 py-1.5 text-sm font-medium ${
+                      active
+                        ? "bg-amber-100 text-amber-700"
+                        : "text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-base">
+                      {item.icon}
+                    </span>
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </nav>
+          ) : null}
 
           <div className="flex items-center gap-3">
             <div className="text-right text-xs leading-tight text-slate-600">

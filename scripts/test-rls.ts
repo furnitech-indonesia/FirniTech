@@ -82,15 +82,21 @@ async function main() {
     `${rows(rates.data).length} kota`,
   );
 
-  // 4. Profil: hanya user dalam tenant yang sama
+  // 4. Profil: hanya user dalam tenant yang sama.
+  //    Jumlah profil TIDAK dikunci ke angka tertentu — tenant bisa punya owner,
+  //    admin penjualan, dan beberapa tukang. Yang dijaga adalah tidak adanya
+  //    baris super_admin (tenant_id NULL) atau baris tenant lain.
+  const me = await get(ownerToken, "users?select=tenant_id");
+  const myTenantId = rows(me.data)[0]?.tenant_id as string | undefined;
+
   const users = await get(ownerToken, "users?select=email,role,tenant_id");
   const userRows = rows(users.data);
-  const otherTenantLeak = userRows.some(
-    (u) => u.role === "super_admin" || u.tenant_id === null,
+  const leak = userRows.filter(
+    (u) => u.role === "super_admin" || u.tenant_id !== myTenantId,
   );
   check(
     "users: tidak bocor ke tenant lain / super admin",
-    !otherTenantLeak && userRows.length === 1,
+    userRows.length > 0 && leak.length === 0,
     `${userRows.length} profil, role=${userRows.map((u) => u.role).join(",")}`,
   );
 

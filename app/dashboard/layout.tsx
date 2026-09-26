@@ -5,16 +5,10 @@ import { db } from "@/db";
 import { tenants } from "@/db/schema";
 import { requireSession } from "@/lib/auth/session";
 import { ROLE_LABELS } from "@/lib/auth/permissions";
-import { DashboardNav, type NavItem } from "@/components/dashboard-nav";
+import { DashboardNav } from "@/components/dashboard-nav";
+import { navForRole } from "@/lib/nav";
 
 export const metadata = { title: "Dashboard — FurniTech" };
-
-const TENANT_NAV: NavItem[] = [
-  { href: "/dashboard", label: "Ringkasan", icon: "space_dashboard" },
-  { href: "/dashboard/produk", label: "Produk", icon: "chair" },
-  { href: "/dashboard/materials", label: "Bahan Baku", icon: "inventory_2" },
-  { href: "/dashboard/pesanan", label: "Pesanan", icon: "receipt_long" },
-];
 
 /**
  * Layout back-office pengrajin.
@@ -43,7 +37,7 @@ export default async function DashboardLayout({
 
   return (
     <DashboardNav
-      items={TENANT_NAV}
+      items={navForRole(role)}
       home={tenant ? `/t/${tenant.slug}` : "/"}
       who={{
         fullName: session.fullName,

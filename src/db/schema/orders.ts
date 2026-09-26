@@ -9,7 +9,7 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { orderStatusEnum, paymentStatusEnum } from "./enums";
+import { orderSourceEnum, orderStatusEnum, paymentStatusEnum } from "./enums";
 import { products } from "./catalog";
 import { customerAddresses } from "./shipping";
 import { tenants, users } from "./tenants";
@@ -38,6 +38,8 @@ export const orders = pgTable(
   {
     id: uuid("id").primaryKey().defaultRandom(),
     orderCode: text("order_code").notNull(), // e.g., ORD-8821
+    /** storefront = dibuat pembeli; manual = dicatat staf (Custom Order Builder). */
+    source: orderSourceEnum("source").default("storefront").notNull(),
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
@@ -125,7 +127,7 @@ export const orderItems = pgTable(
     }),
     productName: text("product_name").notNull(),
 
-    /** Spesifikasi kustom jika pesanan di luar katalog standar. */
+    /** Spesifikasi kustom bila pesanan di luar katalog (Custom Order Builder). */
     customSpecs: jsonb("custom_specs").$type<{
       lengthCm?: number;
       widthCm?: number;

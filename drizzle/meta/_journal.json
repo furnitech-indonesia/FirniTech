@@ -22,6 +22,20 @@
       "when": 1790432453666,
       "tag": "0002_illegal_valeria_richards",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790437000215,
+      "tag": "0003_smiling_white_tiger",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790437001215,
+      "tag": "0004_rls_sprint3",
+      "breakpoints": true
     }
   ]
 }

@@ -106,3 +106,28 @@ export const notificationChannelEnum = pgEnum("notification_channel", [
   "whatsapp",
   "push",
 ]);
+
+/** Alasan perubahan stok bahan baku — dipakai untuk jejak audit inventaris. */
+export const materialAdjustmentReasonEnum = pgEnum(
+  "material_adjustment_reason",
+  [
+    "pembelian", // pembelian baru dari pemasok
+    "pemakaian", // dipakai untuk produksi
+    "rusak", // kerusakan / cacat
+    "koreksi", // koreksi hasil hitung fisik (stock opname)
+    "retur", // retur dari customer
+  ],
+);
+
+/** Status percakapan untuk triase Inbox CS (ROADMAP Sprint 3). */
+export const conversationStatusEnum = pgEnum("conversation_status", [
+  "open", // baru / belum ditangani
+  "pending", // menunggu pembeli
+  "resolved", // selesai
+]);
+
+/** Sumber pesanan: dari storefront atau dicatat staf (Custom Order Builder). */
+export const orderSourceEnum = pgEnum("order_source", [
+  "storefront",
+  "manual",
+]);

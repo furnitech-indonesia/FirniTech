@@ -1,5 +1,6 @@
 import { requireRole } from "@/lib/auth/session";
-import { DashboardNav, type NavItem } from "@/components/dashboard-nav";
+import { DashboardNav } from "@/components/dashboard-nav";
+import type { NavItem } from "@/lib/nav";
 
 export const metadata = { title: "Super Admin — FurniTech" };
 

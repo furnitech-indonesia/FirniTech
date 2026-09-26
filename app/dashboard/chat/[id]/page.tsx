@@ -1,0 +1,136 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { and, eq } from "drizzle-orm";
+
+import { db } from "@/db";
+import { conversations } from "@/db/schema";
+import { requireTenantWrite } from "@/lib/auth/guard";
+import {
+  listMessages,
+  markConversationRead,
+  replyToConversation,
+  setConversationStatus,
+} from "@/lib/actions/chat";
+import { formatDateID } from "@/lib/format";
+import { CONVERSATION_STATUS_LABELS } from "@/lib/labels";
+import { ActionForm } from "@/components/action-form";
+import { Badge, Card, Select, Textarea } from "@/components/ui";
+
+export default async function ConversationPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const actor = await requireTenantWrite(["owner", "admin_penjualan"]);
+
+  const [conversation] = await db
+    .select()
+    .from(conversations)
+    .where(
+      and(
+        eq(conversations.id, id),
+        eq(conversations.tenantId, actor.tenantId),
+      ),
+    )
+    .limit(1);
+
+  if (!conversation) notFound();
+
+  const messages = await listMessages(id);
+
+  return (
+    <main className="mx-auto max-w-3xl px-4 py-10">
+      <p className="text-sm">
+        <Link href="/dashboard/chat" className="text-amber-700 hover:underline">
+          ← Kembali ke inbox
+        </Link>
+      </p>
+
+      <header className="mt-2 mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {conversation.customerName}
+          </h1>
+          <p className="mt-1 text-sm text-slate-600">
+            {conversation.customerPhone}
+          </p>
+        </div>
+        <Badge tone="neutral">
+          {CONVERSATION_STATUS_LABELS[conversation.status]}
+        </Badge>
+      </header>
+
+      <Card title="Percakapan">
+        {messages.length === 0 ? (
+          <p className="text-sm text-slate-600">Belum ada pesan.</p>
+        ) : (
+          <ul className="grid gap-3">
+            {messages.map((message) => {
+              const fromStaff = message.senderUserId !== null;
+              return (
+                <li
+                  key={message.id}
+                  className={
+                    fromStaff
+                      ? "ml-auto max-w-[80%] rounded-2xl bg-amber-50 p-3"
+                      : "mr-auto max-w-[80%] rounded-2xl bg-slate-100 p-3"
+                  }
+                >
+                  <p className="text-sm text-slate-800">{message.body}</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {fromStaff ? message.senderName : conversation.customerName}
+                    {" · "}
+                    {formatDateID(message.createdAt)}
+                    {message.readAt ? " · dibaca" : ""}
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </Card>
+
+      <div className="mt-6 grid gap-4">
+        <Card title="Balas">
+          <ActionForm
+            action={replyToConversation}
+            hidden={{ conversationId: id }}
+            submitLabel="Kirim balasan"
+          >
+            <Textarea label="Pesan" name="body" required rows={3} />
+          </ActionForm>
+        </Card>
+
+        <Card title="Tindakan">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <ActionForm
+              action={markConversationRead}
+              hidden={{ conversationId: id }}
+              submitLabel="Tandai sudah dibaca"
+              tone="ghost"
+            />
+
+            <ActionForm
+              action={setConversationStatus}
+              hidden={{ conversationId: id }}
+              submitLabel="Ubah status"
+              tone="ghost"
+            >
+              <Select
+                label="Status percakapan"
+                name="status"
+                defaultValue={conversation.status}
+                options={[
+                  { value: "open", label: "Baru / ditangani" },
+                  { value: "pending", label: "Menunggu pembeli" },
+                  { value: "resolved", label: "Selesai" },
+                ]}
+              />
+            </ActionForm>
+          </div>
+        </Card>
+      </div>
+    </main>
+  );
+}

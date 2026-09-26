@@ -53,6 +53,8 @@ npm run db:test-rls   # 8 uji isolasi tenant dgn JWT pengguna sungguhan
 npm run db:studio
 npm run db:seed       # idempoten
 npm run test:auth     # 11 uji auth & RBAC via HTTP (butuh server jalan)
+npm run test:sprint3  # 16 uji halaman & pembatasan role Sprint 3
+npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
 ```
 
 Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
@@ -102,6 +104,30 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   Onboarding owner hanya boleh lewat kode server-side. Ini sudah diuji.
 - `npm run db:test-rls` membuktikan isolasi dengan JWT asli. Jalankan setelah
   menyentuh policy.
+
+## Back-office Sprint 3
+
+- **Semua Server Action WAJIB lewat guard** `requireTenantWrite([...roles])`
+  (src/lib/auth/guard.ts). `tenantId` SELALU dari guard, TIDAK PERNAH dari
+  FormData. Klien Drizzle bypass RLS, jadi ini satu-satunya penahan tenantId
+  yang salah. Query update/delete juga diverifikasi ulang tenantId-nya —
+  knowing an UUID saja tidak cukup.
+- **Stok bahan hanya boleh berubah lewat `adjustStock()`**, yang memperbarui
+  `materials.quantity` dan menulis `material_adjustments` dalam satu
+  transaksi. Ubah `quantity` langsung = jejak audit rusak.
+- **Uang masuk form sebagai string** dan dikonversi di `src/lib/parse.ts`
+  (`parseRupiah`, `parseDecimal`). Kolom `numeric` di Drizzle bertipe string.
+- **Transisi status** hanya lewat `transitionOrderStatus`, yang memvalidasi
+  dengan `canTransition()` DAN `ROLE_ALLOWED_TARGETS` (tukang tidak boleh
+  menandai shipped/completed).
+- **Foto produk & progres** masuk bucket privat `product-images`; render
+  memakai signed URL. Object path yang disimpan, bukan URL. Jangan pernah
+  menempelkan path mentah ke `<img src>`.
+- **Form HTML tidak boleh bersarang.** Kalau butuh dua action dalam satu
+  kartu, letakkan dua `<ActionForm>` sebagai saudara — browser akan
+  men-olah form yang diinside.
+- Navigasi per peran di `src/lib/nav.ts` (tukang hanya melihat antrean
+  produksi). Menyembunyikan menu BUKAN otorisasi — guard tetap berlaku.
 
 ## Auth & RBAC
 
