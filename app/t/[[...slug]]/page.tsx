@@ -33,14 +33,14 @@ export default async function TenantHome({
   return (
     <TenantShell name={tenant.name} plan={tenant.plan}>
       <main className="mx-auto max-w-5xl px-4 py-10">
-        <h1 className="text-2xl font-bold text-slate-900">{tenant.name}</h1>
-        <p className="mt-1 text-slate-700">
+        <h1 className="text-2xl font-bold text-foreground">{tenant.name}</h1>
+        <p className="mt-1 text-secondary">
           Tenant: <code>{tenant.slug}</code> · paket{" "}
-          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-700">
+          <span className="rounded-full bg-accent px-2 py-0.5 text-accent-foreground">
             {tenant.plan}
           </span>
         </p>
-        <p className="mt-4 text-sm text-slate-500">
+        <p className="mt-4 text-sm text-muted-foreground">
           Path: <code>/{rest?.join("/") ?? ""}</code> — katalog, ongkir otomatis,
           dan checkout Midtrans menyusul di Sprint 5.
         </p>

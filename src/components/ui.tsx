@@ -10,12 +10,12 @@ import type { ReactNode } from "react";
  */
 
 const INPUT_CLASS =
-  "w-full rounded-xl border bg-slate-100 px-3 py-2 text-slate-900 outline-none focus:bg-white";
+  "w-full rounded-xl border bg-input px-3 py-2 text-foreground outline-none transition-colors focus:bg-card";
 
 function inputClass(error?: string) {
   return error
-    ? `${INPUT_CLASS} border-red-400 focus:border-red-500`
-    : `${INPUT_CLASS} border-slate-200 focus:border-amber-600`;
+    ? `${INPUT_CLASS} border-destructive focus:border-destructive`
+    : `${INPUT_CLASS} border-border focus:border-primary`;
 }
 
 export function Card({
@@ -38,15 +38,15 @@ export function Card({
     <section
       className={
         className ??
-        `rounded-2xl border border-slate-200 bg-white shadow-sm ${bare ? "p-0" : "p-5"}`
+        `rounded-2xl border border-border bg-card shadow-sm ${bare ? "p-0" : "p-5"}`
       }
     >
       {title ? (
         <header className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+            <h2 className="text-lg font-semibold text-foreground">{title}</h2>
             {description ? (
-              <p className="mt-0.5 text-sm text-slate-600">{description}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
             ) : null}
           </div>
           {actions}
@@ -61,7 +61,7 @@ export function Card({
 function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
   return (
-    <p id={id} role="alert" className="text-xs text-red-600">
+    <p id={id} role="alert" className="text-xs text-destructive">
       {message}
     </p>
   );
@@ -97,7 +97,7 @@ export function Field({
   const errorId = `${name}-error`;
   return (
     <div className={`grid gap-1 ${className ?? ""}`}>
-      <label htmlFor={name} className="text-sm font-medium text-slate-700">
+      <label htmlFor={name} className="text-sm font-medium text-secondary">
         {label}
       </label>
       <input
@@ -117,7 +117,7 @@ export function Field({
       {error ? (
         <FieldError id={errorId} message={error} />
       ) : hint ? (
-        <p className="text-xs text-slate-500">{hint}</p>
+        <p className="text-xs text-muted-foreground">{hint}</p>
       ) : null}
     </div>
   );
@@ -143,7 +143,7 @@ export function Textarea({
   const errorId = `${name}-error`;
   return (
     <div className="grid gap-1">
-      <label htmlFor={name} className="text-sm font-medium text-slate-700">
+      <label htmlFor={name} className="text-sm font-medium text-secondary">
         {label}
       </label>
       <textarea
@@ -180,7 +180,7 @@ export function Select({
   const errorId = `${name}-error`;
   return (
     <div className="grid gap-1">
-      <label htmlFor={name} className="text-sm font-medium text-slate-700">
+      <label htmlFor={name} className="text-sm font-medium text-secondary">
         {label}
       </label>
       <select
@@ -213,9 +213,9 @@ export function SubmitButton({
   tone?: "primary" | "ghost" | "danger";
 }) {
   const tones = {
-    primary: "bg-amber-600 text-white hover:bg-amber-700",
-    ghost: "border border-slate-200 text-slate-700 hover:bg-slate-100",
-    danger: "bg-red-600 text-white hover:bg-red-700",
+    primary: "bg-primary text-primary-foreground hover:bg-primary-hover",
+    ghost: "border border-border text-secondary hover:bg-muted",
+    danger: "bg-destructive text-primary-foreground hover:bg-destructive",
   } as const;
 
   return (
@@ -237,9 +237,9 @@ export function Alert({
   children: ReactNode;
 }) {
   const tones = {
-    error: "bg-red-100 text-red-600",
-    success: "bg-green-100 text-green-700",
-    info: "bg-slate-100 text-slate-700",
+    error: "bg-status-failed-bg text-status-failed",
+    success: "bg-status-settled-bg text-status-settled",
+    info: "bg-muted text-muted-foreground",
   } as const;
 
   return (
@@ -257,13 +257,14 @@ export function Badge({
   children: ReactNode;
 }) {
   // Warna mengikuti DESIGN.md §3 (indikator status).
+  // Warna dari token status (globals.css) yang dipetakan ke DESIGN.md §3.
   const tones = {
-    pending: "bg-yellow-100 text-yellow-600",
-    production: "bg-blue-100 text-blue-600",
-    quality: "bg-purple-100 text-purple-600",
-    settled: "bg-green-100 text-green-600",
-    failed: "bg-red-100 text-red-600",
-    neutral: "bg-slate-100 text-slate-700",
+    pending: "bg-status-pending-bg text-status-pending",
+    production: "bg-status-production-bg text-status-production",
+    quality: "bg-status-quality-bg text-status-quality",
+    settled: "bg-status-settled-bg text-status-settled",
+    failed: "bg-status-failed-bg text-status-failed",
+    neutral: "bg-muted text-muted-foreground",
   } as const;
 
   return (
@@ -277,7 +278,7 @@ export function Badge({
 
 export function EmptyState({ message }: { message: string }) {
   return (
-    <p className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-600">
+    <p className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
       {message}
     </p>
   );

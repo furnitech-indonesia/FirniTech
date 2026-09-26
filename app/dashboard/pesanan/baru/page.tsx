@@ -12,15 +12,15 @@ export default async function NewCustomOrderPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
       <p className="text-sm">
-        <Link href="/dashboard/pesanan" className="text-amber-700 hover:underline">
+        <Link href="/dashboard/pesanan" className="text-accent-foreground hover:underline">
           ← Kembali ke daftar pesanan
         </Link>
       </p>
 
-      <h1 className="mt-2 text-2xl font-bold text-slate-900">
+      <h1 className="mt-2 text-2xl font-bold text-foreground">
         Catat Pesanan Kustom
       </h1>
-      <p className="mt-1 text-sm text-slate-600">
+      <p className="mt-1 text-sm text-muted-foreground">
         Untuk pesanan di luar katalog standar. Ongkos, fee platform, dan sisa
         tagihan dihitung ulang di server saat disimpan.
       </p>

@@ -48,12 +48,12 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
         )}
       </ZodForm>
 
-      <div className="grid gap-3 border-t border-slate-200 pt-4">
-        <p className="text-sm text-slate-700">
+      <div className="grid gap-3 border-t border-border pt-4">
+        <p className="text-sm text-secondary">
           Tidak punya password? Kirim tautan masuk ke email (magic link).
         </p>
         {sent ? (
-          <p className="rounded-xl bg-green-100 px-3 py-2 text-sm text-green-700">
+          <p className="rounded-xl bg-status-settled-bg px-3 py-2 text-sm text-status-settled">
             {sent}
           </p>
         ) : (

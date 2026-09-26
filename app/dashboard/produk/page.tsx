@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { desc, eq, sql } from "drizzle-orm";
+import { ArmchairIcon } from "@phosphor-icons/react/dist/ssr";
 
 import { db } from "@/db";
 import { productVariants, products } from "@/db/schema";
@@ -52,8 +53,8 @@ export default async function ProductsPage() {
     <main className="mx-auto max-w-6xl px-4 py-10">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Katalog Produk</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="text-2xl font-bold text-foreground">Katalog Produk</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {rows.length} produk · harga belum termasuk ongkir; ongkir dihitung
             saat checkout.
           </p>
@@ -61,7 +62,7 @@ export default async function ProductsPage() {
         {canEdit ? (
           <Link
             href="/dashboard/produk/baru"
-            className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+            className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary-hover"
           >
             Tambah produk
           </Link>
@@ -80,7 +81,7 @@ export default async function ProductsPage() {
             return (
               <Card key={product.id} bare>
                 <div className="flex gap-3 p-4">
-                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted">
                     {coverUrl ? (
                       // Bucket Storage privat: URL dari signed URL server-side.
                       // eslint-disable-next-line @next/next/no-img-element
@@ -90,27 +91,30 @@ export default async function ProductsPage() {
                         className="h-full w-full object-cover"
                       />
                     ) : (
-                      <span className="material-symbols-outlined flex h-full w-full items-center justify-center text-slate-400">
-                        chair
-                      </span>
+                      <ArmchairIcon
+                        size={28}
+                        weight="light"
+                        className="h-full w-full text-muted-foreground"
+                        aria-hidden
+                      />
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1">
                     <Link
                       href={`/dashboard/produk/${product.id}`}
-                      className="font-semibold text-slate-900 hover:text-amber-700"
+                      className="font-semibold text-foreground hover:text-accent-foreground"
                     >
                       {product.name}
                     </Link>
-                    <p className="text-sm text-slate-700">
+                    <p className="text-sm text-secondary">
                       {formatRupiah(product.basePrice)}
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {product.lengthCm}×{product.widthCm}×
                       {product.heightCm} cm · {product.woodType}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       {product.finishingType}
                       {variants > 0 ? ` · ${variants} variasi` : ""}
                     </p>

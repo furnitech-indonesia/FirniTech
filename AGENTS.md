@@ -54,6 +54,7 @@ npm run db:studio
 npm run db:seed       # idempoten
 npm run test:auth     # 11 uji auth & RBAC via HTTP (butuh server jalan)
 npm run test:schemas  # 14 uji skema validasi (guard uang, pesan, id)
+npm run test:responsive # 9 pemeriksaan struktural responsif & token
 npm run test:sprint3  # 16 uji halaman & pembatasan role Sprint 3
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
 ```
@@ -236,6 +237,45 @@ git -c credential.helper= -c 'credential.helper=store --file=.git/gh-credentials
 
 Jangan membungkus ini dalam `git config alias` — quoting bersarang di alias `!`
 merusak nilai `-c` di dalamnya dan alias itu diam-diam hanya mencetak git usage.
+
+## Design system, ikon & komponen
+
+- **Token satu arah: `DESIGN.md` → `:root` → `@theme inline`.** Nilai warna
+  ada di `app/globals.css` bagian `:root`, lalu dipetakan ke utilitas Tailwind.
+  JANGAN menulis utilitas warna langsung di markup — `test:responsive` akan
+  gagal. `DESIGN.md` tetap sumber kebenaran.
+- Token status (pending/production/quality/settled/failed) dipakai lewat
+  `bg-status-*` / `text-status-*`, bukan `bg-yellow-100` langsung.
+- **Komponen shadcn/ui ada di `src/components/ui/`** (Base UI, bukan Radix).
+  Primitif itu milik kita sekarang; jangan diedit manual tanpa alasan.
+  Primitif buatan sendiri (Card/Field/Badge/Alert/EmptyState) masih di
+  `src/components/ui.tsx` dan memakai token semantik.
+- **Ikon: Phosphor, inline SVG. Bukan icon font dari CDN.** Ini syarat offline
+  untuk PWA dan Capacitor (PRD §7.2), bukan selera visual.
+  - Di **Client Component**: `import { XIcon } from "@phosphor-icons/react"`.
+  - Di **Server Component**: WAJIB `from "@phosphor-icons/react/dist/ssr"`.
+    Entry utama memanggil `createContext` yang tidak ada di RSC, dan build
+    gagal dengan `createContext is not a function`. Ada test-nya.
+  - Batas RSC: komponen ikon **tidak boleh** dikirim dari Server Component ke
+    Client Component sebagai bagian dari array/prop. Karena itu `DashboardNav`
+    menerima `role` (string) lalu memanggil `navForRole()` di sisi klien.
+- `cn()` ada di `src/lib/utils.ts` (clsx + tailwind-merge). Wajib dipakai
+  saat menggabungkan className pada komponen shadcn agar prop bisa menimpa.
+
+## Tampilan responsif (PRD §3.1)
+
+- Tiga ukuran: mobile (<768px), tablet, desktop (>=1024px). Desktop adalah
+  kondisi paling longgar; yang perlu dirancang justru mobile.
+- **Tabel data wajib punya padanan kartu** di bawah `md` (`md:hidden` + tabel
+  `hidden md:block`). Scroll horizontal bukan jawaban yang baik.
+- **Target sentuh 44px** → pakai `min-h-11` pada link, tombol, dan item menu.
+- Jangan ada lebar tetap (`w-[400px]`) di className. Jangan ada informasi yang
+  hanya muncul saat hover.
+- Padding iOS notch/home indicator: kelas `.safe-top` dan `.safe-bottom`
+  (memakai `env(safe-area-inset-*)`).
+- Zoom tidak dibatasi (viewport `maximumScale: 5`).
+- `npm run test:responsive` memeriksa aturan-aturan ini secara struktural.
+  Pemeriksaan ini bukan pengganti pengujian visual.
 
 ## Skill UI/UX (.opencode/skills/)
 

@@ -40,7 +40,7 @@ export function PaymentBreakdown({
     }).format(value);
 
   return (
-    <div className="grid gap-1 rounded-xl bg-slate-100 p-3 text-sm">
+    <div className="grid gap-1 rounded-xl bg-muted p-3 text-sm">
       <Row label="Subtotal item" value={rupiah(breakdown.itemsSubtotal)} />
       <Row label="Ongkir kargo" value={rupiah(breakdown.shippingFee)} />
       <Row label="Total all-in" value={rupiah(breakdown.total)} strong />
@@ -65,12 +65,12 @@ function Row({
 }) {
   return (
     <div className="flex justify-between gap-4">
-      <span className={strong ? "font-semibold text-slate-900" : "text-slate-700"}>
+      <span className={strong ? "font-semibold text-foreground" : "text-secondary"}>
         {label}
       </span>
       <span
         className={
-          strong ? "font-semibold text-slate-900" : "text-slate-700 tabular-nums"
+          strong ? "font-semibold text-foreground" : "text-secondary tabular-nums"
         }
       >
         {value}

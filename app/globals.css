@@ -1,55 +1,188 @@
 @import "tailwindcss";
 
-/* ==========================================================
-   FurniTech Design Tokens — sumber: DESIGN.md
-   Pendekatan: Modern Tech & Minimalist + aksen kayu (amber).
-   Light mode only, dirancang untuk HP/tablet di bengkel.
-   ========================================================== */
-@theme {
-  /* --- Craft Accent (CTA & highlight) --- */
-  --color-amber-600: #d97706;
-  --color-amber-700: #b45309;
+/* =====================================================================
+   FurniTech Design System — sumber kebenaran: DESIGN.md
+   Pendekatan: Modern Tech & Minimalist dengan aksen kayu (amber).
+   Light mode only, dirancang untuk HP/tablet di bengkel sampai desktop.
 
-  /* --- Netral (app background, surface, border, input) --- */
-  --color-surface-app: #f8fafc; /* slate-50 */
-  --color-surface-card: #ffffff;
-  --color-surface-input: #f1f5f9; /* slate-100 */
-  --color-border-subtle: #e2e8f0; /* slate-200 */
+   Token di sini DUA lapis, dan urutannya penting:
+     1. :root  — nilai warna dan ukuran dari DESIGN.md (sumber kebenaran).
+     2. @theme inline — memetakan variabel itu ke utilitas Tailwind
+        (bg-primary, text-muted-foreground, …) yang dipakai komponen
+        shadcn/ui.
 
-  /* --- Status Indicators (Progress Tracker & order) --- */
-  --color-status-pending: #ca8a04; /* yellow-600 */
-  --color-status-pending-bg: #fef9c3; /* yellow-100 */
-  --color-status-production: #2563eb; /* blue-600  */
-  --color-status-production-bg: #dbeafe; /* blue-100  */
-  --color-status-quality: #9333ea; /* purple-600 */
-  --color-status-quality-bg: #f3e8ff; /* purple-100 */
-  --color-status-settled: #16a34a; /* green-600  */
-  --color-status-settled-bg: #dcfce7; /* green-100  */
-  --color-status-failed: #dc2626; /* red-600    */
-  --color-status-failed-bg: #fee2e2; /* red-100    */
+   Arah pemetaan selalu DESIGN.md → shadcn. JANGAN membalik: kalau utilitas
+   Tailwind yang menentukan warna, brand ikut berubah diam-diam.
+   ===================================================================== */
 
-  /* --- Typography --- */
+:root {
+  /* --- Brand: Craft Accent (CTA) — DESIGN.md §2.B --- */
+  --primary: #d97706; /* amber-600 */
+  --primary-hover: #b45309; /* amber-700 */
+  --primary-foreground: #ffffff;
+
+  /* --- Netral: background & surface — DESIGN.md §2.C --- */
+  --background: #f8fafc; /* slate-50, app background */
+  --foreground: #0f172a; /* slate-900, teks utama */
+  --card: #ffffff; /* slate-0, kartu & panel */
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+
+  /* Permukaan sekunder: bg-700 slate-700 = teks sub-header & ikon aktif */
+  --secondary: #334155;
+  --secondary-foreground: #f8fafc;
+
+  /* Muted: input background slate-100 + teks slate-600 */
+  --muted: #f1f5f9; /* slate-100 */
+  --muted-foreground: #475569; /* slate-600 */
+
+  /* Accent: hover surface. Amber sangat tipis agar tak competes dengan CTA. */
+  --accent: #fef3c7; /* amber-100 */
+  --accent-foreground: #92400e; /* amber-800 */
+
+  /* Border & input: DESIGN.md §2.C */
+  --border: #e2e8f0; /* slate-200 */
+  --input: #e2e8f0; /* slate-200 */
+
+  /* Destructive: status failed DESIGN.md §3 (red-600) */
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  /* Focus ring: amber agar konsisten dengan CTA */
+  --ring: #d97706;
+
+  /* --- Status indicators — DESIGN.md §3 (dipakai lewat utility kustom) --- */
+  --status-pending: #ca8a04; /* yellow-600 */
+  --status-pending-bg: #fef9c3; /* yellow-100 */
+  --status-production: #2563eb; /* blue-600  */
+  --status-production-bg: #dbeafe; /* blue-100  */
+  --status-quality: #9333ea; /* purple-600 */
+  --status-quality-bg: #f3e8ff; /* purple-100 */
+  --status-settled: #16a34a; /* green-600  */
+  --status-settled-bg: #dcfce7; /* green-100  */
+  --status-failed: #dc2626; /* red-600    */
+  --status-failed-bg: #fee2e2; /* red-100    */
+
+  /* --- Geometry — DESIGN.md §4 (Soft Rounded) --- */
+  /* Tombol, badge, input: 12px. Kartu, modal, sheet: 16px. */
+  --radius: 0.75rem; /* 12px — dasar */
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem; /* 16px — kartu & overlay */
+  --radius-xl: 1rem;
+  --radius-sm: 0.5rem; /* 8px — badge pill kecil */
+
+  /* --- Typography — DESIGN.md §5 (Inter) --- */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* --- Skema: chart & sidebar dipakai shadcn, diselaraskan ke palet --- */
+  --chart-1: #d97706;
+  --chart-2: #334155;
+  --chart-3: #2563eb;
+  --chart-4: #16a34a;
+  --chart-5: #9333ea;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #d97706;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #d97706;
 }
 
-/* Base: reset sisa template Codespaces (font SF Pro + margin auto) */
+/* =====================================================================
+   Pemetaan ke utilitas Tailwind
+   ===================================================================== */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Status: dipakai sebagai bg-status-* / text-status-* */
+  --color-status-pending: var(--status-pending);
+  --color-status-pending-bg: var(--status-pending-bg);
+  --color-status-production: var(--status-production);
+  --color-status-production-bg: var(--status-production-bg);
+  --color-status-quality: var(--status-quality);
+  --color-status-quality-bg: var(--status-quality-bg);
+  --color-status-settled: var(--status-settled);
+  --color-status-settled-bg: var(--status-settled-bg);
+  --color-status-failed: var(--status-failed);
+  --color-status-failed-bg: var(--status-failed-bg);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --font-sans: var(--font-sans);
+}
+
+/* Base */
 body {
-  background-color: var(--color-surface-app);
-  color: var(--color-slate-900);
+  background-color: var(--background);
+  color: var(--foreground);
   font-family: var(--font-sans);
   margin: 0;
   -webkit-font-smoothing: antialiased;
+  /* Cegah scroll horizontal di layar sempit (PRD §3.1). Satu-satunya sumber
+     scroll-x yang boleh ada adalah tabel di desktop, yang sudah dibungkus
+     sendiri dengan overflow-x-auto. */
+  overflow-x: hidden;
 }
 
 /*
- * Material Symbols dimuat via <link> di app/layout.tsx, bukan next/font
- * (tidak tersedia di sana). Override ringan agar ketebalan garis konsisten
- * dengan estetika minimalis DESIGN.md §5.
+ * Safe area iOS. Saat aplikasi dibungkus Capacitor, notch dan home indicator
+ * berada di atas konten; tanpa padding ini tombol di bagian bawah terpotong
+ * (PRD §7.2). env() menghasilkan 0px di browser, jadi tidak merusak web.
  */
-.material-symbols-outlined {
-  font-variation-settings:
-    "FILL" 0,
-    "wght" 400,
-    "GRAD" 0,
-    "opsz" 24;
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.safe-top {
+  padding-top: max(0px, env(safe-area-inset-top));
+}
+
+/* Target sentuh: DESIGN-derived, minimal 44px pada perangkat sentuh
+   (PRD §3.1). Hanya untuk breakpoint md ke bawah, supaya di desktop
+  Density tetap seperti aslinya. */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  a[data-touch-target] {
+    min-height: 44px;
+  }
 }

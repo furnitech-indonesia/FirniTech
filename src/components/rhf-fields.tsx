@@ -33,29 +33,29 @@ function FieldShell({
 
   return (
     <div className={`grid gap-1 ${className ?? ""}`}>
-      <label htmlFor={name} className="text-sm font-medium text-slate-700">
+      <label htmlFor={name} className="text-sm font-medium text-secondary">
         {label}
-        {required ? <span className="text-red-600"> *</span> : null}
+        {required ? <span className="text-destructive"> *</span> : null}
       </label>
       {children}
       {error ? (
-        <p id={errorId} role="alert" className="text-xs text-red-600">
+        <p id={errorId} role="alert" className="text-xs text-destructive">
           {error}
         </p>
       ) : hint ? (
-        <p className="text-xs text-slate-500">{hint}</p>
+        <p className="text-xs text-muted-foreground">{hint}</p>
       ) : null}
     </div>
   );
 }
 
 const CONTROL =
-  "w-full rounded-xl border bg-slate-100 px-3 py-2 text-slate-900 outline-none focus:bg-white";
+  "w-full rounded-xl border bg-muted px-3 py-2 text-foreground outline-none focus:bg-card";
 
 function controlClass(error?: string) {
   return error
-    ? `${CONTROL} border-red-400 focus:border-red-500`
-    : `${CONTROL} border-slate-200 focus:border-amber-600`;
+    ? `${CONTROL} border-destructive focus:border-destructive`
+    : `${CONTROL} border-border focus:border-primary`;
 }
 
 type TextFieldProps = {
@@ -236,7 +236,7 @@ export function FileField({
 }) {
   return (
     <div className="grid gap-1">
-      <label htmlFor={name} className="text-sm font-medium text-slate-700">
+      <label htmlFor={name} className="text-sm font-medium text-secondary">
         {label}
       </label>
       <input
@@ -244,9 +244,9 @@ export function FileField({
         name={name}
         type="file"
         accept={accept}
-        className="w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700 file:mr-3 file:rounded-lg file:border-0 file:bg-slate-200 file:px-3 file:py-1 file:text-sm file:text-slate-700"
+        className="w-full rounded-xl border border-border bg-muted px-3 py-2 text-sm text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-1 file:text-sm file:text-secondary"
       />
-      {hint ? <p className="text-xs text-slate-500">{hint}</p> : null}
+      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }
@@ -266,18 +266,18 @@ export function CheckboxField({
 
   return (
     <div className="grid gap-1">
-      <label className="flex items-center gap-2 text-sm text-slate-700">
+      <label className="flex items-center gap-2 text-sm text-secondary">
         <input
           id={name}
           type="checkbox"
           defaultChecked={defaultChecked}
-          className="h-4 w-4 rounded border-slate-300"
+          className="h-4 w-4 rounded border-border"
           {...ctx.register(name)}
         />
         {label}
       </label>
       {error ? (
-        <p role="alert" className="text-xs text-red-600">
+        <p role="alert" className="text-xs text-destructive">
           {error}
         </p>
       ) : null}
@@ -293,8 +293,8 @@ export function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <fieldset className="grid gap-3 rounded-xl border border-slate-200 p-3">
-      <legend className="px-1 text-sm font-medium text-slate-700">{title}</legend>
+    <fieldset className="grid gap-3 rounded-xl border border-border p-3">
+      <legend className="px-1 text-sm font-medium text-secondary">{title}</legend>
       {children}
     </fieldset>
   );

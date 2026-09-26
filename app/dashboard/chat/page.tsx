@@ -14,8 +14,8 @@ export default async function ChatInboxPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">Inbox Customer Service</h1>
-      <p className="mt-1 text-sm text-slate-600">
+      <h1 className="text-2xl font-bold text-foreground">Inbox Customer Service</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
         Percakapan pembeli masuk lewat widget storefront (Sprint 5). Untuk sekarang
         halaman ini siap menerima dan membalas pesan.
       </p>
@@ -30,14 +30,14 @@ export default async function ChatInboxPage() {
             <li key={conversation.id}>
               <Link
                 href={`/dashboard/chat/${conversation.id}`}
-                className="block rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-amber-600"
+                className="block rounded-2xl border border-border bg-card p-4 shadow-sm hover:border-primary"
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="font-semibold text-slate-900">
+                    <p className="font-semibold text-foreground">
                       {conversation.customerName}
                     </p>
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-muted-foreground">
                       {conversation.customerPhone}
                       {conversation.assignee
                         ? ` · ditangani ${conversation.assignee}`
@@ -57,18 +57,18 @@ export default async function ChatInboxPage() {
                     >
                       {CONVERSATION_STATUS_LABELS[conversation.status]}
                     </Badge>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-muted-foreground">
                       {formatDateID(conversation.lastMessageAt)}
                     </span>
                   </div>
                 </div>
 
                 {previews[conversation.id] ? (
-                  <p className="mt-2 truncate text-sm text-slate-700">
+                  <p className="mt-2 truncate text-sm text-secondary">
                     {previews[conversation.id]}
                   </p>
                 ) : (
-                  <p className="mt-2 text-sm text-slate-500">Belum ada pesan.</p>
+                  <p className="mt-2 text-sm text-muted-foreground">Belum ada pesan.</p>
                 )}
               </Link>
             </li>
@@ -76,7 +76,7 @@ export default async function ChatInboxPage() {
         </ul>
       )}
 
-      <p className="mt-6 text-xs text-slate-500">
+      <p className="mt-6 text-xs text-muted-foreground">
         Urutan: percakapan baru dan menunggu pembeli didahulukan, lalu berdasarkan
         pesan terakhir.
       </p>

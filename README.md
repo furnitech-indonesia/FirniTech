@@ -45,6 +45,7 @@ npm run db:test-rls  # uji isolasi tenant dgn JWT pengguna sungguhan
 # butuh server jalan: npm run build && npm run start
 npm run test:auth    # 11 uji auth & RBAC (login, 403, redirect per role)
 npm run test:schemas # 14 uji skema validasi (guard uang, pesan, id)
+npm run test:responsive # 9 pemeriksaan struktural responsif & token
 npm run test:sprint3 # 16 uji halaman back-office & pembatasan role
 ```
 

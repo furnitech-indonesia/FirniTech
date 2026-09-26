@@ -17,8 +17,8 @@ export default async function DashboardHome() {
   if (!tenantId) {
     return (
       <main className="mx-auto max-w-6xl px-4 py-10">
-        <h1 className="text-2xl font-bold text-slate-900">Ringkasan</h1>
-        <p className="mt-2 text-slate-700">
+        <h1 className="text-2xl font-bold text-foreground">Ringkasan</h1>
+        <p className="mt-2 text-secondary">
           Akun ini belum terhubung ke tenant mana pun. Hubungi admin platform.
         </p>
       </main>
@@ -75,10 +75,10 @@ export default async function DashboardHome() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">
+      <h1 className="text-2xl font-bold text-foreground">
         Ringkasan {tenant?.name}
       </h1>
-      <p className="mt-1 text-sm text-slate-600">
+      <p className="mt-1 text-sm text-muted-foreground">
         Data sejak {startOfMonth.toISOString().slice(0, 10)} · hanya pesanan
         yang lunas.
       </p>
@@ -87,10 +87,10 @@ export default async function DashboardHome() {
         {cards.map((card) => (
           <div
             key={card.label}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            className="rounded-2xl border border-border bg-card p-4 shadow-sm"
           >
-            <div className="text-sm text-slate-600">{card.label}</div>
-            <div className="mt-1 text-2xl font-semibold text-slate-900">
+            <div className="text-sm text-muted-foreground">{card.label}</div>
+            <div className="mt-1 text-2xl font-semibold text-foreground">
               {card.value}
             </div>
           </div>

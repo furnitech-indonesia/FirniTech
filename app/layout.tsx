@@ -1,5 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const inter = Inter({
@@ -7,6 +9,19 @@ const inter = Inter({
   variable: "--font-inter",
   display: "swap",
 });
+
+/**
+ * Viewport eksplisit. Next sudah memberi nilai default, tetapi kita perlu
+ * `viewport-fit=cover` agar notch dan home indicator iOS tidak menutupi
+ * konten saat aplikasi dibungkus Capacitor (PRD §7.2).
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  // Jangan batasi zoom: membatasi zoom merusak aksesibilitas.
+  maximumScale: 5,
+  viewportFit: "cover",
+};
 
 export const metadata: Metadata = {
   title: "FurniTech",
@@ -19,27 +34,14 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="id" className={inter.variable}>
-      <head>
-        {/*
-          Material Symbols (Outlined) TIDAK tersedia di next/font/google —
-          font-data.json Next hanya memuat 1942 family tanpa Material Symbols.
-          Karena itu dimuat lewat link resmi Google, sesuai DESIGN.md §5.
-        */}
-        <link
-          rel="preconnect"
-          href="https://fonts.googleapis.com"
-        />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block"
-          rel="stylesheet"
-        />
-      </head>
-      <body>{children}</body>
+      {/* Tidak ada <head> manual: Inter di-host sendiri oleh next/font,
+          jadi tidak ada permintaan ke Google Fonts saat runtime. Penting untuk
+          luring dan untuk pembungkus Capacitor (PRD §7.2). */}
+      <body className="antialiased">
+        {children}
+        {/* Notifikasi ringan untuk aksi sukses/gagal tanpa memuat ulang. */}
+        <Toaster position="top-center" richColors closeButton />
+      </body>
     </html>
   );
 }

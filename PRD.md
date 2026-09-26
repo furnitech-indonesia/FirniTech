@@ -1,11 +1,16 @@
 Product Requirement Document (PRD) — FurniTech
 Nama Produk: FurniTech
 Tipe Platform: SaaS Multi-Tenant (B2B2C E-Commerce & Internal Operations for Furniture Makers)
-Versi PRD: 1.1
+Versi PRD: 1.2
 Status: Approved for Development
-Catatan Revisi: v1.1 menyelaraskan PRD dengan ROADMAP.md (6 sprint) dan menambahkan
-Modul 5 (Super Admin Panel) yang sebelumnya belum tercantum. ROADMAP.md menjadi acuan cakupan sprint,
-sedangkan PRD ini adalah acuan kebutuhan & aturan bisnis.
+Catatan Revisi:
+ * v1.2 — Menambahkan §7 (Rencana Rilis PWA & Native) beserta keputusan
+   arsitektur Capacitor, dan persyaratan tampilan responsif sebagai kebutuhan
+   lintas modul.
+ * v1.1 — Menyelaraskan PRD dengan ROADMAP.md (6 sprint) dan menambahkan
+   Modul 5 (Super Admin Panel) yang sebelumnya belum tercantum.
+ROADMAP.md menjadi acuan cakupan sprint, sedangkan PRD ini adalah acuan
+kebutuhan & aturan bisnis.
 1. Ringkasan Eksekutif & Visi Produk
 FurniTech adalah platform Software-as-a-Service (SaaS) multi-tenant yang dirancang khusus untuk memberdayakan pengrajin dan UMKM mebel/furnitur lokal. Platform ini menyediakan dua fungsionalitas utama dalam satu ekosistem:
  * Front-Office (Toko Online / Storefront): Platform e-commerce dengan custom domain untuk menjual produk mebel dengan kalkulasi ongkir kargo otomatis per kota.
@@ -31,14 +36,15 @@ C. Kebijakan Transaksi & Potongan Biaya (Fees)
 3. Tech Stack & Arsitektur Sistem
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        CLIENT / USER INTERFACE                         │
-│   Next.js (App Router) + Tailwind CSS + Google Icons + Firebase Push   │
+│   Next.js (App Router) + Tailwind CSS + shadcn/ui + Phosphor Icons       │
+│   Tampilan responsif: Mobile / Tablet / Desktop                          │
 │            [Phase 1: PWA | Phase 2: Next.js + Capacitor]               │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │                      ROUTING & MULTI-TENANCY                           │
-│     Next.js Middleware + Cloudflare for SaaS API (Custom Domains)      │
+│   proxy.ts (Next 16) + Cloudflare for SaaS API (Custom Domains)         │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼
@@ -54,17 +60,44 @@ C. Kebijakan Transaksi & Potongan Biaya (Fees)
 │ Midtrans Core & IRIS │ │ Fonnte (WhatsApp)  │ │    cron-job.org      │
 └──────────────────────┘ └────────────────────┘ └──────────────────────┘
 
- * Frontend: Next.js (App Router), Tailwind CSS, Google Symbols/Icons.
+ * Frontend: Next.js (App Router), Tailwind CSS v4, shadcn/ui di atas
+   Base UI, Phosphor Icons (inline SVG, offline-safe).
  * Database & ORM: PostgreSQL (Supabase) diakses menggunakan Drizzle ORM.
  * Arsitektur Multi-Tenant: Single Database dengan isolasi data berbasis tenant_id dan Supabase Row Level Security (RLS).
  * Authentication: Supabase Auth (Email/Password & Magic Link).
- * Domain Routing: Next.js Middleware + Cloudflare for SaaS (Custom Hostnames API).
+ * Domain Routing: proxy.ts + Cloudflare for SaaS (Custom Hostnames API).
+   Catatan: pada Next.js 16 middleware.ts sudah deprecated, digantikan proxy.ts
+   dengan fungsi export `proxy` dan runtime Node.js.
  * Notifikasi: Fonnte (WhatsApp Gateway API) & Firebase Cloud Messaging (Push Notification PWA/Mobile).
  * Cron Job: cron-job.org (Trigger webhook pencairan IRIS & pembaruan status sistem).
  * Hosting & Source Control: Vercel (Hosting Platform) & GitHub (Repository Codebase).
- * Rencana Rilis Aplikasi:
-   * Fase 1: Progressive Web App (PWA)
-   * Fase 2: Hybrid Mobile App (Next.js + Capacitor untuk Android & iOS)
+ * Rencana Rilis Aplikasi: lengkap di §7.
+ * Fase 1: Progressive Web App (PWA) — dipasang, dapat diinstal, offline-capable.
+ * Fase 2: Hybrid Mobile App (Next.js + Capacitor untuk Android & iOS).
+### 3.1 Persyaratan Tampilan Responsif (lintas modul)
+
+Semua halaman WAJIB dapat dipakai pada tiga ukuran layar. Ini bukan sesuatu yang
+bisa diabaikan: target pengguna utama adalah tukang yang memakai HP di bengkel, dan
+pemilik toko yang memakai tablet atau laptop di kantor.
+
+ * Mobile — lebar 375px sampai 767px. Titik Samsun untuk tukang: antrean
+   produksi dan unggah foto progres harus nyaman dipakai satu tangan. Navigasi
+   berubah menjadi menu ringkas, bukan deretan menu penuh.
+ * Tablet — 768px sampai 1023px. Titik nyaman untuk admin penjualan dan
+   pemilik toko saat Away dari meja kerja.
+ * Desktop — 1024px ke atas. Tata letak dua atau tiga kolom untuk daftar dan
+   detail; tabel boleh tampil penuh.
+
+Aturan yang berlaku untuk semua modul:
+ * Tidak ada lebar tetap (px) pada konten; pakai kontainer responsif.
+ * Tabel data meluaphorizontal dengan sendirinya di layar sempit, atau berubah
+   menjadi daftar kartu di bawah breakpoint md.
+ * Target sentuh sekurang-kurangnya 44 x 44px pada layar sentuh.
+ * Tidak ada informasi yang hanya tersedia lewat hover.
+ * Tata letak tetap berfungsi pada 200% zoom dan ukuran teks yang dinaikkan pengguna.
+ * Gambar produk & foto progres diberi rasio tetap supaya tidak menggeser
+   tata letak saat dimuat.
+
 4. Spesifikasi Modul & Fitur Platform
 Modul 1: Toko Online Pembeli (Storefront / Front-Office)
  * Dynamic Tenant Rendering:
@@ -170,3 +203,71 @@ nama sprint di ROADMAP.md.
  * Sprint 6 — IRIS Auto-Payout, Cron, PWA & QA:
    * Engine payout batch IRIS 2x/hari (06.00 & 18.00 WIB) via cron-job.org.
    * PWA, Firebase push, audit keamanan RLS, dan deployment Vercel Production.
+
+7. Rencana Rilis: Phase 1 (PWA) & Phase 2 (Native)
+
+FurniTech_bind_two_release dengan alasan yang berbeda.
+
+7.1 Phase 1 — Progressive Web App (PWA)
+Deliverable Phase 1 adalah PWA yang bisa dipasang di layar utama HP dan tetap
+berguna saat koneksi tidak stabil.
+ * manifest.json: nama aplikasi FurniTech, ikon, warna tema slate-900 dan
+   amber-600, display standalone.
+ * Service Worker untuk cache shell aplikasi (halaman, aset, CSS, JavaScript).
+ * Halaman tetap dapat dibuka saat offline, dan menampilkan penanda bahwa sedang luring.
+ * Install prompt di browser yang mendukung; pengingat untuk menambahkan
+   ke home screen khusus iOS.
+ * Firebase Cloud Messaging untuk push notification (pembaruan status pesanan
+   & progres produksi).
+ * Verifikasi Lighthouse untuk performa, A11y, dan PWA.
+Catatan: PWA memakai Service Worker. Pada Phase 2 Service Worker tidak lagi
+menjadi lapisan offline utama karena aset sudah berada di dalam paket aplikasi.
+
+7.2 Phase 2 — Hybrid Mobile App (Next.js + Capacitor, Android & iOS)
+Phase 2 membungkus aplikasi yang sama menjadi aplikasi native melalui
+Capacitor, khusus untuk dua platform:
+ * Android — paket APK/AAB, target SDK terbaru, build & rilis ke Google Play.
+ * iOS — paket Xcode, build & rilis ke App Store.
+ * Satu basis kode: Next.js App Router, Tailwind, dan Server Action yang sama.
+   Tidak ada penulisan ulang antarmuka untuk native.
+
+Keputusan arsitektur yang sudah diambil untuk Phase 2:
+ * Mode A (dipakai untuk rilis pertama): aplikasi native memanggil URL Vercel
+   yang sudah produksi lewat `server.url` pada capacitor.config.ts. Seluruh
+   logika server tetap di server, jadi tidak ada duplikasi.
+ * Konsekuensi mode A yang harus disadari: aplikasi tidak punya kemampuan
+   offline, dan pembungkus webview perlu fungsi yang nyata agar tidak ditolak
+   toko aplikasi (Apple App Store 4.2 minimum functionality, Google Play
+   minimum functionality). UI khusus tukang, kamera untuk foto progres, dan
+   push notification native menjadi alasan fungsional yang sah.
+ * Mode B (disiapkan untuk tahap berikutnya, belum dikerjakan): static export
+   plus pemindahan mutasi ke panggilan Supabase dari klien, sehingga unggah
+   foto bisa diantre saat luring.
+ * Fondasi Mode B sudah disiapkan sejak awal: seluruh policy RLS tenant sudah
+   benar dan teruji, jadi pemindahan mutasi ke sisi klien bersifat mekanis,
+   bukan penulisan ulang.
+
+Batasan yang harus dipahami sebelum Phase 2:
+ * Arsitektur sekarang TIDAK dapat di-static-export. Aplikasi memakai Server
+   Action, proxy.ts, dan koneksi PostgreSQL langsung. Karena itu mode A
+   menjadi pilihan, bukan sekadar preferensi.
+ * Ikon memakai inline SVG (Phosphor), bukan icon font dari CDN. Icon font
+   yang diambil dari jaringan akan hilang saat laring dan menyebabkan
+   kedipan tampilan pada setiap aplikasi dibuka.
+ * Domain milik FurniTech belum ada. Selama ini tenant diakses lewat path
+   (/t/<slug>); mode host-based aktif begitu domain tersedia tanpa perubahan
+   kode.
+
+7.3 Prasyarat & Definition of Done tiap Fase
+Phase 1 (PWA):
+ * Aplikasi terpasang di layar utama dan dapat dibuka ulang.
+ * Shell aplikasi tetap termuat saat luring dengan penanda yang jelas.
+ * Push notification sampai ke perangkat.
+ * Skor Lighthouse PWA & Performance memenuhi target yang ditetapkan.
+Phase 2 (Native):
+ * Satu basis kode berjalan di Android dan iOS.
+ * Alur inti yang dipakai tukang — login, melihat antrean, mengunggah foto
+   progres — berjalan dari perangkat nyata, bukan hanya simulator.
+ * Foto progres bisa diambil langsung lewat kamera pada perangkat.
+ * Notifikasi push masuk sebagai notifikasi native.
+ * Build rilis siap diajukan ke Google Play dan App Store.

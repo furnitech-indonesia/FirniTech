@@ -33,5 +33,19 @@ Seluruh komponen UI menggunakan sudut melengkung halus (Soft Rounded) untuk memb
    * Card Normal: shadow-sm (0 1px 2px 0 rgb(0 0 0 / 0.05))
    * Card Hover / Modal: shadow-md (0 4px 6px -1px rgb(0 0 0 / 0.1))
 5. Typography & Icons
- * Font Family: Inter / System UI Font (font-sans) untuk keterbacaan data numerik, dimensi (P \times L \times T), dan teks teknis yang presisi.
- * Icon System: Google Material Symbols (Outlined) — Menggunakan garis tipis yang konsisten dengan estetika minimalis.
+ * Font Family: Inter / System UI Font (font-sans) untuk keterbacaan data numerik, dimensi (P \times L \times T), dan teks teknis yang presisi. Di-host sendiri lewat next/font, bukan dari CDN.
+ * Icon System: Phosphor Icons (inline SVG) dengan weight "light" agar garisnya tetap tipis dan konsisten dengan estetika minimalis.
+ * Catatan Pergantian Icon (2026-09-26): sebelumnya menggunakan Google Material Symbols (icon font dari CDN). Diganti ke Phosphor karena tiga alasan teknis:
+     1. Offline — icon font diambil dari jaringan setiap kali app dibuka. Saat luring ikon hilang kosong; saat lambat muncul kedipan (FOUT).
+     2. Aksesibilitas — icon font berbasis ligature teks ("chair") bisa dibaca
+        screen reader bila tanpa aria-hidden; SVG tidak.
+     3. PWA & Native — aset SVG ter-bundle di dalam paket Capacitor, sehingga
+        tidak ada permintaan jaringan sama.
+ * Ketebalan thinning tetap terjaga lewat weight="light", jadi estetika garis tipis yang dikehendaki §5 tetap tercapai.
+6. Tampilan Responsif & Target Sentuh
+ * Tiga ukuran layar wajib didukung: mobile (375-767px), tablet (768-1023px), dan desktop (1024px ke atas). Sumber: PRD §3.1.
+ * Data table berubah menjadi daftar kartu di bawah breakpoint md. Memaksa pengguna HP menggeser tabel horizontal adalah cara tercepat membuat halaman terasa sempit.
+ * Target sentuh minimum 44 x 44px pada perangkat sentuh (pointer: coarse).
+ * Tidak boleh ada informasi yang hanya tersedia lewat hover.
+ * Padding aman iOS (notch & home indicator) memakai env(safe-area-inset-*), diterapkan lewat kelas .safe-top dan .safe-bottom. Penting saat aplikasi dibungkus Capacitor (Fase 2).
+ * Zoom tidak dibatasi; membatasi zoom merusak aksesibilitas.

@@ -6,7 +6,6 @@ import { tenants } from "@/db/schema";
 import { requireSession } from "@/lib/auth/session";
 import { ROLE_LABELS } from "@/lib/auth/permissions";
 import { DashboardNav } from "@/components/dashboard-nav";
-import { navForRole } from "@/lib/nav";
 
 export const metadata = { title: "Dashboard — FurniTech" };
 
@@ -37,7 +36,7 @@ export default async function DashboardLayout({
 
   return (
     <DashboardNav
-      items={navForRole(role)}
+      role={role}
       home={tenant ? `/t/${tenant.slug}` : "/"}
       who={{
         fullName: session.fullName,

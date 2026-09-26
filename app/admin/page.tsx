@@ -74,8 +74,8 @@ export default async function AdminOverviewPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">Ringkasan Platform</h1>
-      <p className="mt-1 text-sm text-slate-600">
+      <h1 className="text-2xl font-bold text-foreground">Ringkasan Platform</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
         Periode sejak {formatDateID(startOfMonth)} WIB.
       </p>
 
@@ -83,30 +83,30 @@ export default async function AdminOverviewPage() {
         {cards.map((card) => (
           <div
             key={card.label}
-            className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+            className="rounded-2xl border border-border bg-card p-4 shadow-sm"
           >
-            <div className="text-sm text-slate-600">{card.label}</div>
-            <div className="mt-1 text-xl font-semibold text-slate-900">
+            <div className="text-sm text-muted-foreground">{card.label}</div>
+            <div className="mt-1 text-xl font-semibold text-foreground">
               {card.value}
             </div>
           </div>
         ))}
       </div>
 
-      <h2 className="mt-8 text-lg font-semibold text-slate-900">
+      <h2 className="mt-8 text-lg font-semibold text-foreground">
         Sebaran paket langganan
       </h2>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         {planRows.length === 0 ? (
-          <p className="text-sm text-slate-600">Belum ada tenant.</p>
+          <p className="text-sm text-muted-foreground">Belum ada tenant.</p>
         ) : (
           planRows.map((row) => (
             <div
               key={row.plan}
-              className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+              className="rounded-2xl border border-border bg-card p-4 shadow-sm"
             >
-              <div className="text-sm capitalize text-slate-600">{row.plan}</div>
-              <div className="mt-1 text-2xl font-semibold text-slate-900">
+              <div className="text-sm capitalize text-muted-foreground">{row.plan}</div>
+              <div className="mt-1 text-2xl font-semibold text-foreground">
                 {row.total}
               </div>
             </div>

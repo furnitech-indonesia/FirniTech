@@ -79,17 +79,17 @@ export default async function OrderDetailPage({
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
       <p className="text-sm">
-        <Link href="/dashboard/pesanan" className="text-amber-700 hover:underline">
+        <Link href="/dashboard/pesanan" className="text-accent-foreground hover:underline">
           ← Kembali ke daftar pesanan
         </Link>
       </p>
 
       <header className="mt-2 mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-foreground">
             {order.orderCode}
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             {order.customerName} · {order.destinationCity} ·{" "}
             {formatDateID(order.createdAt)}
             {order.source === "manual" ? " · dicatat staf" : ""}
@@ -110,17 +110,17 @@ export default async function OrderDetailPage({
           <Card title="Rincian item">
             <ul className="grid gap-3">
               {items.map((item) => (
-                <li key={item.id} className="rounded-xl border border-slate-200 p-3">
+                <li key={item.id} className="rounded-xl border border-border p-3">
                   <div className="flex justify-between gap-3">
-                    <span className="font-medium text-slate-900">
+                    <span className="font-medium text-foreground">
                       {item.productName} × {item.quantity}
                     </span>
-                    <span className="text-slate-700">
+                    <span className="text-secondary">
                       {formatRupiah(item.price * item.quantity)}
                     </span>
                   </div>
                   {item.customSpecs ? (
-                    <p className="mt-1 text-xs text-slate-600">
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {[
                         item.customSpecs.lengthCm && `P ${item.customSpecs.lengthCm} cm`,
                         item.customSpecs.widthCm && `L ${item.customSpecs.widthCm} cm`,
@@ -138,7 +138,7 @@ export default async function OrderDetailPage({
               ))}
             </ul>
 
-            <dl className="mt-4 grid gap-1 border-t border-slate-100 pt-3 text-sm">
+            <dl className="mt-4 grid gap-1 border-t border-border pt-3 text-sm">
               <Row label="Subtotal" value={formatRupiah(order.itemsSubtotal)} />
               <Row label="Ongkir kargo" value={formatRupiah(order.shippingFee)} />
               <Row label="Total all-in" value={formatRupiah(total)} strong />
@@ -160,15 +160,15 @@ export default async function OrderDetailPage({
             description="Unggah foto dari bengkel; status pesanan mengikuti tahap terakhir."
           >
             {progress.length === 0 ? (
-              <p className="mb-4 text-sm text-slate-600">Belum ada progres.</p>
+              <p className="mb-4 text-sm text-muted-foreground">Belum ada progres.</p>
             ) : (
               <ol className="mb-4 grid gap-2">
                 {progress.map((p) => (
                   <li
                     key={p.id}
-                    className="flex gap-3 rounded-xl border border-slate-200 p-3"
+                    className="flex gap-3 rounded-xl border border-border p-3"
                   >
-                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted">
                       {progressImageMap[p.photoUrl] ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -179,14 +179,14 @@ export default async function OrderDetailPage({
                       ) : null}
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900">
+                      <p className="font-medium text-foreground">
                         {PROGRESS_STAGE_LABELS[p.stage]}
                       </p>
-                      <p className="text-xs text-slate-600">
+                      <p className="text-xs text-muted-foreground">
                         {p.carpenterName} · {formatDateID(p.createdAt)}
                       </p>
                       {p.notes ? (
-                        <p className="mt-1 text-sm text-slate-700">{p.notes}</p>
+                        <p className="mt-1 text-sm text-secondary">{p.notes}</p>
                       ) : null}
                     </div>
                   </li>
@@ -268,7 +268,7 @@ export default async function OrderDetailPage({
                 </ActionForm>
 
                 {remaining > 0 ? (
-                  <div className="mt-3 border-t border-slate-100 pt-3">
+                  <div className="mt-3 border-t border-border pt-3">
                     <ActionForm
                       action={recordPayment}
                       hidden={{ orderId: order.id, mode: "lunas" }}
@@ -276,7 +276,7 @@ export default async function OrderDetailPage({
                       tone="ghost"
                       className="grid"
                     >
-                      <p className="text-sm text-slate-700">
+                      <p className="text-sm text-secondary">
                         Mencatat pelunasan tidak mengubah status produksi.
                       </p>
                     </ActionForm>
@@ -310,13 +310,13 @@ export default async function OrderDetailPage({
           ) : null}
 
           <Card title="Alamat pengiriman">
-            <p className="text-sm text-slate-700">{order.customerAddress}</p>
-            <p className="mt-1 text-sm text-slate-700">
+            <p className="text-sm text-secondary">{order.customerAddress}</p>
+            <p className="mt-1 text-sm text-secondary">
               {order.destinationCity}
             </p>
-            <p className="mt-2 text-sm text-slate-600">{order.customerPhone}</p>
+            <p className="mt-2 text-sm text-muted-foreground">{order.customerPhone}</p>
             {order.notes ? (
-              <p className="mt-3 border-t border-slate-100 pt-2 text-sm text-slate-700">
+              <p className="mt-3 border-t border-border pt-2 text-sm text-secondary">
                 Catatan internal: {order.notes}
               </p>
             ) : null}
@@ -338,10 +338,10 @@ function Row({
 }) {
   return (
     <div className="flex justify-between gap-4">
-      <span className={strong ? "font-semibold text-slate-900" : "text-slate-700"}>
+      <span className={strong ? "font-semibold text-foreground" : "text-secondary"}>
         {label}
       </span>
-      <span className={strong ? "font-semibold text-slate-900" : "text-slate-700"}>
+      <span className={strong ? "font-semibold text-foreground" : "text-secondary"}>
         {value}
       </span>
     </div>

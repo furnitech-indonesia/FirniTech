@@ -1,13 +1,7 @@
 import { requireRole } from "@/lib/auth/session";
 import { DashboardNav } from "@/components/dashboard-nav";
-import type { NavItem } from "@/lib/nav";
 
 export const metadata = { title: "Super Admin — FurniTech" };
-
-const ADMIN_NAV: NavItem[] = [
-  { href: "/admin", label: "Ringkasan", icon: "monitoring" },
-  { href: "/admin/tenant", label: "Tenant", icon: "storefront" },
-];
 
 /**
  * Panel platform (ROADMAP Sprint 2).
@@ -26,7 +20,7 @@ export default async function AdminLayout({
 
   return (
     <DashboardNav
-      items={ADMIN_NAV}
+      role={session.role}
       home="/admin"
       who={{
         fullName: session.fullName,

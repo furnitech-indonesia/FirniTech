@@ -1,4 +1,16 @@
-import "server-only";
+// Tipe `Icon` tidak diekspor dari entry ssr, jadi diambil dari entry utama
+// yang sudah tetap type-only (tidak menambah kode ke bundle).
+import type { Icon } from "@phosphor-icons/react";
+import {
+  ArmchairIcon,
+  ChartBarIcon,
+  ChatIcon,
+  HammerIcon,
+  PackageIcon,
+  ReceiptIcon,
+  SquaresFourIcon,
+  StorefrontIcon,
+} from "@phosphor-icons/react/dist/ssr";
 
 import type { UserRole } from "@/lib/auth/permissions";
 
@@ -8,25 +20,65 @@ import type { UserRole } from "@/lib/auth/permissions";
  * Ini murni untuk tampilan: menyembunyikan menu yang tidak relevan agar tukang
  * tidak melihat pintu masuk ke modul yang memang bukan haknya. Penegakan
  * sebenarnya tetap di guard tiap action dan RLS — menu yang tersembunyi pun
- * tetap akan ditolak kalau diakses langsung.
+ * tetap ditolak kalau diakses langsung.
+ *
+ * Ikon adalah komponen Phosphor (inline SVG). Benefit untuk Fase 2: tidak ada
+ * permintaan jaringan untuk ikon, jadi tidak ada kedipan saat aplikasi dibuka
+ * dan tetap tampil saat luring (PRD §7.2).
  */
 
-export type NavItem = { href: string; label: string; icon: string };
+export type NavItem = {
+  href: string;
+  label: string;
+  /** Label pendek untuk layar sempit. */
+  shortLabel?: string;
+  icon?: Icon;
+};
 
 const ALL_NAV: NavItem[] = [
-  { href: "/dashboard", label: "Ringkasan", icon: "space_dashboard" },
-  { href: "/dashboard/produk", label: "Produk", icon: "chair" },
-  { href: "/dashboard/materials", label: "Bahan Baku", icon: "inventory_2" },
-  { href: "/dashboard/pesanan", label: "Pesanan", icon: "receipt_long" },
-  { href: "/dashboard/chat", label: "Inbox CS", icon: "chat" },
+  {
+    href: "/dashboard",
+    label: "Ringkasan",
+    shortLabel: "Ringkasan",
+    icon: SquaresFourIcon,
+  },
+  {
+    href: "/dashboard/produk",
+    label: "Produk",
+    shortLabel: "Produk",
+    icon: ArmchairIcon,
+  },
+  {
+    href: "/dashboard/materials",
+    label: "Bahan Baku",
+    shortLabel: "Bahan",
+    icon: PackageIcon,
+  },
+  {
+    href: "/dashboard/pesanan",
+    label: "Pesanan",
+    shortLabel: "Pesanan",
+    icon: ReceiptIcon,
+  },
+  {
+    href: "/dashboard/chat",
+    label: "Inbox CS",
+    shortLabel: "Inbox",
+    icon: ChatIcon,
+  },
 ];
 
 /**
- * Tukang: antrean produksi saja. Sprint 4 akan menambahkan tampilan khusus
- * tukang (antrean kerja + unggah foto progres).
+ * Tukang: antrean produksi saja. Sprint 7/8 membuat antrean ini mobile-first
+ * dengan akses kamera.
  */
 const CARPENTER_NAV: NavItem[] = [
-  { href: "/dashboard/pesanan", label: "Antrean Produksi", icon: "handyman" },
+  {
+    href: "/dashboard/pesanan",
+    label: "Antrean Produksi",
+    shortLabel: "Antrean",
+    icon: HammerIcon,
+  },
 ];
 
 export function navForRole(role: UserRole): NavItem[] {
@@ -34,3 +86,13 @@ export function navForRole(role: UserRole): NavItem[] {
   if (role === "super_admin") return [];
   return ALL_NAV;
 }
+
+export const ADMIN_NAV: NavItem[] = [
+  { href: "/admin", label: "Ringkasan", shortLabel: "Ringkasan", icon: ChartBarIcon },
+  {
+    href: "/admin/tenant",
+    label: "Tenant",
+    shortLabel: "Tenant",
+    icon: StorefrontIcon,
+  },
+];

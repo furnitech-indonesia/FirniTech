@@ -49,15 +49,15 @@ export default async function ProductDetailPage({
   return (
     <main className="mx-auto max-w-5xl px-4 py-10">
       <p className="text-sm">
-        <Link href="/dashboard/produk" className="text-amber-700 hover:underline">
+        <Link href="/dashboard/produk" className="text-accent-foreground hover:underline">
           ← Kembali ke katalog
         </Link>
       </p>
 
       <header className="mt-2 mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{product.name}</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <h1 className="text-2xl font-bold text-foreground">{product.name}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {formatRupiah(product.basePrice)} · {product.isPublished ? "tayang" : "draft"}
           </p>
         </div>
@@ -66,7 +66,7 @@ export default async function ProductDetailPage({
             {product.images.map((path) => (
               <div
                 key={path}
-                className="h-16 w-16 overflow-hidden rounded-xl bg-slate-100"
+                className="h-16 w-16 overflow-hidden rounded-xl bg-muted"
               >
                 {signedMap[path] ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -104,7 +104,7 @@ export default async function ProductDetailPage({
           </Card>
         ) : (
           <Card title="Data produk">
-            <p className="text-sm text-slate-700">
+            <p className="text-sm text-secondary">
               Peran {actor.role} hanya dapat melihat katalog, bukan mengubahnya.
             </p>
           </Card>
@@ -116,7 +116,7 @@ export default async function ProductDetailPage({
             description="Ukuran, jenis kayu, atau finishing lain. Kosongkan harga bila memakai harga dasar."
           >
             {variants.length === 0 ? (
-              <p className="mb-4 text-sm text-slate-600">
+              <p className="mb-4 text-sm text-muted-foreground">
                 Belum ada variasi. Produk memakai data di atas sebagai varian bawaan.
               </p>
             ) : (
@@ -124,11 +124,11 @@ export default async function ProductDetailPage({
                 {variants.map((variant) => (
                   <li
                     key={variant.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 p-3"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border p-3"
                   >
                     <div>
-                      <p className="font-medium text-slate-900">{variant.name}</p>
-                      <p className="text-xs text-slate-600">
+                      <p className="font-medium text-foreground">{variant.name}</p>
+                      <p className="text-xs text-muted-foreground">
                         {[
                           variant.lengthCm && `${variant.lengthCm} cm`,
                           variant.widthCm && `${variant.widthCm} cm`,
@@ -142,7 +142,7 @@ export default async function ProductDetailPage({
                       </p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-slate-900">
+                      <span className="text-sm font-medium text-foreground">
                         {variant.price
                           ? formatRupiah(variant.price)
                           : "harga dasar"}
@@ -175,7 +175,7 @@ export default async function ProductDetailPage({
               submitLabel="Hapus produk"
               tone="danger"
             >
-              <p className="text-sm text-slate-700">
+              <p className="text-sm text-secondary">
                 Tindakan ini tidak bisa dibatalkan.
               </p>
             </ActionForm>

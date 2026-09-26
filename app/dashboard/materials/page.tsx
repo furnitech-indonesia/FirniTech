@@ -1,4 +1,5 @@
 import { desc, eq } from "drizzle-orm";
+import { WarningIcon } from "@phosphor-icons/react/dist/ssr";
 
 import { db } from "@/db";
 import { materialAdjustments, materials } from "@/db/schema";
@@ -43,23 +44,21 @@ export default async function MaterialsPage() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-10">
-      <h1 className="text-2xl font-bold text-slate-900">Inventaris Bahan Baku</h1>
-      <p className="mt-1 text-sm text-slate-600">
+      <h1 className="text-2xl font-bold text-foreground">Inventaris Bahan Baku</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
         Stok hanya berubah lewat penyesuaian yang tercatat, supaya bisa
         dipertanggungjawabkan saat stock opname.
       </p>
 
       {lowStock.length > 0 ? (
-        <div className="mt-4 rounded-2xl border border-yellow-200 bg-yellow-100 p-4">
+        <div className="mt-4 rounded-2xl border border-status-pending bg-status-pending-bg p-4">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-yellow-600">
-              warning
-            </span>
-            <h2 className="font-semibold text-yellow-600">
+            <WarningIcon size={20} weight="light" className="text-status-pending" aria-hidden />
+            <h2 className="font-semibold text-status-pending">
               Stok menipis ({lowStock.length})
             </h2>
           </div>
-          <ul className="mt-2 grid gap-1 text-sm text-yellow-600 sm:grid-cols-2">
+          <ul className="mt-2 grid gap-1 text-sm text-status-pending sm:grid-cols-2">
             {lowStock.map((m) => (
               <li key={m.id}>
                 {m.name}: {Number(m.quantity)} {m.unit} (minimum{" "}
@@ -72,7 +71,7 @@ export default async function MaterialsPage() {
 
       <div className="mt-6 grid gap-4">
         {rows.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-600">
+          <p className="rounded-2xl border border-dashed border-border bg-card p-8 text-center text-sm text-muted-foreground">
             Belum ada bahan baku.
           </p>
         ) : (
@@ -85,11 +84,11 @@ export default async function MaterialsPage() {
               <Card key={material.id} bare>
                 <div className="flex flex-wrap items-center justify-between gap-3 p-4">
                   <div>
-                    <p className="font-semibold text-slate-900">{material.name}</p>
-                    <p className="text-sm text-slate-600">
+                    <p className="font-semibold text-foreground">{material.name}</p>
+                    <p className="text-sm text-muted-foreground">
                       {material.category} · {qty} {material.unit} (minimum {min})
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-muted-foreground">
                       Diperbarui {formatDateID(material.updatedAt)}
                     </p>
                   </div>
@@ -103,16 +102,16 @@ export default async function MaterialsPage() {
                 </div>
 
                 {canEdit ? (
-                  <div className="grid gap-4 border-t border-slate-100 p-4 lg:grid-cols-2">
+                  <div className="grid gap-4 border-t border-border p-4 lg:grid-cols-2">
                     <div className="grid gap-3">
-                      <p className="text-sm font-medium text-slate-700">
+                      <p className="text-sm font-medium text-secondary">
                         Penyesuaian stok
                       </p>
                       <AdjustStockForm materialId={material.id} />
                     </div>
 
                     <div className="grid gap-3">
-                      <p className="text-sm font-medium text-slate-700">
+                      <p className="text-sm font-medium text-secondary">
                         Data bahan
                       </p>
                       <EditMaterialForm
@@ -135,9 +134,9 @@ export default async function MaterialsPage() {
                         hidden={{ id: material.id }}
                         submitLabel="Hapus bahan"
                         tone="danger"
-                        className="border-t border-slate-100 pt-4 lg:col-span-2"
+                        className="border-t border-border pt-4 lg:col-span-2"
                       >
-                        <p className="text-sm text-slate-700">
+                        <p className="text-sm text-secondary">
                           Menghapus bahan juga menghapus riwayat penyesuaiannya.
                         </p>
                       </ActionForm>
@@ -157,7 +156,7 @@ export default async function MaterialsPage() {
 
         {recentAdjustments.length > 0 ? (
           <Card title="Penyesuaian terbaru" description="Jejak audit stok.">
-            <ul className="grid gap-1 text-sm text-slate-700">
+            <ul className="grid gap-1 text-sm text-secondary">
               {recentAdjustments.map((a) => (
                 <li key={a.id} className="flex justify-between gap-2">
                   <span>
@@ -165,7 +164,7 @@ export default async function MaterialsPage() {
                     {Number(a.delta) > 0 ? "+" : ""}
                     {a.delta} ({a.reason})
                   </span>
-                  <span className="text-slate-500">
+                  <span className="text-muted-foreground">
                     {formatDateID(a.createdAt)}
                   </span>
                 </li>

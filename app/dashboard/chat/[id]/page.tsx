@@ -42,17 +42,17 @@ export default async function ConversationPage({
   return (
     <main className="mx-auto max-w-3xl px-4 py-10">
       <p className="text-sm">
-        <Link href="/dashboard/chat" className="text-amber-700 hover:underline">
+        <Link href="/dashboard/chat" className="text-accent-foreground hover:underline">
           ← Kembali ke inbox
         </Link>
       </p>
 
       <header className="mt-2 mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-2xl font-bold text-foreground">
             {conversation.customerName}
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-muted-foreground">
             {conversation.customerPhone}
           </p>
         </div>
@@ -63,7 +63,7 @@ export default async function ConversationPage({
 
       <Card title="Percakapan">
         {messages.length === 0 ? (
-          <p className="text-sm text-slate-600">Belum ada pesan.</p>
+          <p className="text-sm text-muted-foreground">Belum ada pesan.</p>
         ) : (
           <ul className="grid gap-3">
             {messages.map((message) => {
@@ -73,12 +73,12 @@ export default async function ConversationPage({
                   key={message.id}
                   className={
                     fromStaff
-                      ? "ml-auto max-w-[80%] rounded-2xl bg-amber-50 p-3"
-                      : "mr-auto max-w-[80%] rounded-2xl bg-slate-100 p-3"
+                      ? "ml-auto max-w-[80%] rounded-2xl bg-accent p-3"
+                      : "mr-auto max-w-[80%] rounded-2xl bg-muted p-3"
                   }
                 >
-                  <p className="text-sm text-slate-800">{message.body}</p>
-                  <p className="mt-1 text-xs text-slate-500">
+                  <p className="text-sm text-foreground">{message.body}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {fromStaff ? message.senderName : conversation.customerName}
                     {" · "}
                     {formatDateID(message.createdAt)}

@@ -13,8 +13,16 @@ import {
   PAYMENT_STATUS_LABELS,
   type OrderStatus,
 } from "@/lib/labels";
+import { OrderCard } from "@/components/order-card";
 
-/** Daftar pesanan (ROADMAP Sprint 3). */
+/**
+ * Daftar pesanan (ROADMAP Sprint 3).
+ *
+ * RESPONSIF (PRD §3.1): tabel penuh disembunyikan di bawah `md` dan diganti
+ * daftar kartu. Memaksa pengguna HP menggeser tabel horizontal adalah cara
+ * tercepat membuat halaman terasa sempit — dan ini justru layar yang paling
+ * sering dipakai.
+ */
 export default async function OrdersPage() {
   const actor = await requireTenantWrite(["owner", "admin_penjualan", "tukang"]);
 
@@ -43,28 +51,29 @@ export default async function OrdersPage() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10">
+    <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:py-10">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Pesanan</h1>
-          <p className="mt-1 text-sm text-slate-600">{rows.length} pesanan tercatat.</p>
+          <h1 className="text-2xl font-bold text-foreground">Pesanan</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {rows.length} pesanan tercatat.
+          </p>
         </div>
         {actor.role !== "tukang" ? (
           <Link
             href="/dashboard/pesanan/baru"
-            className="rounded-xl bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+            className="inline-flex min-h-11 items-center rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover"
           >
             Catat pesanan kustom
           </Link>
         ) : null}
       </header>
 
-      {/* Ringkasan per status, memakai urutan resmi dari order-status.ts */}
       <div className="mb-6 flex flex-wrap gap-2">
         {ORDER_STATUS_FLOW.map((status) => (
           <span
             key={status}
-            className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700"
+            className="rounded-full border border-border bg-card px-3 py-1 text-xs text-secondary"
           >
             {ORDER_STATUS_LABELS[status]}: {counts.get(status) ?? 0}
           </span>
@@ -74,62 +83,79 @@ export default async function OrdersPage() {
       {rows.length === 0 ? (
         <EmptyState message="Belum ada pesanan. Catat pesanan kustom atau tunggu pembeli dari storefront." />
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-slate-200 text-slate-600">
-              <tr>
-                <th className="px-4 py-3 font-medium">Kode</th>
-                <th className="px-4 py-3 font-medium">Pelanggan</th>
-                <th className="px-4 py-3 font-medium">Total</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Bayar</th>
-                <th className="px-4 py-3 font-medium">Tukang</th>
-                <th className="px-4 py-3 font-medium">Dibuat</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((order) => (
-                <tr key={order.id} className="border-b border-slate-100 last:border-0">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/dashboard/pesanan/${order.id}`}
-                      className="font-medium text-slate-900 hover:text-amber-700"
-                    >
-                      {order.orderCode}
-                    </Link>
-                    {order.source === "manual" ? (
-                      <span className="ml-2 text-xs text-slate-500">kustom</span>
-                    ) : null}
-                  </td>
-                  <td className="px-4 py-3 text-slate-700">
-                    {order.customerName}
-                    <span className="block text-xs text-slate-500">
-                      {order.destinationCity}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-slate-700">
-                    {formatRupiah(order.totalAmount)}
-                    <span className="block text-xs text-slate-500">
-                      cair {formatRupiah(order.netTenantAmount)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={order.orderStatus as OrderStatus} />
-                  </td>
-                  <td className="px-4 py-3 text-xs text-slate-700">
-                    {PAYMENT_STATUS_LABELS[order.paymentStatus]}
-                  </td>
-                  <td className="px-4 py-3 text-slate-700">
-                    {order.carpenterName ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-slate-500">
-                    {formatDateID(order.createdAt)}
-                  </td>
+        <>
+          {/* Mobile & tablet kecil: daftar kartu. */}
+          <ul className="grid gap-3 md:hidden">
+            {rows.map((order) => (
+              <li key={order.id}>
+                <OrderCard order={order} />
+              </li>
+            ))}
+          </ul>
+
+          {/* Desktop: tabel penuh. */}
+          <div className="hidden overflow-x-auto rounded-2xl border border-border bg-card shadow-sm md:block">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Kode</th>
+                  <th className="px-4 py-3 font-medium">Pelanggan</th>
+                  <th className="px-4 py-3 font-medium">Total</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium">Bayar</th>
+                  <th className="px-4 py-3 font-medium">Tukang</th>
+                  <th className="px-4 py-3 font-medium">Dibuat</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {rows.map((order) => (
+                  <tr
+                    key={order.id}
+                    className="border-b border-border last:border-0"
+                  >
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/dashboard/pesanan/${order.id}`}
+                        className="font-medium text-foreground hover:text-primary"
+                      >
+                        {order.orderCode}
+                      </Link>
+                      {order.source === "manual" ? (
+                        <span className="ml-2 text-xs text-muted-foreground">
+                          kustom
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3 text-secondary">
+                      {order.customerName}
+                      <span className="block text-xs text-muted-foreground">
+                        {order.destinationCity}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-secondary">
+                      {formatRupiah(order.totalAmount)}
+                      <span className="block text-xs text-muted-foreground">
+                        cair {formatRupiah(order.netTenantAmount)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={order.orderStatus as OrderStatus} />
+                    </td>
+                    <td className="px-4 py-3 text-xs text-secondary">
+                      {PAYMENT_STATUS_LABELS[order.paymentStatus]}
+                    </td>
+                    <td className="px-4 py-3 text-secondary">
+                      {order.carpenterName ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {formatDateID(order.createdAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </main>
   );
