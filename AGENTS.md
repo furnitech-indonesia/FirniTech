@@ -31,12 +31,13 @@ Quirks:
 
 The codespace's built-in token (`GITHUB_TOKEN`, a `ghu_` app token) is scoped **only** to `github/codespaces-nextjs`, so plain `git push` fails with `403 Permission denied` even though `gh api` reads work. `/etc/gitconfig` also registers `/.codespaces/bin/gitcredential_github.sh` as the *first* credential helper, which shadows the repo's own helper.
 
-A real PAT lives in `.env` (`GITHUB_TOKEN=ghp_…`, mode 600, gitignored) and in `.git/gh-credentials` (gitignored by construction, mode 600). Push with the helper list reset:
+A real PAT lives in `.env` (`GITHUB_TOKEN=ghp_…`, mode 600, gitignored) and in `.git/gh-credentials` (gitignored by construction, mode 600). Always push with the helper list reset — the leading empty `credential.helper=` is what drops the codespaces helper:
 
 ```bash
-git pushauth              # local alias, equivalent to the command below
 git -c credential.helper= -c 'credential.helper=store --file=.git/gh-credentials' push
 ```
+
+Do **not** try to wrap this in a `git config alias` — nested quoting in a `!`-alias breaks the inner `-c` value, and the alias silently falls back to printing git usage.
 
 Rules:
 - **Never** commit `.env`; `.gitignore` now covers `.env` and re-allows `!.env.example`. If you add a real `.env.example`, keep it token-free.
