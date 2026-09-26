@@ -25,6 +25,24 @@ Quirks:
 - Codespace **rebuilds** run `npm install && npm run build`, so a broken build surfaces on every rebuild.
 - `npm run build` prints a harmless warning: Next ignores `package-lock.json` in `/workspaces` (outside the git repo). Do not "fix" it by setting `turbopack.root`.
 
+## Pushing to GitHub (read before the first `git push`)
+
+`origin` = `https://github.com/furnitech-indonesia/FirniTech.git` (public, branch `main`).
+
+The codespace's built-in token (`GITHUB_TOKEN`, a `ghu_` app token) is scoped **only** to `github/codespaces-nextjs`, so plain `git push` fails with `403 Permission denied` even though `gh api` reads work. `/etc/gitconfig` also registers `/.codespaces/bin/gitcredential_github.sh` as the *first* credential helper, which shadows the repo's own helper.
+
+A real PAT lives in `.env` (`GITHUB_TOKEN=ghp_…`, mode 600, gitignored) and in `.git/gh-credentials` (gitignored by construction, mode 600). Push with the helper list reset:
+
+```bash
+git pushauth              # local alias, equivalent to the command below
+git -c credential.helper= -c 'credential.helper=store --file=.git/gh-credentials' push
+```
+
+Rules:
+- **Never** commit `.env`; `.gitignore` now covers `.env` and re-allows `!.env.example`. If you add a real `.env.example`, keep it token-free.
+- Never echo/print the token or run `git credential fill` without redacting — it returns the codespaces token first, not the PAT, which is a misleading way to check auth.
+- Verify a token works with `gh api` / `curl -H "Authorization: Bearer $(sed -n 's/^GITHUB_TOKEN=//p' .env)" …`, not with a push.
+
 ## Doc vs. code conflicts (docs describe the target, code is the current state)
 
 - `PRD.md` / `ROADMAP.md` mandate **App Router + Tailwind CSS + Material Symbols**; the code is **Pages Router + CSS Modules**. Migrating to App Router is an intentional project decision, not an oversight — but it has not happened. Match the surrounding code's router unless the task is the migration.
