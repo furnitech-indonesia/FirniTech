@@ -3,7 +3,8 @@ import { requireTenantWrite } from "@/lib/auth/guard";
 import { listConversations, lastMessagePreview } from "@/lib/actions/chat";
 import { formatDateID } from "@/lib/format";
 import { CONVERSATION_STATUS_LABELS } from "@/lib/labels";
-import { Badge, EmptyState } from "@/components/ui";
+import { EmptyState } from "@/components/panels";
+import { Badge } from "@/components/ui/badge";
 
 /** Inbox Customer Service (ROADMAP Sprint 3). */
 export default async function ChatInboxPage() {
@@ -46,12 +47,11 @@ export default async function ChatInboxPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     {conversation.unreadCount > 0 ? (
-                      <Badge tone="pending">
+                      <Badge variant="pending">
                         {conversation.unreadCount} belum dibalas
                       </Badge>
                     ) : null}
-                    <Badge
-                      tone={
+                    <Badge variant={
                         conversation.status === "open" ? "production" : "neutral"
                       }
                     >

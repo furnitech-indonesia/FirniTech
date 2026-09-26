@@ -2,13 +2,9 @@
 
 import { useActionState, type ReactNode } from "react";
 
-import { Alert, SubmitButton } from "@/components/ui";
-
-export type FormState = {
-  error?: string;
-  message?: string;
-  fieldErrors?: Record<string, string>;
-};
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import type { FormState } from "./form-state";
 
 /**
  * Form sederhana untuk aksi tanpa input: tombol ubah status, tandai dibaca,
@@ -20,6 +16,9 @@ export type FormState = {
  *
  * Field tersembunyi lewat prop `hidden`. Nilainya WAJIB di-hardcode dari
  * server; jangan pernah meneruskan nilai dari klien tanpa memverifikasi.
+ *
+ * `size="touch"` dipakai karena aksi ini sering dipakai di layar HP dan
+ * PRD §3.1 menuntut target sentuh minimal 44px.
  */
 export function ActionForm({
   action,
@@ -29,6 +28,7 @@ export function ActionForm({
   tone = "primary",
   encType,
   className,
+  size = "touch",
 }: {
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   children?: ReactNode;
@@ -37,6 +37,7 @@ export function ActionForm({
   tone?: "primary" | "ghost" | "danger";
   encType?: "multipart/form-data";
   className?: string;
+  size?: "default" | "touch";
 }) {
   const [state, formAction, pending] = useActionState<FormState, FormData>(
     action,
@@ -59,12 +60,21 @@ export function ActionForm({
 
       {children}
 
-      {state?.error ? <Alert tone="error">{state.error}</Alert> : null}
-      {state?.message ? <Alert tone="success">{state.message}</Alert> : null}
+      {state?.error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{state.error}</AlertDescription>
+        </Alert>
+      ) : null}
+      {state?.message ? <Alert>{state.message}</Alert> : null}
 
-      <SubmitButton pending={pending} tone={tone}>
-        {submitLabel}
-      </SubmitButton>
+      <Button
+        type="submit"
+        size={size}
+        disabled={pending}
+        variant={tone === "danger" ? "destructive" : tone === "ghost" ? "outline" : "default"}
+      >
+        {pending ? "Memproses…" : submitLabel}
+      </Button>
     </form>
   );
 }

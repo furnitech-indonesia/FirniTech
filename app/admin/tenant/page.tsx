@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { tenants } from "@/db/schema";
 import { formatDateID, formatRupiah } from "@/lib/format";
 import { PLANS } from "@/lib/plans";
-import { Badge } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata = { title: "Direktori Tenant — FurniTech" };
 
@@ -64,7 +64,7 @@ export default async function AdminTenantsPage() {
                       <span className="font-medium text-foreground">{t.name}</span>
                       {!t.isActive ? (
                         <span className="ml-2">
-                          <Badge tone="failed">nonaktif</Badge>
+                          <Badge variant="failed">nonaktif</Badge>
                         </span>
                       ) : null}
                     </td>
@@ -80,7 +80,7 @@ export default async function AdminTenantsPage() {
                       {t.customDomain ?? "—"}
                       {t.customDomain && !t.customDomainVerified ? (
                         <span className="ml-2">
-                          <Badge tone="pending">belum diverifikasi</Badge>
+                          <Badge variant="pending">belum diverifikasi</Badge>
                         </span>
                       ) : null}
                     </td>
@@ -116,10 +116,10 @@ function TenantCard({ tenant }: { tenant: TenantRow }) {
           </Link>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <Badge tone={tenant.isActive ? "settled" : "failed"}>
+          <Badge variant={tenant.isActive ? "settled" : "failed"}>
             {tenant.plan}
           </Badge>
-          {!tenant.isActive ? <Badge tone="failed">nonaktif</Badge> : null}
+          {!tenant.isActive ? <Badge variant="failed">nonaktif</Badge> : null}
         </div>
       </div>
 
@@ -142,7 +142,7 @@ function TenantCard({ tenant }: { tenant: TenantRow }) {
 
       {tenant.customDomain && !tenant.customDomainVerified ? (
         <p className="mt-2">
-          <Badge tone="pending">belum diverifikasi</Badge>
+          <Badge variant="pending">belum diverifikasi</Badge>
         </p>
       ) : null}
     </div>

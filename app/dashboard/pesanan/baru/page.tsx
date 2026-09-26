@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { CustomOrderForm } from "@/components/custom-order-form";
-import { Card } from "@/components/ui";
+import { SectionCard } from "@/components/panels";
 import { requireTenantWrite } from "@/lib/auth/guard";
 
 export const metadata = { title: "Pesanan Kustom — FurniTech" };
@@ -26,9 +26,9 @@ export default async function NewCustomOrderPage() {
       </p>
 
       <div className="mt-6">
-        <Card>
+        <SectionCard>
           <CustomOrderForm />
-        </Card>
+        </SectionCard>
       </div>
     </main>
   );

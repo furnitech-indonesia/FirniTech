@@ -10,8 +10,9 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 
-import { Alert, SubmitButton } from "@/components/ui";
-import type { FormState } from "./action-form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import type { FormState } from "./form-state";
 
 /**
  * Konteks form untuk komponen anak.
@@ -145,12 +146,21 @@ export function ZodForm<S extends ZodFormSchema>({
             setValue(name as never, value as never),
         })}
 
-        {state.error ? <Alert tone="error">{state.error}</Alert> : null}
-        {state.message ? <Alert tone="success">{state.message}</Alert> : null}
+        {state.error ? (
+          <Alert variant="destructive">
+            <AlertDescription>{state.error}</AlertDescription>
+          </Alert>
+        ) : null}
+        {state.message ? <Alert>{state.message}</Alert> : null}
 
-        <SubmitButton pending={isSubmitting} tone={tone}>
-          {submitLabel}
-        </SubmitButton>
+        <Button
+          type="submit"
+          size="touch"
+          disabled={isSubmitting}
+          variant={tone === "danger" ? "destructive" : tone === "ghost" ? "outline" : "default"}
+        >
+          {isSubmitting ? "Memproses…" : submitLabel}
+        </Button>
       </form>
     </FormProvider>
   );

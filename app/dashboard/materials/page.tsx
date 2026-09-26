@@ -6,7 +6,8 @@ import { materialAdjustments, materials } from "@/db/schema";
 import { ActionForm } from "@/components/action-form";
 import { AdjustStockForm, CreateMaterialForm } from "@/components/material-forms";
 import { EditMaterialForm } from "@/components/edit-material-form";
-import { Badge, Card } from "@/components/ui";
+import { SectionCard } from "@/components/panels";
+import { Badge } from "@/components/ui/badge";
 import { requireTenantWrite } from "@/lib/auth/guard";
 import { deleteMaterial } from "@/lib/actions/materials";
 import { formatDateID } from "@/lib/format";
@@ -81,7 +82,7 @@ export default async function MaterialsPage() {
             const isLow = qty <= min;
 
             return (
-              <Card key={material.id} bare>
+              <SectionCard key={material.id} bare>
                 <div className="flex flex-wrap items-center justify-between gap-3 p-4">
                   <div>
                     <p className="font-semibold text-foreground">{material.name}</p>
@@ -94,9 +95,9 @@ export default async function MaterialsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     {isLow ? (
-                      <Badge tone="pending">stok menipis</Badge>
+                      <Badge variant="pending">stok menipis</Badge>
                     ) : (
-                      <Badge tone="settled">aman</Badge>
+                      <Badge variant="settled">aman</Badge>
                     )}
                   </div>
                 </div>
@@ -143,19 +144,19 @@ export default async function MaterialsPage() {
                     ) : null}
                   </div>
                 ) : null}
-              </Card>
+              </SectionCard>
             );
           })
         )}
 
         {canEdit ? (
-          <Card title="Tambah bahan baku">
+          <SectionCard title="Tambah bahan baku">
             <CreateMaterialForm />
-          </Card>
+          </SectionCard>
         ) : null}
 
         {recentAdjustments.length > 0 ? (
-          <Card title="Penyesuaian terbaru" description="Jejak audit stok.">
+          <SectionCard title="Penyesuaian terbaru" description="Jejak audit stok.">
             <ul className="grid gap-1 text-sm text-secondary">
               {recentAdjustments.map((a) => (
                 <li key={a.id} className="flex justify-between gap-2">
@@ -170,7 +171,7 @@ export default async function MaterialsPage() {
                 </li>
               ))}
             </ul>
-          </Card>
+          </SectionCard>
         ) : null}
       </div>
     </main>

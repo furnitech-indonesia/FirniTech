@@ -10,13 +10,13 @@ import {
   users,
 } from "@/db/schema";
 import { requireTenantWrite } from "@/lib/auth/guard";
-import {
-  assignCarpenter,
-  recordPayment,
-  setTracking,
-  transitionOrderStatus,
-} from "@/lib/actions/orders";
+import { recordPayment, transitionOrderStatus } from "@/lib/actions/orders";
 import { ProgressForm } from "@/components/progress-form";
+import {
+  AssignCarpenterForm,
+  RecordPaymentForm,
+  TrackingForm,
+} from "@/components/order-forms";
 import { formatDateID, formatRupiah } from "@/lib/format";
 import { createSignedUrls } from "@/lib/storage";
 import { ALLOWED_TRANSITIONS, PROGRESS_STAGE_ORDER } from "@/lib/order-status";
@@ -28,7 +28,8 @@ import {
   type OrderStatus,
 } from "@/lib/labels";
 import { ActionForm } from "@/components/action-form";
-import { Badge, Card, Field, Select } from "@/components/ui";
+import { SectionCard } from "@/components/panels";
+import { Badge } from "@/components/ui/badge";
 
 export default async function OrderDetailPage({
   params,
@@ -96,10 +97,10 @@ export default async function OrderDetailPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge tone={ORDER_STATUS_TONES[current]}>
+          <Badge variant={ORDER_STATUS_TONES[current]}>
             {ORDER_STATUS_LABELS[current]}
           </Badge>
-          <Badge tone={order.paymentStatus === "fully_paid" ? "settled" : "pending"}>
+          <Badge variant={order.paymentStatus === "fully_paid" ? "settled" : "pending"}>
             {PAYMENT_STATUS_LABELS[order.paymentStatus]}
           </Badge>
         </div>
@@ -107,7 +108,7 @@ export default async function OrderDetailPage({
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="grid gap-6 lg:col-span-2">
-          <Card title="Rincian item">
+          <SectionCard title="Rincian item">
             <ul className="grid gap-3">
               {items.map((item) => (
                 <li key={item.id} className="rounded-xl border border-border p-3">
@@ -153,9 +154,9 @@ export default async function OrderDetailPage({
                 strong
               />
             </dl>
-          </Card>
+          </SectionCard>
 
-          <Card
+          <SectionCard
             title="Progres produksi"
             description="Unggah foto dari bengkel; status pesanan mengikuti tahap terakhir."
           >
@@ -201,12 +202,12 @@ export default async function OrderDetailPage({
                 label: PROGRESS_STAGE_LABELS[stage],
               }))}
             />
-          </Card>
+          </SectionCard>
         </div>
 
         <div className="grid gap-6">
           {nextStatuses.length > 0 ? (
-            <Card
+            <SectionCard
               title="Ubah status"
               description="Transisi memakai aturan di src/lib/order-status.ts."
             >
@@ -222,53 +223,28 @@ export default async function OrderDetailPage({
                   />
                 ))}
               </div>
-            </Card>
+            </SectionCard>
           ) : null}
 
           {isOwnerOrAdmin ? (
             <>
-              <Card title="Tugaskan tukang">
-                <ActionForm
-                  action={assignCarpenter}
-                  hidden={{ orderId: order.id }}
-                  submitLabel="Simpan penugasan"
-                >
-                  <Select
-                    label="Tukang produksi"
-                    name="carpenterId"
-                    defaultValue={order.assignedCarpenterId ?? ""}
-                    options={[
-                      { value: "", label: "— belum ditugaskan —" },
-                      ...carpenters
-                        .filter((c) => c.id !== order.assignedCarpenterId)
-                        .map((c) => ({ value: c.id, label: c.fullName })),
-                    ]}
-                  />
-                </ActionForm>
-              </Card>
+              <SectionCard title="Tugaskan tukang">
+                <AssignCarpenterForm
+                  orderId={order.id}
+                  assignedTo={order.assignedCarpenterId}
+                  carpenters={carpenters}
+                />
+              </SectionCard>
 
-              <Card
+              <SectionCard
                 title="Catat pembayaran"
                 description={`Sisa tagihan ${formatRupiah(remaining)}.`}
               >
-                <ActionForm
-                  action={recordPayment}
-                  hidden={{ orderId: order.id }}
-                  submitLabel="Catat pelunasan"
-                >
-                  <Field
-                    label="Nominal pelunasan (Rp)"
-                    name="amount"
-                    type="number"
-                    min="0"
-                    defaultValue={remaining}
-                    hint="Mencatat pelunasan akan menutup pesanan bila sudah penuh."
-                  />
-                  <input type="hidden" name="mode" value="dp" />
-                </ActionForm>
+                <RecordPaymentForm orderId={order.id} remaining={remaining} />
 
                 {remaining > 0 ? (
                   <div className="mt-3 border-t border-border pt-3">
+                    {/* Aksi tanpa input -> tetap ActionForm, bukan ZodForm. */}
                     <ActionForm
                       action={recordPayment}
                       hidden={{ orderId: order.id, mode: "lunas" }}
@@ -282,34 +258,22 @@ export default async function OrderDetailPage({
                     </ActionForm>
                   </div>
                 ) : null}
-              </Card>
+              </SectionCard>
             </>
           ) : null}
 
           {isOwnerOrAdmin &&
           ["ready_to_ship", "shipped", "completed"].includes(current) ? (
-            <Card title="Data pengiriman">
-              <ActionForm
-                action={setTracking}
-                hidden={{ orderId: order.id }}
-                submitLabel="Simpan resi"
-              >
-                <Field
-                  label="Nama kargo"
-                  name="cargoName"
-                  defaultValue={order.cargoName ?? ""}
-                  placeholder="Indah Logistik Kargo"
-                />
-                <Field
-                  label="Nomor resi"
-                  name="trackingNumber"
-                  defaultValue={order.trackingNumber ?? ""}
-                />
-              </ActionForm>
-            </Card>
+            <SectionCard title="Data pengiriman">
+              <TrackingForm
+                orderId={order.id}
+                cargoName={order.cargoName}
+                trackingNumber={order.trackingNumber}
+              />
+            </SectionCard>
           ) : null}
 
-          <Card title="Alamat pengiriman">
+          <SectionCard title="Alamat pengiriman">
             <p className="text-sm text-secondary">{order.customerAddress}</p>
             <p className="mt-1 text-sm text-secondary">
               {order.destinationCity}
@@ -320,7 +284,7 @@ export default async function OrderDetailPage({
                 Catatan internal: {order.notes}
               </p>
             ) : null}
-          </Card>
+          </SectionCard>
         </div>
       </div>
     </main>

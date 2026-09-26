@@ -254,10 +254,21 @@ merusak nilai `-c` di dalamnya dan alias itu diam-diam hanya mencetak git usage.
   gagal. `DESIGN.md` tetap sumber kebenaran.
 - Token status (pending/production/quality/settled/failed) dipakai lewat
   `bg-status-*` / `text-status-*`, bukan `bg-yellow-100` langsung.
-- **Komponen shadcn/ui ada di `src/components/ui/`** (Base UI, bukan Radix).
-  Primitif itu milik kita sekarang; jangan diedit manual tanpa alasan.
-  Primitif buatan sendiri (Card/Field/Badge/Alert/EmptyState) masih di
-  `src/components/ui.tsx` dan memakai token semantik.
+- **shadcn/ui adalah pemilik TUNGGAL primitif** di `src/components/ui/`
+  (Base UI, bukan Radix). Primitif itu milik kita sekarang — boleh diedit,
+  tapi jangan menulis ulang primitif baru di tempat lain. `src/components/ui.tsx`
+  yang lama sudah DIHAPUS karena berduplikasi.
+  - Yang tetap milik kita: `src/components/panels.tsx` (`SectionCard`,
+    `EmptyState`) — itu **komposisi pola halaman**, bukan primitif; dan
+    `rhf-fields.tsx` — logika react-hook-form di dalam primitif shadcn.
+  - `test:responsive` menegakkan aturan ini plus aturan "ActionForm tidak
+    boleh dipakai untuk form berisi input".
+- **Dua penyimpangan yang disengaja dari bawaan shadcn**, keduanya lewat
+  `cva` dan bukan menyalin kode:
+  - `badge`: 5 varian status (pending/production/quality/settled/failed) dari
+    DESIGN.md §3. Bawaan shadcn hanya punya destructive.
+  - `button`: varian `size="touch"` (min-h-11). Ukuran bawaan maksimum
+    `h-9` (36px) dan TIDAK memenuhi syarat 44px di PRD §3.1.
 - **Ikon: Phosphor, inline SVG. Bukan icon font dari CDN.** Ini syarat offline
   untuk PWA dan Capacitor (PRD §7.2), bukan selera visual.
   - Di **Client Component**: `import { XIcon } from "@phosphor-icons/react"`.

@@ -5,16 +5,16 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { conversations } from "@/db/schema";
 import { requireTenantWrite } from "@/lib/auth/guard";
+import { listMessages, markConversationRead } from "@/lib/actions/chat";
 import {
-  listMessages,
-  markConversationRead,
-  setConversationStatus,
-} from "@/lib/actions/chat";
-import { ChatReplyForm } from "@/components/chat-reply-form";
+  ChatReplyForm,
+  ConversationStatusForm,
+} from "@/components/chat-reply-form";
 import { formatDateID } from "@/lib/format";
 import { CONVERSATION_STATUS_LABELS } from "@/lib/labels";
 import { ActionForm } from "@/components/action-form";
-import { Badge, Card, Select } from "@/components/ui";
+import { SectionCard } from "@/components/panels";
+import { Badge } from "@/components/ui/badge";
 
 export default async function ConversationPage({
   params,
@@ -56,12 +56,12 @@ export default async function ConversationPage({
             {conversation.customerPhone}
           </p>
         </div>
-        <Badge tone="neutral">
+        <Badge variant="neutral">
           {CONVERSATION_STATUS_LABELS[conversation.status]}
         </Badge>
       </header>
 
-      <Card title="Percakapan">
+      <SectionCard title="Percakapan">
         {messages.length === 0 ? (
           <p className="text-sm text-muted-foreground">Belum ada pesan.</p>
         ) : (
@@ -89,14 +89,14 @@ export default async function ConversationPage({
             })}
           </ul>
         )}
-      </Card>
+      </SectionCard>
 
       <div className="mt-6 grid gap-4">
-        <Card title="Balas">
+        <SectionCard title="Balas">
           <ChatReplyForm conversationId={id} />
-        </Card>
+        </SectionCard>
 
-        <Card title="Tindakan">
+        <SectionCard title="Tindakan">
           <div className="grid gap-4 sm:grid-cols-2">
             <ActionForm
               action={markConversationRead}
@@ -105,25 +105,12 @@ export default async function ConversationPage({
               tone="ghost"
             />
 
-            <ActionForm
-              action={setConversationStatus}
-              hidden={{ conversationId: id }}
-              submitLabel="Ubah status"
-              tone="ghost"
-            >
-              <Select
-                label="Status percakapan"
-                name="status"
-                defaultValue={conversation.status}
-                options={[
-                  { value: "open", label: "Baru / ditangani" },
-                  { value: "pending", label: "Menunggu pembeli" },
-                  { value: "resolved", label: "Selesai" },
-                ]}
+            <ConversationStatusForm
+                conversationId={id}
+                current={conversation.status}
               />
-            </ActionForm>
           </div>
-        </Card>
+        </SectionCard>
       </div>
     </main>
   );

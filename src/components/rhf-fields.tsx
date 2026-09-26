@@ -1,77 +1,75 @@
 "use client";
 
-import type { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { ReactNode } from "react";
+import { useFormContext, useWatch } from "react-hook-form";
 
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea as TextareaPrimitive } from "@/components/ui/textarea";
+import {
+  Select as SelectPrimitive,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 import type { ZodFormContext } from "./zod-form";
 
 /**
  * Kolom form yang terhubung ke react-hook-form.
  *
- * `register` wajib dipasang pada `name` agar nilai ikut terkirim DAN
- * tervalidasi di browser. Input file TIDAK memakai komponen ini — file dibaca
- * dari FormData dan divalidasi di server.
+ * PRIMITIFNYA dari shadcn/ui; yang lokal hanyalah cara memasang
+ * `register` dan membaca `errors` ke dalamnya. Karena itu ada tepat satu
+ * sumber gaya input di repo ini: komponen shadcn yang memakai token kita.
+ *
+ * Aturan: `register` WAJIB dipasang pada `name` supaya nilai ikut terkirim
+ * dan tervalidasi di browser. Input file TIDAK memakai kolom ini — file dibaca
+ * dari FormData dan divalidasi di server (src/lib/storage.ts).
  */
 
-function FieldShell({
-  label,
-  name,
-  error,
-  hint,
-  children,
-  required,
-  className,
-}: {
-  label: string;
-  name: string;
-  error?: string;
-  hint?: string;
-  children: React.ReactNode;
-  required?: boolean;
-  className?: string;
-}) {
-  const errorId = `${name}-error`;
-
-  return (
-    <div className={`grid gap-1 ${className ?? ""}`}>
-      <label htmlFor={name} className="text-sm font-medium text-secondary">
-        {label}
-        {required ? <span className="text-destructive"> *</span> : null}
-      </label>
-      {children}
-      {error ? (
-        <p id={errorId} role="alert" className="text-xs text-destructive">
-          {error}
-        </p>
-      ) : hint ? (
-        <p className="text-xs text-muted-foreground">{hint}</p>
-      ) : null}
-    </div>
-  );
-}
-
-const CONTROL =
-  "w-full rounded-xl border bg-muted px-3 py-2 text-foreground outline-none focus:bg-card";
-
-function controlClass(error?: string) {
-  return error
-    ? `${CONTROL} border-destructive focus:border-destructive`
-    : `${CONTROL} border-border focus:border-primary`;
-}
-
-type TextFieldProps = {
+type Common = {
   ctx: ZodFormContext;
   label: string;
   name: string;
-  type?: string;
-  placeholder?: string;
   required?: boolean;
   hint?: string;
-  step?: string;
-  min?: string;
-  max?: string;
-  defaultValue?: string | number;
   className?: string;
-} & Omit<InputHTMLAttributes<HTMLInputElement>, "name" | "type" | "defaultValue">;
+};
+
+/** Shell satu field: label + kontrol + pesan error. */
+function FieldShell({
+  name,
+  label,
+  required,
+  hint,
+  error,
+  className,
+  control,
+}: Common & { error?: string; control: ReactNode }) {
+  return (
+    <Field
+      className={cn("gap-1.5", className)}
+      // Menyalakan gaya error Field, Input, dan Select sekaligus.
+      data-invalid={error ? true : undefined}
+    >
+      <FieldLabel htmlFor={name}>
+        {label}
+        {required ? <span className="text-destructive"> *</span> : null}
+      </FieldLabel>
+
+      {control}
+
+      {error ? (
+        <FieldError>{error}</FieldError>
+      ) : hint ? (
+        <FieldDescription>{hint}</FieldDescription>
+      ) : null}
+    </Field>
+  );
+}
 
 export function TextField({
   ctx,
@@ -87,48 +85,41 @@ export function TextField({
   defaultValue,
   className,
   ...rest
-}: TextFieldProps) {
-  const error = ctx.errors[name]?.message;
-
+}: Common & {
+  type?: string;
+  placeholder?: string;
+  step?: string;
+  min?: string;
+  max?: string;
+  defaultValue?: string | number;
+} & Omit<React.ComponentProps<typeof Input>, "name" | "type" | "defaultValue">) {
   return (
     <FieldShell
+      ctx={ctx}
       label={label}
       name={name}
-      error={error}
-      hint={hint}
       required={required}
+      hint={hint}
       className={className}
-    >
-      <input
-        id={name}
-        type={type}
-        step={step}
-        min={min}
-        max={max}
-        placeholder={placeholder}
-        defaultValue={defaultValue}
-        required={required}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${name}-error` : undefined}
-        className={controlClass(error)}
-        {...ctx.register(name)}
-        {...rest}
-      />
-    </FieldShell>
+      error={ctx.errors[name]?.message}
+      control={
+        <Input
+          id={name}
+          type={type}
+          step={step}
+          min={min}
+          max={max}
+          placeholder={placeholder}
+          defaultValue={defaultValue}
+          required={required}
+          aria-invalid={ctx.errors[name] ? true : undefined}
+          {...ctx.register(name)}
+          {...rest}
+        />
+      }
+    />
   );
 }
-
-type AreaProps = {
-  ctx: ZodFormContext;
-  label: string;
-  name: string;
-  rows?: number;
-  placeholder?: string;
-  required?: boolean;
-  hint?: string;
-  defaultValue?: string;
-  className?: string;
-} & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "name" | "defaultValue">;
 
 export function TextAreaField({
   ctx,
@@ -141,45 +132,50 @@ export function TextAreaField({
   defaultValue,
   className,
   ...rest
-}: AreaProps) {
-  const error = ctx.errors[name]?.message;
-
+}: Common & {
+  rows?: number;
+  placeholder?: string;
+  defaultValue?: string;
+} & Omit<
+  React.ComponentProps<typeof TextareaPrimitive>,
+  "name" | "defaultValue"
+>) {
   return (
     <FieldShell
+      ctx={ctx}
       label={label}
       name={name}
-      error={error}
-      hint={hint}
       required={required}
+      hint={hint}
       className={className}
-    >
-      <textarea
-        id={name}
-        rows={rows}
-        placeholder={placeholder}
-        defaultValue={defaultValue}
-        required={required}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${name}-error` : undefined}
-        className={controlClass(error)}
-        {...ctx.register(name)}
-        {...rest}
-      />
-    </FieldShell>
+      error={ctx.errors[name]?.message}
+      control={
+        <TextareaPrimitive
+          id={name}
+          rows={rows}
+          placeholder={placeholder}
+          defaultValue={defaultValue}
+          required={required}
+          aria-invalid={ctx.errors[name] ? true : undefined}
+          {...ctx.register(name)}
+          {...rest}
+        />
+      }
+    />
   );
 }
 
-type SelectProps = {
-  ctx: ZodFormContext;
-  label: string;
-  name: string;
-  options: ReadonlyArray<{ value: string; label: string }>;
-  defaultValue?: string;
-  required?: boolean;
-  hint?: string;
-  className?: string;
-} & Omit<SelectHTMLAttributes<HTMLSelectElement>, "name" | "defaultValue">;
-
+/**
+ * Kolom select.
+ *
+ * Dua detail yang mudah salah:
+ *  1. Nilai dikirim lewat input tersembunyi bernama `name`, bukan lewat
+ *     onValueChange saja. Dengan begitu nilainya tetap bagian FormData seperti
+ *     kolom lain dan validasi server tidak perlu jalur khusus.
+ *  2. Nilai saat ini dibaca dengan `useWatch`, BUKAN `watch()`. `watch` adalah
+ *     fungsi biasa; memanggilnya saat render membuat React Compiler melewati
+ *     memoisasi dan nilainya bisa basi di subtree yang sudah dimemoisasi.
+ */
 export function SelectField({
   ctx,
   label,
@@ -189,65 +185,50 @@ export function SelectField({
   required,
   hint,
   className,
-  ...rest
-}: SelectProps) {
-  const error = ctx.errors[name]?.message;
+  placeholder = "Pilih…",
+}: Common & {
+  options: ReadonlyArray<{ value: string; label: string }>;
+  defaultValue?: string;
+  placeholder?: string;
+}) {
+  const { control } = useFormContext();
+  const watched = useWatch({ control, name, defaultValue });
+  const value = typeof watched === "string" ? watched : (defaultValue ?? "");
 
   return (
     <FieldShell
+      ctx={ctx}
       label={label}
       name={name}
-      error={error}
-      hint={hint}
       required={required}
+      hint={hint}
       className={className}
-    >
-      <select
-        id={name}
-        defaultValue={defaultValue}
-        required={required}
-        aria-invalid={error ? true : undefined}
-        aria-describedby={error ? `${name}-error` : undefined}
-        className={controlClass(error)}
-        {...ctx.register(name)}
-        {...rest}
-      >
-        {options.map((opt) => (
-          <option key={opt.value} value={opt.value}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </FieldShell>
-  );
-}
-
-/** Input file: TIDAK terdaftar ke RHF, nilainya diambil dari FormData. */
-export function FileField({
-  label,
-  name,
-  accept = "image/jpeg,image/png,image/webp,image/avif",
-  hint,
-}: {
-  label: string;
-  name: string;
-  accept?: string;
-  hint?: string;
-}) {
-  return (
-    <div className="grid gap-1">
-      <label htmlFor={name} className="text-sm font-medium text-secondary">
-        {label}
-      </label>
-      <input
-        id={name}
-        name={name}
-        type="file"
-        accept={accept}
-        className="w-full rounded-xl border border-border bg-muted px-3 py-2 text-sm text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-1 file:text-sm file:text-secondary"
-      />
-      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
-    </div>
+      error={ctx.errors[name]?.message}
+      control={
+        <>
+          <input type="hidden" name={name} value={value} />
+          <SelectPrimitive
+            value={value}
+            onValueChange={(next) => ctx.setValue(name, next)}
+          >
+            <SelectTrigger
+              id={name}
+              aria-invalid={ctx.errors[name] ? true : undefined}
+              className="w-full"
+            >
+              <SelectValue placeholder={placeholder} />
+            </SelectTrigger>
+            <SelectContent>
+              {options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </SelectPrimitive>
+        </>
+      }
+    />
   );
 }
 
@@ -256,46 +237,88 @@ export function CheckboxField({
   label,
   name,
   defaultChecked,
+  hint,
 }: {
   ctx: ZodFormContext;
   label: string;
   name: string;
   defaultChecked?: boolean;
+  hint?: string;
 }) {
-  const error = ctx.errors[name]?.message;
-
   return (
-    <div className="grid gap-1">
-      <label className="flex items-center gap-2 text-sm text-secondary">
-        <input
-          id={name}
-          type="checkbox"
-          defaultChecked={defaultChecked}
-          className="h-4 w-4 rounded border-border"
-          {...ctx.register(name)}
-        />
+    <Field
+      orientation="horizontal"
+      className="gap-2"
+      data-invalid={ctx.errors[name] ? true : undefined}
+    >
+      <Checkbox
+        id={name}
+        defaultChecked={defaultChecked}
+        aria-invalid={ctx.errors[name] ? true : undefined}
+        {...ctx.register(name)}
+      />
+      <FieldLabel htmlFor={name} className="text-sm text-secondary">
         {label}
-      </label>
-      {error ? (
-        <p role="alert" className="text-xs text-destructive">
-          {error}
-        </p>
+      </FieldLabel>
+      {ctx.errors[name] ? (
+        <FieldError>{ctx.errors[name]!.message}</FieldError>
+      ) : hint ? (
+        <FieldDescription>{hint}</FieldDescription>
       ) : null}
-    </div>
+    </Field>
   );
 }
 
+/**
+ * Input file: TIDAK terdaftar ke RHF. RHF tidak mengurus File; nilainya
+ * diambil dari FormData elemen form lalu divalidasi di server.
+ */
+export function FileField({
+  label,
+  name,
+  accept = "image/jpeg,image/png,image/webp,image/avif",
+  hint,
+  required,
+}: {
+  label: string;
+  name: string;
+  accept?: string;
+  hint?: string;
+  required?: boolean;
+}) {
+  return (
+    <Field className="gap-1.5">
+      <FieldLabel htmlFor={name}>
+        {label}
+        {required ? <span className="text-destructive"> *</span> : null}
+      </FieldLabel>
+      <input
+        id={name}
+        name={name}
+        type="file"
+        accept={accept}
+        required={required}
+        className="w-full rounded-xl border border-border bg-input px-3 py-2 text-sm text-secondary file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-1 file:text-sm file:text-secondary"
+      />
+      {hint ? <FieldDescription>{hint}</FieldDescription> : null}
+    </Field>
+  );
+}
+
+/** Grup field dengan judul — pengganti <fieldset> buatan sendiri. */
 export function FormSection({
   title,
   children,
 }: {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
-    <fieldset className="grid gap-3 rounded-xl border border-border p-3">
-      <legend className="px-1 text-sm font-medium text-secondary">{title}</legend>
+    <Field className="gap-3 rounded-xl border border-border p-3">
+      <FieldLabel className="text-sm font-medium text-secondary">{title}</FieldLabel>
       {children}
-    </fieldset>
+    </Field>
   );
 }
+
+export { Label };

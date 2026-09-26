@@ -7,7 +7,8 @@ import { productVariants, products } from "@/db/schema";
 import { requireTenantWrite } from "@/lib/auth/guard";
 import { createSignedUrls } from "@/lib/storage";
 import { formatRupiah } from "@/lib/format";
-import { Badge, Card, EmptyState } from "@/components/ui";
+import { EmptyState, SectionCard } from "@/components/panels";
+import { Badge } from "@/components/ui/badge";
 
 /** Katalog produk (ROADMAP Sprint 3). */
 export default async function ProductsPage() {
@@ -79,7 +80,7 @@ export default async function ProductsPage() {
             const variants = variantMap.get(product.id) ?? 0;
 
             return (
-              <Card key={product.id} bare>
+              <SectionCard key={product.id} bare>
                 <div className="flex gap-3 p-4">
                   <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted">
                     {coverUrl ? (
@@ -120,14 +121,14 @@ export default async function ProductsPage() {
                     </p>
                     <div className="mt-2">
                       {product.isPublished ? (
-                        <Badge tone="settled">tayang</Badge>
+                        <Badge variant="settled">tayang</Badge>
                       ) : (
-                        <Badge tone="neutral">draft</Badge>
+                        <Badge variant="neutral">draft</Badge>
                       )}
                     </div>
                   </div>
                 </div>
-              </Card>
+              </SectionCard>
             );
           })}
         </div>

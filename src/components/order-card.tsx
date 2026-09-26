@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { Badge } from "@/components/ui";
+import { Badge } from "@/components/ui/badge";
 import { formatDateID, formatRupiah } from "@/lib/format";
 import {
   ORDER_STATUS_LABELS,
@@ -48,7 +48,7 @@ export function OrderCard({
           </p>
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
-          <Badge tone={ORDER_STATUS_TONES[order.orderStatus as OrderStatus] ?? "neutral"}>
+          <Badge variant={ORDER_STATUS_TONES[order.orderStatus as OrderStatus] ?? "neutral"}>
             {ORDER_STATUS_LABELS[order.orderStatus as OrderStatus]}
           </Badge>
           {order.source === "manual" ? (

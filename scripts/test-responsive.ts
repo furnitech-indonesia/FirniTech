@@ -148,6 +148,45 @@ function main() {
     fixedWidth.length === 0 ? "bersih" : fixedWidth.join(", "),
   );
 
+  // ---- 10. Primitif TIDAK boleh dibuat ulang di luar src/components/ui/ ----
+  // shadcn/ui adalah pemilik tunggal primitif. Komposisi buatan sendiri hanya
+  // boleh berupa pola halaman, misalnya SectionCard di components/panels.tsx.
+  const primitiveOwners = [
+    "Card", "Badge", "Button", "Input", "Textarea", "Select",
+    "Field", "Alert", "Empty", "EmptyState", "SubmitButton",
+  ];
+  const reimplementations = all.filter((f) => {
+    if (f.includes("/components/ui/")) return false;
+    if (f.endsWith("components/panels.tsx")) return false;
+    return new RegExp(
+      `export (?:function|const) (${primitiveOwners.join("|")})\\b`,
+    ).test(read(f));
+  });
+  check(
+    "Tidak ada primitif yang dibuat ulang di luar src/components/ui/",
+    reimplementations.length === 0,
+    reimplementations.length === 0
+      ? "shadcn/ui adalah pemilik tunggal"
+      : reimplementations.join(", "),
+  );
+
+  // ---- 11. Form berisi input WAJIB lewat ZodForm, bukan ActionForm ----
+  const actionFormUsers = all.filter((f) => /<ActionForm/.test(read(f)));
+  const actionFormWithInput = actionFormUsers.filter((f) => {
+    const src = read(f);
+    const hasVisibleInput =
+      /<input(?![^>]*type="hidden")/.test(src) ||
+      /<(TextField|SelectField|TextAreaField)\b/.test(src);
+    return hasVisibleInput;
+  });
+  check(
+    "ActionForm tidak dipakai untuk form yang berisi input",
+    actionFormWithInput.length === 0,
+    actionFormWithInput.length === 0
+      ? `${actionFormUsers.length} pemakaian ActionForm (tanpa input) OK`
+      : actionFormWithInput.join(", "),
+  );
+
   const failed = results.filter((r) => !r.ok).length;
   console.log(
     `\n${results.length - failed}/${results.length} pemeriksaan responsif lulus.\n`,

@@ -5,7 +5,8 @@ import { db } from "@/db";
 import { orders, users } from "@/db/schema";
 import { requireTenantWrite } from "@/lib/auth/guard";
 import { formatDateID, formatRupiah } from "@/lib/format";
-import { Badge, EmptyState } from "@/components/ui";
+import { EmptyState } from "@/components/panels";
+import { Badge } from "@/components/ui/badge";
 import { ORDER_STATUS_FLOW } from "@/lib/order-status";
 import {
   ORDER_STATUS_LABELS,
@@ -163,7 +164,7 @@ export default async function OrdersPage() {
 
 function StatusBadge({ status }: { status: OrderStatus }) {
   return (
-    <Badge tone={ORDER_STATUS_TONES[status] ?? "neutral"}>
+    <Badge variant={ORDER_STATUS_TONES[status] ?? "neutral"}>
       {ORDER_STATUS_LABELS[status]}
     </Badge>
   );

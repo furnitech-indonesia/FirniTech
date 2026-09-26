@@ -5,6 +5,7 @@ import { text } from "./primitives";
 /** Skema Inbox CS (ROADMAP Sprint 3). */
 
 export const CONVERSATION_STATUSES = ["open", "pending", "resolved"] as const;
+export type ConversationStatusValue = (typeof CONVERSATION_STATUSES)[number];
 
 export const conversationIdSchema = z.object({
   conversationId: z.uuid("Percakapan tidak valid."),

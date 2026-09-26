@@ -11,7 +11,7 @@ import { VariantForm } from "@/components/variant-form";
 import { createSignedUrls } from "@/lib/storage";
 import { formatRupiah } from "@/lib/format";
 import { ActionForm } from "@/components/action-form";
-import { Card } from "@/components/ui";
+import { SectionCard } from "@/components/panels";
 
 /**
  * Detail produk: ubah data dasar, kelola variasi, dan hapus.
@@ -84,7 +84,7 @@ export default async function ProductDetailPage({
 
       <div className="grid gap-6">
         {canEdit ? (
-          <Card title="Ubah data produk" description="Harga tetap dalam rupiah penuh.">
+          <SectionCard title="Ubah data produk" description="Harga tetap dalam rupiah penuh.">
             <ProductForm
               mode="edit"
               product={{
@@ -101,17 +101,17 @@ export default async function ProductDetailPage({
                 isPublished: product.isPublished,
               }}
             />
-          </Card>
+          </SectionCard>
         ) : (
-          <Card title="Data produk">
+          <SectionCard title="Data produk">
             <p className="text-sm text-secondary">
               Peran {actor.role} hanya dapat melihat katalog, bukan mengubahnya.
             </p>
-          </Card>
+          </SectionCard>
         )}
 
         {canEdit ? (
-          <Card
+          <SectionCard
             title="Variasi"
             description="Ukuran, jenis kayu, atau finishing lain. Kosongkan harga bila memakai harga dasar."
           >
@@ -161,11 +161,11 @@ export default async function ProductDetailPage({
             )}
 
             <VariantForm productId={product.id} />
-          </Card>
+          </SectionCard>
         ) : null}
 
         {isOwner ? (
-          <Card
+          <SectionCard
             title="Hapus produk"
             description="Variasi ikut terhapus. Riwayat pesanan tetap utuh karena isian produk disalin ke item pesanan."
           >
@@ -179,7 +179,7 @@ export default async function ProductDetailPage({
                 Tindakan ini tidak bisa dibatalkan.
               </p>
             </ActionForm>
-          </Card>
+          </SectionCard>
         ) : null}
       </div>
     </main>

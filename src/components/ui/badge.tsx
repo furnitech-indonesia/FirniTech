@@ -18,6 +18,18 @@ const badgeVariants = cva(
         ghost:
           "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
         link: "text-primary underline-offset-4 hover:underline",
+
+        /* --- Indikator status (DESIGN.md §3) ---------------------------
+         * Lima warna status untuk Visual Progress Tracker dan status pesanan.
+         * shadcn bawaan hanya punya destructive; sisanya ditambahkan di sini
+         * memakai token status, BUKAN hex langsung.Menambahkannya lewat cva
+         * adalah cara resmi viveu bersama shadcn, bukan menyalin kodenya. */
+        pending: "bg-status-pending-bg text-status-pending",
+        production: "bg-status-production-bg text-status-production",
+        quality: "bg-status-quality-bg text-status-quality",
+        settled: "bg-status-settled-bg text-status-settled",
+        failed: "bg-status-failed-bg text-status-failed",
+        neutral: "bg-muted text-muted-foreground",
       },
     },
     defaultVariants: {
