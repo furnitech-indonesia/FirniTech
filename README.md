@@ -41,6 +41,9 @@ npm run build        # build produksi (Turbopack)
 
 npm run db:verify    # cek tabel, RLS, trigger, kolom uang, isolasi anon
 npm run db:test-rls  # uji isolasi tenant dgn JWT pengguna sungguhan
+
+# butuh server jalan: npm run build && npm run start
+npm run test:auth   # 11 uji auth & RBAC (login, 403, redirect per role)
 ```
 
 Urutannya: `lint → typecheck → build`, lalu `db:verify` bila ada perubahan
@@ -64,6 +67,19 @@ Dua koneksi berbeda, dan itu disengaja:
 - `DIRECT_URL` — session pooler, port **5432**. Dipakai `drizzle-kit migrate`
   karena drizzle-kit memakai `pg_advisory_lock` yang tidak didukung transaction
   mode. Memakai 6543 untuk migrasi akan gagal tanpa pesan error yang jelas.
+
+## Auth & RBAC
+
+Empat peran: `super_admin` (FurniTech sebagai SaaS owner, tanpa tenant),
+`owner`, `admin_penjualan`, `tukang`.
+
+- `/login` — email/password dan magic link.
+- `/dashboard` — back-office pengrajin (owner, admin penjualan, tukang).
+- `/admin` — panel platform, hanya super admin.
+
+Otorisasi berlapis: `proxy.ts` hanya menolak request tanpa cookie auth
+(penghematan kerja), keputusan role diambil di layout server dari database, dan
+RLS menjadi lapisan terakhir.
 
 ## Multi-tenancy
 

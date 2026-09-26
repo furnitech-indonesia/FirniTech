@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { isProtectedPath } from "@/lib/auth/permissions";
 import { getRequestHost, resolveTenantFromHost } from "@/lib/tenant-host";
 
 /**
@@ -23,13 +24,19 @@ import { getRequestHost, resolveTenantFromHost } from "@/lib/tenant-host";
  * Server Function / Server Action, tidak boleh bergantung pada proxy.
  */
 
-/** Path milik platform (back-office & super admin), tidak ikut di-rewrite tenant. */
+/**
+ * Path milik platform (back-office, super admin, dan alur auth) — tidak ikut
+ * di-rewrite tenant. `/forbidden` dan `/auth` WAJIB ada di sini: kalau tidak,
+ * tenant yang membuka halaman 403 akan dialihkan ke storefront-nya.
+ */
 const PLATFORM_PATHS = [
   "/dashboard",
   "/admin",
   "/superadmin",
   "/api",
   "/login",
+  "/forbidden",
+  "/auth",
   "/t",
 ];
 
@@ -39,8 +46,27 @@ function isPlatformPath(pathname: string): boolean {
   );
 }
 
+/**
+ * Apakah ada session cookie. Nama cookie auth Supabase diawali `sb-`
+ * (prefix project ref). Hanya sinyal "mungkin sudah login" — keabsahan cookie
+ * tetap divalidasi server lewat supabase.auth.getUser().
+ */
+function hasSessionCookie(request: NextRequest): boolean {
+  return request.cookies.getAll().some((cookie) => cookie.name.startsWith("sb-"));
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Fast-path auth: area dalam butuh session cookie Supabase. Ini HANYA
+  // Menghemat kerja — bukan otorisasi. Penentuan role tetap diverifikasi dari
+  // database di layout (/dashboard, /admin), dan RLS adalah lapisan ketiga.
+  if (isProtectedPath(pathname) && !hasSessionCookie(request)) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = `?next=${encodeURIComponent(pathname)}`;
+    return NextResponse.redirect(url);
+  }
 
   if (isPlatformPath(pathname)) {
     return NextResponse.next();

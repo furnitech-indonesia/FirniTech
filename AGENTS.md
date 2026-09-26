@@ -52,6 +52,7 @@ npm run db:verify     # 6 pemeriksaan: tabel, RLS, trigger, kolom uang, anon
 npm run db:test-rls   # 8 uji isolasi tenant dgn JWT pengguna sungguhan
 npm run db:studio
 npm run db:seed       # idempoten
+npm run test:auth     # 11 uji auth & RBAC via HTTP (butuh server jalan)
 ```
 
 Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
@@ -101,6 +102,34 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   Onboarding owner hanya boleh lewat kode server-side. Ini sudah diuji.
 - `npm run db:test-rls` membuktikan isolasi dengan JWT asli. Jalankan setelah
   menyentuh policy.
+
+## Auth & RBAC
+
+Tiga lapis, urut dari yang paling murah:
+
+1. **`proxy.ts` fast-path** — hanya cek ada/tidaknya cookie auth (prefix `sb-`).
+   Ini HANYA penghematan kerja, bukan otorisasi.
+2. **Layout server** — `app/dashboard/layout.tsx` memakai `requireSession()`,
+   `app/admin/layout.tsx` memakai `requireRole(["super_admin"])`. Di sinilah
+   keputusan role diambil, selalu dari database.
+3. **RLS** — lapisan terakhir, sudah ada di Postgres.
+
+Aturan yang tidak boleh dilanggar:
+- `requireSession` melakukan redirect ke `/login?next=...`; `requireRole`
+  melakukan redirect ke `/forbidden` (bukan ke login) karena user-nya memang
+  sudah sah, hanya tidak berhak.
+- `next` dari query string WAJIB divalidasi sebagai path internal
+  (`startsWith("/")`, bukan `//` atau `://`) — kalau tidak, ini open redirect.
+- Item navigasi dikirim dari server ke client (prop `items`), TIDAK dihitung
+  dari role di sisi browser.
+- `getAuthUser()` memvalidasi JWT ke server Supabase. Jangan pernah mempercayai
+  isi cookie JWT tanpa memvalidasi.
+- `useActionState` adalah hook → form login harus `"use client"`, sementara
+  Server Action-nya tetap di file `"use server"`.
+
+Cookie session Supabase bernama `sb-<project-ref>-auth-token` dengan nilai
+`base64-` + base64(JSON session). `scripts/test-auth.ts` menyusun cookie dengan
+format itu untuk menguji HTTP end-to-end.
 
 ## Multi-tenant routing
 

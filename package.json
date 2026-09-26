@@ -12,6 +12,7 @@
     "db:studio": "drizzle-kit studio",
     "db:verify": "tsx scripts/verify-db.ts",
     "db:test-rls": "tsx scripts/test-rls.ts",
+    "test:auth": "tsx scripts/test-auth.ts",
     "db:apply": "tsx scripts/apply-migrations.ts",
     "db:seed": "tsx scripts/seed.ts"
   },
