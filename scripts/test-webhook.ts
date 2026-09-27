@@ -29,7 +29,7 @@ import {
 // hanya mengekspor apa yang didefinisikan di file itu sendiri.
 import { parseForm } from "@/lib/schemas/primitives";
 import { PROGRESS_STAGE_ORDER } from "@/lib/order-status";
-import { PLANS, PLAN_IDS, PLATFORM_FEE_RATE } from "@/lib/plans";
+import { PLANS, PLAN_IDS } from "@/lib/plans";
 
 /**
  * Uji keamanan alur pendaftaran & pembayaran (Sprint 10 Fase D).
@@ -327,7 +327,14 @@ async function main() {
   const savings = Math.round(
     (1 - PLANS.pro.priceYearly / (PLANS.pro.priceMonthly * 12)) * 100,
   );
-  check("diskon tahunan 10%, bukan 15% seperti desain Stitch", savings === 10, `${savings}%`);
+  // Diskon tahunan 5% (keputusan pemilik produk; sebelumnya 10%). Nilainya
+  // dihitung dari harga bulanan, jadi test memakai angka turunan — bukan
+  // konstanta yang harus ikut diubah setiap kali harga berubah.
+  check(
+    "diskon tahunan 5% dari harga bulanan × 12",
+    savings === 5,
+    `${savings}% (tahun = bulanan × 12 × 0,95)`,
+  );
 
   // Kontrak yang sebenarnya dari `slug`: menyanitasi, bukan menolak.
   const sanitized = parseForm(
@@ -352,9 +359,11 @@ async function main() {
   /* ---------- 5. Integritas bermasalah ---------- */
 
   check(
-    "biaya platform 1,5%",
-    PLATFORM_FEE_RATE === 0.015,
-    `${PLATFORM_FEE_RATE * 100}%`,
+    "diskon paket tahunan 5% dan dihitung dari harga bulanan",
+    PLANS.basic.priceYearly === Math.round(PLANS.basic.priceMonthly * 12 * 0.95) &&
+      PLANS.pro.priceYearly === Math.round(PLANS.pro.priceMonthly * 12 * 0.95) &&
+      PLANS.max.priceYearly === Math.round(PLANS.max.priceMonthly * 12 * 0.95),
+    PLANS.basic.priceYearly.toLocaleString("id-ID") + " per tahun",
   );
   check(
     "lima tahap produksi, urut dan lengkap",

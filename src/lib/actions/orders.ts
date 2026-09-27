@@ -10,7 +10,7 @@ import {
   STAGE_TO_ORDER_STATUS,
   canTransition,
 } from "@/lib/order-status";
-import { PLATFORM_FEE_RATE } from "@/lib/plans";
+import { PLATFORM_FEE_RATE } from "@/lib/fees";
 import { requireTenantWrite, guard } from "@/lib/auth/guard";
 import { parseForm } from "@/lib/schemas/primitives";
 import {

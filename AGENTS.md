@@ -319,22 +319,31 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
     diambil dari nilai fee — kecuali QRIS, GoPay, dan ShopeePay.
   - Tarif di halaman publik adalah **batas bawah**, bukan angka final untuk
     akun merchant kita; diskon tidak pernah dipublikasikan.
-  - **Fee ditanggung pengrajin, bukan platform** (PRD v1.6). Jadi
-    `platformServiceFee` = 1,5% × `totalAmount` (produk + ongkir) UTUH, dan
-    `midtransMdrFee` dipotong ke pengrajin. Rinciannya harus tampil di tiga
-    tempat (wizard pendaftaran, ringkasan saldo, detail pesanan) dan TIDAK
-    boleh tampil di halaman lacak publik.
-  - **`feePayout` Rp 5.000 itu per BATCH pencairan, ditanggung platform.**
-    Satu panggilan Payouts = Rp 5.000 berapa pun pengrajin di dalamnya, jadi
-    dua slot/hari = Rp 10.000/hari. Nilai yang ditransfer ke pengrajin
-    TIDAK dipotong — sama persis dengan saldonya. Asumsi "per batch" belum
-    dikonfirmasi Midtrans; kalau per-penerima, biayanya tumbuh 10× pada 100
-    pengrajin.
+  - **Seluruh fee gateway ditanggung pengrajin; platform fee 0%** (PRD
+    v1.7). `platformServiceFee` = 0 dan bisa diubah owner dari panel admin.
+    `midtransMdrFee` (fee masuk Rp 4.440) dipotong ke pengrajin, dan fee
+    pencairan Rp 5.550 **per penerima** dipotong dari saldonya saat payout.
+    Rinciannya wajib tampil di tiga tempat (wizard pendaftaran, ringkasan
+    saldo, detail pesanan) dan TIDAK boleh tampil di halaman lacak publik.
+  - **Fee pencairan Rp 5.550 itu per PENERIMA, bukan per batch.** Ini yang
+    membebaskan fee itu dari platform: fee per batch tidak bisa dibagi adil
+    ke banyak pengrajin sekaligus. Kalau suatu saat dibalik jadi per-batch,
+    `payoutAmountFor()` harus diubah DAN keputusan pembagiannya ditanya lagi.
+  - **Kedua fee ditampilkan TERPISAH di modal kalkulator, bukan
+    dijumlahkan.** Keduanya dipotong pada waktu berbeda; satu angka total
+    membuat pengrajin salah menghitung kapan saldonya masih utuh.
+  - **Tidak ada ambang minimum pencairan dan tidak ada minimum pesanan.**
+    Keduanya konsisten dengan model "biaya dibebankan ke pengrajin": dia
+    bebas menambah fee itu ke harga jualnya lewat kalkulator.
+  - **Paket langganan belum termasuk PPN 11%** karena perusahaan belum PKP.
+    PPN di dalam fee Midtrans tidak bisa dikreditkan dan sudah termasuk di
+    angka `src/lib/fees.ts`. Diskon tahunan 5%, dihitung dari bulanan × 12 ×
+    0,95 — jangan mengetik harga tahunan.
   - Fee dicatat sebagai **beban**, bukan pengurangan pendapatan.
   - **Semua konstanta fee hanya di `src/lib/fees.ts`.** Berkas itu sengaja
-    TIDAK memakai `server-only` supaya modal kalkulator di modul produk dan
-    server membaca angka yang sama. Kalau ditambah `server-only`, modal akan
-    menarik graf modul server ke bundel klien.
+    TIDAK memakai `server-only` supaya modal kalkulator dan server membaca
+    angka yang sama. `PLATFORM_FEE_RATE` pernah hidup juga di `plans.ts` dan
+    sudah dihapus dari sana.
   - **`test:checkout` mengunci daftar kanal.** Begitu QRIS atau kartu kredit
     aktif lagi, seluruh hitungan fee di `docs/midtrans-fee.md` tidak berlaku
     karena tarifnya persen — dan tidak ada pemeriksaan lain yang menangkapnya.

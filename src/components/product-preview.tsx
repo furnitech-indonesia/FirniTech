@@ -1,7 +1,8 @@
 import { CheckIcon, WrenchIcon } from "@phosphor-icons/react/dist/ssr";
 
 import { Badge } from "@/components/ui/badge";
-import { PAYOUT_SLOTS, PLANS, PLATFORM_FEE_RATE } from "@/lib/plans";
+import { PLANS } from "@/lib/plans";
+import { totalGatewayCostPerOrder } from "@/lib/fees";
 import { PROGRESS_STAGE_ORDER } from "@/lib/order-status";
 import { PROGRESS_STAGE_LABELS } from "@/lib/labels";
 import { formatRupiah } from "@/lib/format";
@@ -96,25 +97,30 @@ export function ProductPreview() {
       </ol>
 
       {/*
-       * Angka di bawah juga nyata, bukan contoh: jadwal payout dan biaya
-       * platform adalah ketentuan produk, bukan data transaksi.
-       */}
+      {/*
+        Angka di bawah nyata, bukan contoh. Dua hal berubah dan keduanya
+        jujur ditampilkan apa adanya: jadwal payout 06.00/18.00 WIB
+        digantikan pemicu bukti pengiriman, dan fee platform 1,5% dihapus.
+        Yang masih membebani pengrajin adalah fee gateway, jadi itulah yang
+        ditulis — menampilkan "biaya platform 0%" tanpa penjelasan akan
+        membuat pengrajin mengira FurniTech tidak memungut biaya apa pun.
+      */}
       <dl className="grid gap-3 border-t border-border pt-4 sm:grid-cols-3">
         <div>
           <dt className="text-label-sm uppercase text-muted-foreground">
             Pencairan
           </dt>
           <dd className="mt-1 text-body-md text-secondary">
-            {PAYOUT_SLOTS.morning.label} · {PAYOUT_SLOTS.evening.label}
+            Otomatis setelah bukti diterima
           </dd>
         </div>
         <div>
           <dt className="text-label-sm uppercase text-muted-foreground">
-            Biaya platform
+            Biaya per transaksi
           </dt>
           <dd className="mt-1 text-code-tabular text-secondary">
-            {(PLATFORM_FEE_RATE * 100).toLocaleString("id-ID")}% dari nilai
-            transaksi
+            {formatRupiah(totalGatewayCostPerOrder())} — bisa disisipkan ke
+            harga
           </dd>
         </div>
         <div>

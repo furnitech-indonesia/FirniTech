@@ -2,11 +2,10 @@ import { and, count, eq, gte, isNotNull, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { orders, tenants } from "@/db/schema";
-import { PLATFORM_FEE_RATE } from "@/lib/plans";
 import { formatDateID, formatRupiah } from "@/lib/format";
 
 /**
- * Ringkasan platform: jumlah tenant, MRR, GMV, dan pendapatan fee 1.5%.
+ * Ringkasan platform: jumlah tenant, MRR, GMV, dan beban gateway pengrajin.
  *
  * Angka berasal dari tabel orders dan tenants secara langsung. Kolom
  * `net_tenant_amount` = total − MDR − fee platform, jadi MRRplatform adalah
@@ -63,12 +62,18 @@ export default async function AdminOverviewPage() {
     { label: "Tenant terdaftar", value: String(tenantStats?.total ?? 0) },
     { label: "Tenant aktif", value: String(tenantStats?.active ?? 0) },
     { label: "GMV bulan ini", value: formatRupiah(gmv?.total ?? 0) },
-    {
-      label: `Pendapatan fee (${PLATFORM_FEE_RATE * 100}%)`,
-      value: formatRupiah(mrr?.platformFee ?? 0),
-    },
+    /*
+      Platform fee DIHAPUS, jadi pendapatan platform sekarang hanya dari
+      langganan (baris MRR di atas). Kartu yang tersisa di sini bukan
+      pendapatan FurniTech: itu jumlah yang dibayar pengrajin ke Midtrans.
+      Ditampilkan karena tugas panel ini melihat seluruh aliran uang platform,
+      dan menyembunyikannya membuat saldo escrow terlihat utuh padahal tidak.
+    */
     { label: "Saldo untuk pengrajin", value: formatRupiah(mrr?.tenantNet ?? 0) },
-    { label: "MDR dibayar", value: formatRupiah(mrr?.mdr ?? 0) },
+    {
+      label: "Biaya gateway dibayar pengrajin",
+      value: formatRupiah(mrr?.mdr ?? 0),
+    },
     { label: "Pesanan lunas", value: String(paidOrderCount[0]?.total ?? 0) },
   ];
 

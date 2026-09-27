@@ -18,6 +18,8 @@
 import { chromium, type ConsoleMessage } from "playwright";
 import { mkdir } from "node:fs/promises";
 
+import { PLANS } from "../src/lib/plans";
+
 const BASE = process.env.VISUAL_BASE_URL ?? "http://localhost:3000";
 const OUT = "screenshots";
 
@@ -294,19 +296,27 @@ async function main() {
       const yearlyText = await page.locator("#harga").innerText();
 
       const changed = monthlyText !== yearlyText;
+      /*
+       * Diskon tahunan 5% (keputusan pemilik produk 2026-09-27; sebelumnya
+       * 10%). Angka ini dihitung dari `plans.ts`, jadi testnya ikut
+       * mengikuti — kalau hardcode 10% di sini, test akan gagal saat harga
+       * berubah dan akhirnya dibohongi dengan diubah jadi assertion yang
+       * selalu lulus.
+       */
+      const yearlyPrice = PLANS.basic.priceYearly.toLocaleString("id-ID");
       check(
         "toggle mengubah tampilan harga",
-        changed && /10%/.test(yearlyText),
+        changed && yearlyText.includes(yearlyPrice),
         changed
-          ? /10%/.test(yearlyText)
-            ? "harga berubah dan diskon 10% muncul"
-            : "harga berubah tapi diskon tidak tampil"
+          ? yearlyText.includes(yearlyPrice)
+            ? `harga berubah dan harga tahunan ${yearlyPrice} muncul`
+            : "harga berubah tapi harga tahunan tidak tampil"
           : "harga tidak berubah",
       );
       check(
-        "harga tahunan sesuai plans.ts (3.240.000)",
-        yearlyText.includes("3.240.000"),
-        yearlyText.includes("3.240.000") ? "Rp 3.240.000 tampil" : "tidak ditemukan",
+        `harga tahunan sesuai plans.ts (${yearlyPrice})`,
+        yearlyText.includes(yearlyPrice),
+        yearlyText.includes(yearlyPrice) ? `Rp ${yearlyPrice} tampil` : "tidak ditemukan",
       );
     }
 

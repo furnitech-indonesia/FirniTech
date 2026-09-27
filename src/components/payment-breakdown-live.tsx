@@ -3,7 +3,7 @@
 import { useFormContext, useWatch } from "react-hook-form";
 
 import { PaymentBreakdown } from "@/components/payment-breakdown";
-import { PLATFORM_FEE_RATE } from "@/lib/plans";
+import { PLATFORM_FEE_RATE } from "@/lib/fees";
 
 /**
  * Ringkasan biaya yang reacting pada nilai form (Custom Order Builder).

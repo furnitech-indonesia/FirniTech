@@ -3,7 +3,6 @@ import { and, count, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { orders, products, tenants } from "@/db/schema";
 import { requireSession } from "@/lib/auth/session";
-import { PLATFORM_FEE_RATE } from "@/lib/plans";
 import { formatRupiah } from "@/lib/format";
 
 /**
@@ -66,11 +65,14 @@ export default async function DashboardHome() {
     { label: "Pesanan", value: String(orderTotals?.total ?? 0) },
     { label: "Omzet bulan ini", value: formatRupiah(monthRevenue?.gross ?? 0) },
     { label: "Saldo siap cair", value: formatRupiah(monthRevenue?.net ?? 0) },
-    {
-      label: `Fee platform (${PLATFORM_FEE_RATE * 100}%)`,
-      value: formatRupiah(monthRevenue?.platformFee ?? 0),
-    },
-    { label: "MDR Midtrans", value: formatRupiah(monthRevenue?.mdr ?? 0) },
+    /*
+      Fee platform DIHAPUS dari model, jadi kartu "Fee platform 0%" akan
+      selalu Rp 0 — membosankan dan tidak berguna. Yang berguna bagi
+      pengrajin justru angka yang dia benar-benar bayar: biaya gateway.
+      Fee payout belum bisa ikut di sini karena mesin payout belum ada; yang
+      tercatat di `orders` baru fee masuk.
+    */
+    { label: "Biaya gateway dibayar", value: formatRupiah(monthRevenue?.mdr ?? 0) },
   ];
 
   return (

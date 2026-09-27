@@ -19,11 +19,13 @@ import { buildShippingIndex, lookupShippingRate, shippingFeeFor } from "@/lib/sh
 import {
   ALLOWED_PAYMENT_CHANNELS,
   FEE_MASUK,
-  FEE_PENCAIRAN_PER_BATCH,
+  FEE_PENCAIRAN,
   PLATFORM_FEE_RATE,
   craftsmanCreditFor,
   minimumPriceFor,
+  payoutAmountFor,
   platformFeeFor,
+  totalGatewayCostPerOrder,
 } from "@/lib/fees";
 
 /**
@@ -182,9 +184,9 @@ function testFeeModel(): void {
     `FEE_MASUK=${FEE_MASUK} (harus 4440)`,
   );
   check(
-    "fee pencairan = Rp5.000 per batch",
-    FEE_PENCAIRAN_PER_BATCH === 5000,
-    `FEE_PENCAIRAN_PER_BATCH=${FEE_PENCAIRAN_PER_BATCH}`,
+    "fee pencairan = Rp5.000 + PPN 11% per PENERIMA",
+    FEE_PENCAIRAN === 5550,
+    `FEE_PENCAIRAN=${FEE_PENCAIRAN} (harus 5550)`,
   );
 
   const total = 10_000_000;
@@ -192,9 +194,9 @@ function testFeeModel(): void {
   const credit = craftsmanCreditFor(total);
 
   check(
-    "platform fee 1,5% dari totalAmount",
-    fee === 150_000,
-    `platformFeeFor(10.000.000)=${fee} (harus 150.000)`,
+    "platform fee 0 dari totalAmount (dihapus dari model)",
+    fee === 0,
+    `platformFeeFor(10.000.000)=${fee} (harus 0)`,
   );
   check(
     "saldo pengrajin = total − fee platform − fee masuk",
@@ -207,24 +209,45 @@ function testFeeModel(): void {
     `${fee} + ${credit} = ${fee + credit} (escrow ${total - FEE_MASUK})`,
   );
   check(
-    "harga minimum untuk target tertentu = kebalikan dari rumus saldo",
-    craftsmanCreditFor(minimumPriceFor(5_000_000)) >= 5_000_000,
-    `minimumPriceFor(5jt)=${minimumPriceFor(5_000_000)} → credit=${craftsmanCreditFor(minimumPriceFor(5_000_000))}`,
+    "pengrajin menerima escrow dikurangi fee pencairan",
+    payoutAmountFor(credit) + FEE_PENCAIRAN === credit,
+    `diterima ${payoutAmountFor(credit)} (dari saldo ${credit})`,
   );
   check(
-    "platform fee dibulatkan ke BAWAH, tidak pernah ke atas",
-    platformFeeFor(101) === 1 && platformFeeFor(1_667) === 25,
-    `floor: 101→${platformFeeFor(101)}, 1667→${platformFeeFor(1_667)}`,
+    "harga minimum menutup KEDUA fee — target tercapai setelah pencairan",
+    payoutAmountFor(craftsmanCreditFor(minimumPriceFor(5_000_000))) >= 5_000_000,
+    `minimumPriceFor(5jt)=${minimumPriceFor(5_000_000)} → diterima ${payoutAmountFor(craftsmanCreditFor(minimumPriceFor(5_000_000)))}`,
+  );
+  /*
+   * Pembulatan fee platform dulu diuji dengan nilai 0,015. Sekarang fee-nya
+   * 0, jadi `platformFeeFor(x)` selalu 0 dan assertsinya tidak lagi
+   * menguji apa pun — hanya terlihat kebetulan benar. Menghapus lebih jujur
+   * daripada menyisakan pemeriksaan yang terlihat protectif.
+   */
+  check(
+    "platform fee 0 tidak pernah menghasilkan nominal-desimal",
+    platformFeeFor(1_667) === 0 && platformFeeFor(999) === 0,
+    "tidak ada pecahan rupiah yang muncul dari fee 0%",
   );
   check(
-    "platform fee tidak pernah melebihi fee masuk untuk pesanan sangat kecil",
-    platformFeeFor(1_000) < FEE_MASUK,
-    `platformFeeFor(1.000)=${platformFeeFor(1_000)} < ${FEE_MASUK}`,
+    "platform fee 0% — FurniTech tidak lagi mengambil persentase transaksi",
+    PLATFORM_FEE_RATE === 0,
+    `PLATFORM_FEE_RATE=${PLATFORM_FEE_RATE} (harus 0)`,
   );
   check(
-    "platform fee 1,5% menutup nol biaya — tidak ada fee yang dipotong dari fee",
-    PLATFORM_FEE_RATE === 0.015,
-    "fee platform utuh; fee masuk ke pengrajin, fee pencairan ke platform",
+    "total beban gateway per pesanan = fee masuk + fee pencairan",
+    totalGatewayCostPerOrder() === 9_990,
+    `${FEE_MASUK} + ${FEE_PENCAIRAN} = ${totalGatewayCostPerOrder()}`,
+  );
+  check(
+    "nilai payout dikurangi fee pencairan, tidak utuh",
+    payoutAmountFor(10_000_000) === 10_000_000 - FEE_PENCAIRAN,
+    `payoutAmountFor(10jt)=${payoutAmountFor(10_000_000)}`,
+  );
+  check(
+    "harga minimum menutup KEDUA fee, bukan hanya fee masuk",
+    craftsmanCreditFor(minimumPriceFor(5_000_000) - FEE_PENCAIRAN) >= 5_000_000,
+    `minimumPriceFor(5jt)=${minimumPriceFor(5_000_000)}`,
   );
 
   // Modal kalkulator dan server harus membaca konstanta yang sama. Kalau ada

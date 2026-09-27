@@ -19,11 +19,12 @@ import { parseRupiah } from "@/lib/parse";
 import {
   FEE_MASUK,
   FEE_MASUK_PPNJ,
-  FEE_PENCAIRAN_PER_BATCH,
+  FEE_PENCAIRAN,
+  FEE_PENCAIRAN_PPNJ,
   PLATFORM_FEE_RATE,
-  SLOT_PENCAIRAN,
   craftsmanCreditFor,
   minimumPriceFor,
+  payoutAmountFor,
   platformFeeFor,
 } from "@/lib/fees";
 
@@ -70,8 +71,10 @@ export function FeeCalculatorDialog({
 
   const fee = price > 0 ? platformFeeFor(price) : 0;
   const credit = price > 0 ? craftsmanCreditFor(price) : 0;
+  /* Satu pesanan yang langsung dicairkan: dua fee ikut terpotong. */
+  const received = price > 0 ? payoutAmountFor(credit) : 0;
   const needed = target > 0 ? minimumPriceFor(target) : 0;
-  const shortfall = price > 0 && target > 0 ? target - credit : 0;
+  const shortfall = price > 0 && target > 0 ? target - received : 0;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -118,17 +121,17 @@ export function FeeCalculatorDialog({
                   {formatRupiah(price)}
                 </dd>
               </div>
+              {fee > 0 ? (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="text-muted-foreground">Biaya layanan FurniTech</dt>
+                  <dd className="text-code-tabular text-foreground">
+                    −{formatRupiah(fee)}
+                  </dd>
+                </div>
+              ) : null}
               <div className="flex items-baseline justify-between gap-3">
                 <dt className="text-muted-foreground">
-                  Biaya layanan FurniTech (1,5%)
-                </dt>
-                <dd className="text-code-tabular text-foreground">
-                  −{formatRupiah(fee)}
-                </dd>
-              </div>
-              <div className="flex items-baseline justify-between gap-3">
-                <dt className="text-muted-foreground">
-                  Biaya payment gateway
+                  Biaya gateway saat terima pembayaran
                   <span className="block text-body-sm">
                     Rp{FEE_MASUK_PPNJ.toLocaleString("id-ID")} + PPN 11%
                   </span>
@@ -137,10 +140,27 @@ export function FeeCalculatorDialog({
                   −{formatRupiah(FEE_MASUK)}
                 </dd>
               </div>
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="text-muted-foreground">
+                  Biaya gateway saat pencairan
+                  <span className="block text-body-sm">
+                    Rp{FEE_PENCAIRAN_PPNJ.toLocaleString("id-ID")} + PPN 11%,
+                    sekali per pencairan
+                  </span>
+                </dt>
+                <dd className="text-code-tabular text-foreground">
+                  −{formatRupiah(FEE_PENCAIRAN)}
+                </dd>
+              </div>
               <div className="flex items-baseline justify-between gap-3 border-t border-border pt-2">
-                <dt className="font-medium text-foreground">Diterima Anda</dt>
+                <dt className="font-medium text-foreground">
+                  Diterima Anda
+                  <span className="block text-body-sm font-normal text-muted-foreground">
+                    kalau pesanan ini langsung dicairkan
+                  </span>
+                </dt>
                 <dd className="text-code-tabular text-title-md text-foreground">
-                  {formatRupiah(credit)}
+                  {formatRupiah(received)}
                 </dd>
               </div>
             </dl>
@@ -171,7 +191,8 @@ export function FeeCalculatorDialog({
           {needed > 0 ? (
             <div className="grid gap-2 rounded-xl border border-border bg-muted p-4">
               <p className="text-body-md text-foreground">
-                Untuk menerima {formatRupiah(target)}, harga jual minimal{" "}
+                Untuk menerima {formatRupiah(target)} setelah kedua biaya
+                gateway, harga jual minimal{" "}
                 <strong className="text-code-tabular">{formatRupiah(needed)}</strong>
                 {price > 0 && shortfall > 0 ? (
                   <span className="text-destructive">
@@ -189,37 +210,33 @@ export function FeeCalculatorDialog({
           ) : null}
 
           {/*
-            Fee pencairan ditampilkan sebagai catatan, bukan sebagai
-            pengurangan. Alasannya ada di kepala berkas: kalau tidak, owner
-            akan menghitung harga terlalu tinggi atau mengira platform
-            membebankan Rp9.440 padanya.
+            Dua catatan yang harus terlihat, karena keduanya mengubah cara
+            pengrajin menghitung: pencairan dipicu bukti pengiriman, bukan
+            jadwal; dan fee pencairan dihitung per pencairan — jadi menggabung
+            beberapa pesanan jadi satu pencairan menghemat fee itu.
           */}
-          <div className="rounded-xl border border-border p-4">
-            <p className="text-label-lg text-foreground">
-              Biaya pencairan Rp{" "}
-              {FEE_PENCAIRAN_PER_BATCH.toLocaleString("id-ID")}
-              <span className="font-normal text-muted-foreground">
-                {" "}
-                ditanggung FurniTech
-              </span>
+          <div className="grid gap-2 rounded-xl border border-border p-4 text-body-sm text-muted-foreground">
+            <p>
+              Pencairan berjalan otomatis setelah kurir mengunggah foto barang
+              diterima dan tanda tangan pembeli. Tidak ada jadwal harian.
             </p>
-            <p className="mt-1 text-body-sm text-muted-foreground">
-              Dihitung sekali untuk semua pencairan di satu jadwal (
-              {SLOT_PENCAIRAN.join(" dan ")} WIB), bukan per pesanan dan bukan
-              per transfer. Karena itu saldo di bawah ambang minimum tidak
-              ikut dikirim sampai terkumpul cukup.
+            <p>
+              Biaya pencairan Rp{FEE_PENCAIRAN.toLocaleString("id-ID")} dihitung
+              sekali per pencairan, bukan per pesanan. Kalau ada beberapa
+              pesanan yang siap dicairkan bersamaan, menggabungnya jadi satu
+              pencairan menghemat biaya itu.
             </p>
           </div>
 
           {/*
             Kanal pembayaran ditampilkan supaya pengrajin tahu pembeli hanya
-            bisa lewat Virtual Account. Ini bukan detail teknis: kalau ia
-            memasang harga yang hanya bisa dibayar kartu kredit, pembeli akan
-            gagal di halaman pembayaran dan menutupnya.
+            bisa lewat Virtual Account, atau COD. Ini bukan detail teknis:
+            kalau ia memasang harga yang hanya bisa dibayar kartu kredit,
+            pembeli akan gagal di halaman pembayaran dan menutupnya.
           */}
           <p className="text-body-sm text-muted-foreground">
-            Pembeli hanya dapat membayar lewat Virtual Account (BCA, BNI, BRI,
-            BSI, Danamon, Permata).
+            Pembeli dapat membayar lewat Virtual Account (BCA, BNI, BRI, BSI,
+            Danamon, Permata) atau COD.
           </p>
         </div>
       </DialogContent>

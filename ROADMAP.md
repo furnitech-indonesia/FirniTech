@@ -340,7 +340,7 @@ KESULITAN YANG TERBUKA (perlu keputusan, bukan hanya pengerjaan):
 Fokus Utama: Otomatisasi pencairan dana, pengujian end-to-end, dan persiapan rilis PWA.
  * Deliverables Utama:
    * Automated Payout Engine (Midtrans Payouts, dulu bernama IRIS):
-     * Integrasi Midtrans Batch Payout API.
+     * Integrasi Midtrans Payout API, dipicu bukti pengiriman (bukan cron 2x/hari).
      * Perhitungan Platform Service Fee 1,5% dan fee Midtrans sebelum pencairan,
        mengikuti model yang ditetapkan di PRD.md §2.C:
        - Hanya Bank Transfer / VA sebagai kanal pembayaran. Tidak ada MDR
@@ -350,9 +350,8 @@ Fokus Utama: Otomatisasi pencairan dana, pengujian end-to-end, dan persiapan ril
        - `beban pencairan = Rp 5.000 per eksekusi`, ditanggung FurniTech
      * Fee dihitung ulang di server dari `orders`; kalau konstanta fee belum
        diisi, pencairan diblokir dengan pesan yang terbaca — bukan `?? 0`.
-     * Setup cron-job.org webhook untuk eksekusi payout setiap pukul 06.00 WIB
-       dan 18.00 WIB, dengan secret yang wajib diverifikasi supaya route tidak
-       bisa dipicu siapa saja.
+     * cron-job.org DIHAPUS untuk pencairan. Pemicunya bukti pengiriman yang
+       diunggah kurir.
    * CATATAN BIAYA — HARUS DIBACA SEBELUM MULAI (detail di
      docs/midtrans-fee.md):
      - Beban riil FurniTech per pesanan adalah Rp 9.440 (Rp 4.440 masuk +
@@ -746,59 +745,63 @@ YANG MASIH KOSONG DARI SPRINT 6
 
 ━━━ Model Biaya & Payout (keputusan pemilik produk, 2026-09-27) ━━━
 
-STATUS: model final (PRD v1.6) + rumus di `src/lib/fees.ts` + modal kalkulator
-biaya di modul produk. Mesin payout BELUM dibangun dan sengaja ditahan sampai
-konfirmasi Midtrans soal fee per-batch terjawab.
+STATUS: model final (PRD v1.7) + rumus di `src/lib/fees.ts` + modal kalkulator
+biaya di modul produk. Mesin payout BELUM dibangun.
 
 PEMBAGIAN BEBAN (final)
-  fee masuk  Rp4.440  →  pengrajin
-  fee payout Rp5.000  →  platform, dari merchant balance, PER BATCH
-  platform fee 1,5% × totalAmount (produk + ongkir)  →  utuh, tanpa dipotong
-  fee dicatat sebagai BEBAN
+  fee masuk  Rp4.440  →  pengrajin, saat pesanan lunas
+  fee payout Rp5.550  →  pengrajin, saat pencairan, PER PENERIMA
+  platform fee 0%     →  FurniTech tidak mengambil apa-apa per transaksi
+  fee langganan        →  FurniTech (Rp300.000 → diterima Rp295.560)
 
   escrow masuk     = totalAmount − 4.440
-  saldo pengrajin += totalAmount − platformFee − 4.440
-  saat payout     : saldo ditransfer = saldo UTUH
+  saldo pengrajin += totalAmount − 0 − 4.440
+  saat payout     : saldo ditransfer = saldo − 5.550
 
-  Rp10.000.000 → platform Rp150.000, pengrajin Rp9.845.560.
-  Cek buku: 150.000 + 9.845.560 = 9.995.560 = escrow.
-  Terpisah: platform bayar Rp5.000 × 2 batch/hari = Rp10.000/hari.
-
-EFEK PENTING: TITIK IMPAS HILANG
-  Beban platform tidak lagi bergantung pada nilai pesanan. Dengan fee
-  pencairan per batch, titik impas platform ada di Rp333.333 per pesanan pada
-  satu order per batch — jauh di bawah nilai mebel custom. Dan beban
-  pengrajin turun dari Rp9.440 ke Rp4.440, jadi persentasenya ikut turun:
-  0,04% untuk pesanan Rp10 juta, 1,48% untuk Rp300.000. Keputusan "tidak
-  perlu minimum pesanan" jadi aman.
-
-  TAPI: kalau ternyata fee itu PER-PENERIMA, 100 pengrajin dengan 1 order per
-  batch = 200 disbursement/hari = Rp30 juta/bulan. Asumsi per-batch wajib
-  dikonfirmasi tertulis sebelum produksi.
+  Beban pengrajin per pesanan = Rp9.990 datar (bukan persen). Propriosinya
+  naik untuk pesanan kecil: 0,10% untuk Rp10 juta, 1,50% untuk Rp666.000,
+  9,99% untuk Rp100.000. Mebel custom selalu di rentang pertama.
 
 YANG SUDAH DIKERJAKAN
-  - `src/lib/fees.ts` — konstanta dan rumus fee. Tanpa `server-only`, supaya
-    modal kalkulator dan server membaca angka yang sama. Mengimpor
-    `server-only` di sini akan membuat modal menarik graf modul server ke
-    bundel klien.
+  - `src/lib/fees.ts` — konstanta dan rumus. Tanpa `server-only` supaya modal
+    kalkulator dan server membaca angka yang sama. `PLATFORM_FEE_RATE` dan
+    `FEE_PENCAIRAN` TIDAK boleh disalin ke `plans.ts` — pernah terduplikasi
+    dan tidak ada yang menangkapnya.
   - `src/components/fee-calculator-dialog.tsx` — modal kalkulator biaya di
-    form produk, dengan hitung mundur dari target pendapatan. Semua angka
-    diimpor, tidak ada yang diketik ulang.
-  - `ALLOWED_PAYMENT_CHANNELS` + `REJECTED_PAYMENT_CHANNELS` di `fees.ts`,
-    dipakai `snap.ts`. Dipasang di sini, bukan ditulis inline, karena daftar
-    kanal adalah keputusan bisnis dan tarif fee berbeda per kanal — daftar
-    yang tersebar di dua berkas akan menyimpang.
-  - `test:checkout` dikunci: 19 pemeriksaan baru. Yang paling penting adalah
-    "pembagian escrow menutup" (fee platform + saldo pengrajin = escrow) dan
-    "harga minimum untuk target = kebalikan rumus saldo" — kalau keduanya
-    tidak saling cocok, modal akan menyuruh pengrajin menetapkan harga yang
-    tidak benar-benar memenuhi targetnya.
+    form produk, plus hitung mundur dari target pendapatan. Kedua fee
+    ditampilkan TERPISAH, bukan dijumlahkan, karena kapan potongannya
+    berbeda (salah satu saat pesanan lunas, yang lain saat uang keluar).
+  - `ALLOWED_PAYMENT_CHANNELS` + `REJECTED_PAYMENT_CHANNELS` dipakai
+    `snap.ts`. CIMB (maks Rp250 juta) dan SeaBank (maks Rp100 juta)
+    dinonaktifkan karena batas maksimum nominalnya.
+  - Diskon tahunan 5% dan harga tahunan DIHITUNG dari harga bulanan × 12 ×
+    0,95, bukan diketik. `test:visual` dan `test:webhook` ikut membaca
+    `plans.ts` supaya tidak perlu diubah lagi saat harga berubah.
+  - Panel admin & dashboard menampilkan "beban gateway yang dibayar
+    pengrajin", bukan "fee platform 0%" yang selalu Rp 0.
+  - `test:checkout` mengunci 20+ pemeriksaan fee, termasuk "pembagian escrow
+    menutup" dan "harga minimum menutup KEDUA fee".
 
-BELUM SELESAI
-  - Mesin payout itu sendiri: `payout_logs`/`payout_items`, route cron
-    06.00/18.00 WIB dengan secret yang diverifikasi, ambang minimum saldo.
-  - Detail biaya di tiga tempat: wizard pendaftaran, ringkasan saldo siap
-    cair, dan rincian detail pesanan. `test:lacak` harus terus mengunci agar
-    rincian itu tidak bocor ke halaman pembeli.
-  - Kredensial Payouts (`MIDTRANS_IRIS_API_KEY`) dan angka batas minimum saldo
-    per pencairan dari Midtrans.
+YANG MASIH HARUS DIKERJAKAN (urutan)
+  1. Peran **Kurir**: enum role baru, halaman terbatas (daftar pengiriman +
+     unggah bukti), dan RLS yang hanya meloloskan baris yang ditugaskan.
+     Ini prasyarat semua langkah berikutnya.
+  2. Bukti penerimaan: foto barang + tanda tangan pelanggan di layar HP
+     kurir. Bucket privat + signed URL, seperti foto progres.
+  3. Rekening pengrajin: kolom di `tenants`, verifikasi lewat
+     `POST /account_validation` Payouts, dan halaman COD transfer bank yang
+     menampilkan nomor + atas nama rekening.
+  4. Mesin payout: `payout_logs`/`payout_items`, pemicu bukti, fee
+     Rp5.550 per penerima, `iris-idempotency-key` per permintaan.
+  5. COD di checkout: metode bayar baru, tanpa Midtrans, dengan bukti yang
+     diunggah kurir.
+  6. Pengaturan fee platform & harga paket di panel super admin, dengan
+     aturan: invoice yang sudah terbit mengunci harga saat dibuat.
+
+CATATAN SOAL RISIKO YANG DISEPAKAI SENDIRI
+  Tanda tangan digambar di layar HP kurir, dan foto bukti transfer COD hanya
+  bukti foto. Keduanya lemah secara pembuktian. Ini DITERIMA karena: tidak
+  ada sengketa, tidak ada refund, dan kanal pembayaran hanya VA (transfer
+  bank tidak bisa di-chargeback). Kalau nanti kartu kredit atau QRIS
+  ditambahkan, keputusan "tidak ada refund" menjadi tanggung jawab platform
+  dan bukan cuma urusan pengrajin.

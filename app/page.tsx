@@ -15,7 +15,8 @@ import {
 import { ProductPreview } from "@/components/product-preview";
 import { PricingTable } from "@/components/pricing-table";
 import { SiteHeader } from "@/components/site-header";
-import { PLATFORM_FEE_RATE } from "@/lib/plans";
+import { totalGatewayCostPerOrder } from "@/lib/fees";
+import { formatRupiah } from "@/lib/format";
 
 /**
  * Halaman publik FurniTech.
@@ -28,7 +29,7 @@ import { PLATFORM_FEE_RATE } from "@/lib/plans";
  *
  * Yang tampil di sini dibaca dari sumber data nyata:
  *   - Harga, batas paket, dan diskon -> PLANS di src/lib/plans.ts
- *   - Biaya platform                  -> PLATFORM_FEE_RATE (1.5%)
+ *   - Biaya transaksi                 -> totalGatewayCostPerOrder()
  *   - Fitur                           -> PRD.md
  * Yang TIDAK tampil: statistik pelanggan, testimoni, promo, dan free trial.
  *
@@ -482,16 +483,17 @@ export default function Home() {
             <SectionHeading
               eyebrow="Harga"
               title="Paket bulanan, tanpa free trial"
-              body="Harga sudah termasuk pencairan dana dua kali sehari. Yang belum termasuk adalah biaya Midtrans, dipotong langsung dari pencairan."
+              body="Pencairan dana berjalan otomatis setelah bukti barang diterima. Pengrajin tidak membayar biaya pencairan ke platform."
             />
 
             <PricingTable />
 
             <p className="mt-6 text-body-sm text-muted-foreground">
-              Semua paket termasuk biaya platform{" "}
-              {(PLATFORM_FEE_RATE * 100).toLocaleString("id-ID")}% dari nilai
-              transaksi, yang dipotong dari pencairan Anda — bukan biaya tambahan
-              di atas harga paket.
+              Harga paket sudah termasuk semuanya — tidak ada biaya platform
+              per transaksi lagi. Biaya payment gateway{" "}
+              {formatRupiah(totalGatewayCostPerOrder())} per pesanan
+              ditanggung pengrajin, dan kalkulator di halaman produk membantu
+              menghitungnya supaya bisa disisipkan ke harga jual.
             </p>
           </Container>
         </section>

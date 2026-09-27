@@ -467,3 +467,139 @@ proyek apartemen), channelnya perlu dikecualikan secara berkala.
    dikunci `test:checkout` — kalau kanal yang tidak dimaksud bisa dipakai
    lagi, seluruh hitungan fee di dokumen ini tidak berlaku karena tarifnya
    berbeda per kanal.
+
+## 11. API Payouts (dulu IRIS) — hasil pembacaan dokumentasi
+
+Dicek 2026-09-27 dari dokumentasi Midtrans (`docs.midtrans.com/docs/
+disbursement-overview`) dan Antarmuka Pustaka `MidtransIrisApi` resmi.
+Dokumentasi lengkap ada di `iris-docs.midtrans.com`.
+
+**Autentikasi berbeda dari Core API.** Payouts tidak memakai Server Key,
+melainkan sepasang header:
+
+| Header | Isi |
+|---|---|
+| `iris-credential` | API key Payouts (`MIDTRANS_IRIS_API_KEY` di `.env`) |
+| `iris-idempotency-key` | Kunci unik PER PERMINTAAN |
+
+`iris-idempotency-key` itu wajib dipahami sebelum menulis engine payout:
+kalau tidak dikirim, atau dikirim ulang dengan nilai yang sama, permintaan itu
+dianggap sebagai **retry** yang sah — bukan permintaan baru. Ini persis yang
+membuat payout ganda mustahil secara struktural, bukan hanya karena kita
+menjaga idempotensi sendiri.
+
+### Endpoint yang tersedia
+
+| Endpoint | Fungsi | Relevansi untuk FurniTech |
+|---|---|---|
+| `GET /beneficiary_banks` | Daftar bank yang didukung | Mengisi dropdown bank di formulir rekening |
+| `POST /account_validation` | Validasi rekening; kalau valid mengembalikan informasi pemilik rekening | **Verifikasi rekening pengrajin saat pendaftaran** (§12) |
+| `POST /beneficiaries` | Simpan rekening tujuan sebagai *beneficiary* | Satu pengrajin = satu beneficiary, dipakai ulang setiap payout |
+| `POST /payouts` | Membuat payout — **bisa tunggal maupun banyak** dalam satu permintaan | Payout per konfirmasi (§13) |
+| `POST /payouts/approve` | Approver menyetujui payout | Kontrol dua orang (§14) |
+| `POST /payouts/reject` | Approver menolak | Sama |
+| `GET /payouts/{reference_no}` | Detail satu payout | Polling status setelah dikirim |
+| `GET /balance` | Saldo Payouts | Rekonsiliasi saldo escrow vs saldo Payouts |
+| `GET /statements` | Riwayat transaksi satu bulan | Rekonsiliasi bulanan |
+| `GET /channels` | Kanal top-up (khusus aggregator) | Cara mengisi saldo Payouts |
+| `GET /ping` | PING — health check | Memastikan Payouts hanya dikonfigurasi di produksi |
+
+**Temuan yang mengubah desain pencairan:** `POST /payouts` secara resmi
+menerima banyak payout dalam satu permintaan. Jadi "satu pencairan per
+konfirmasi" **tetap bisa dikirim dalam satu panggilan** kalau beberapa
+konfirmasi masuk pada waktu yang berdekatan. Yang mem_rbebankan fee adalah
+jumlah **perymngan**, bukan jumlah panggilan — dan kalau fee-nya per-penerima,
+menggabungkan payout dalam satu panggilan mengurangi total fee.
+
+Skema: **aggregator** (sumber dana dari saldo Midtrans, diisi lewat
+`GET /channels` → top-up) atau **facilitator** (rekening bank sendiri).
+
+### Yang BELUM bisa diverifikasi
+
+Semua di atas berasal dari dokumentasi, **tidak** dari panggilan sungguhan —
+`MIDTRANS_IRIS_API_KEY` masih kosong, dan endpoint `/ping` yang paling
+sederhana pun belum dicoba. Jadi bentuk respons persisnya belum diketahui.
+Implementasi harus defensif: membaca field yang mungkin tidak ada, bukan
+mengambil `body.data.account_name` tanpa checking.
+
+## 12. Verifikasi rekening pengrajin (keputusan pemilik produk)
+
+Rekening pengrajin diverifikasi saat pendaftaran memakai
+`POST /account_validation` dari Payouts, bukan layanan pihak ketiga.
+
+Alasannya teknis, bukan semata karena Midtrans kebetulan menyediakan
+layanan ini:
+
+1. **Rekening itu akan ditampilkan ke pembeli.** Pada COD transfer bank,
+   FurniTech menampilkan nomor rekening dan atas nama pengrajin kepada
+   pelanggan. Kalau rekeningnya salah atau sudah tidak aktif, pelanggan
+   salah transfer — dan yang menanggung adalah pengrajin, yang akan
+   menyalahkan FurniTech karena FurniTech yang menampilkannya.
+2. **Payout memakai rekening itu.** Nomor yang sama yang divalidasi akan
+   dipakai untuk menarik dana. Rekening yang gagal ditolak bank tidak akan
+   ketahuan sampai hari pencairan.
+3. **Satu panggilan, satu sumber kebenaran.** Kalau validasi memakai layanan lain,
+   ada dua sumber yang bisa berbeda pendapat tentang rekening yang sama.
+
+Aturan yang harus berlaku:
+
+- Rekening **wajib terverifikasi** sebelum produk bisa ditayangkan di
+  storefront, dan sebelum COD transfer bank bisa dipilih.
+- Nama pemilik rekening yang dikembalikan Midtrans **disimpan terpisah**
+  dari nama yang diketik pengrajin. Kalau berbeda, pengrajin melihat
+  perbedaan itu dan memutuskan — membiarkan sistem memakai salah satu secara
+  diam-diam berarti FurniTech memutuskan atas nama orang.
+- Pendaftaran **tidak berhenti** kalau validasi gagal atau Midtrans sedang
+ _down_. Alasannya sama seperti wizard pembayaran: menolak pendaftaran
+  menyisakan akun yang emailnya sudah terpakai dan tidak bisa diulang.
+  Tenant tetap dibuat, dengan status "rekening belum terverifikasi" dan penjelasan yang bisa dibaca.
+
+## 13. Alur pencairan (keputusan pemilik produk, 2026-09-27)
+
+Jadwal 06.00/18.00 WIB **diganti** oleh bukti pengiriman yang diunggah kurir.
+
+```
+1. Kurir (akun khusus, akses sangat terbatas) membuka daftar pengiriman
+2. Di HP pelanggan: foto barang diterima + pelanggan menandatangani di layar
+3. Kurir mengunggah foto, dan gambar tanda tangan pelanggan
+4. Otomatis: sistem memanggil Payouts untuk rekening pengrajin
+```
+
+**Tidak ada langkah yang menunggu pembeli.** Ini yang menghapus risiko uang
+mengunci permanen: uang hanya keluar kalau ada bukti yang diunggah kurir, jadi
+kalau bukti tidak pernah diunggah, tidak ada uang yang tertahan — cuma pesanan
+yang belum diselesaikan, dan itu urusan pengrajin dengan pembelinya sendiri.
+
+Fee pencairan Rp 5.550 **per penerima** (sudah dikonfirmasi pemilik produk),
+ditanggung pengrajin, dipotong dari saldonya saat payout:
+
+```
+saldo pengrajin += totalAmount − fee platform (0) − fee masuk (Rp4.440)
+saat payout     : saldo ditransfer = saldo − Rp5.550
+```
+
+Tidak ada ambang minimum pencairan. Keputusan itu konsisten dengan model
+"FurniTech mengambil fee dari pengrajin": pengrajin bebas menambah fee itu ke
+harga produknya lewat kalkulator di form produk, jadi dia yang menanggung
+biayanya sendiri, bukan buyer.
+
+## 14. Kontrol dua orang (disarankan, belum diputuskan)
+
+Payouts punya peran **Maker/Creator** dan **Approver** yang terpisah —
+`POST /payouts` oleh maker, `POST /payouts/approve` oleh approver.
+Halaman produk
+Payouts menyebutnya sebagai pengaman terhadap kecurangan internal.
+
+Untuk platform yang mengirim uang, ini bukan opsional.
+Yang perlu diputuskan:
+apakah payout yang sudah di-trigger bukti pengiriman **langsung dikirim**,
+atau menunggu persetujuan owner di dashboard pengrajin dulu.
+
+Trade-offnya nyata: menunggu persetujuan menambah satu ketukan dan menahan
+uang pengrajin selama beberapa menit; langsung mengirim lebih cepat tapi owner
+tidak pernah tahu uangnya keluar.
+
+Usulan saya: **kirim langsung setelah bukti masuk** untuk tahap sekarang
+dengan volume kecil, dan kontrol dua orang diaktifkan kalau nanti sudah ada
+banyak pengrajin. Ini belum jadi keputusan, dan tidak akan saya
+implementasikan sebelum ada jawaban.
