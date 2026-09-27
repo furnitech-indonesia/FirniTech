@@ -29,6 +29,8 @@ import {
   normalizePhone,
   quotaRemaining,
 } from "../src/lib/fonnte";
+import { notifyOrderEvent } from "../src/lib/wa-messages";
+import { orders, orderItems } from "../src/db/schema";
 import { PLANS } from "../src/lib/plans";
 
 type Result = { label: string; ok: boolean; detail: string };
@@ -209,6 +211,207 @@ async function main() {
     }
   } finally {
     await db.delete(tenants).where(eq(tenants.slug, slug));
+  }
+
+  /* ---------- 4. Notifikasi tidak boleh menggagalkan aksi bisnis ---------- */
+  /*
+   * Di sini `fetch` di-stub. Dua alasan:
+   *   - Kita bisa memeriksa ISI pesan (apakah nomor resi benar-benar ikut),
+   *     yang mustahil dilihat kalau pesan benar-benar terkirim ke Fonnte.
+   *   - Kuota hanya terpotong kalau token ADA, jadi kita bisa menguji jalur
+   *     "terkirim" tanpa kredensial sungguhan.
+   */
+  const realFetch = globalThis.fetch;
+  const sent: { url: string; body: Record<string, unknown> }[] = [];
+  globalThis.fetch = (async (url: string, init?: RequestInit) => {
+    sent.push({
+      url: String(url),
+      body: JSON.parse(String(init?.body ?? "{}")),
+    });
+    return new Response(JSON.stringify({ status: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  }) as typeof fetch;
+
+  const notifySlug = `uji-notif-${Date.now()}`;
+  const [notifyTenant] = await db
+    .insert(tenants)
+    .values({
+      name: "Toko Uji Notif",
+      slug: notifySlug,
+      plan: "pro",
+      subscriptionStatus: "active",
+      subscriptionExpiresAt: new Date(Date.now() + 30 * 86_400_000),
+      isActive: true,
+    })
+    .returning({ id: tenants.id });
+
+  const [notifyOrder] = await db
+    .insert(orders)
+    .values({
+      tenantId: notifyTenant.id,
+      orderCode: "ORD-UJI-1",
+      customerName: "Siti Pembeli",
+      // Sengaja format 08xx: kalau normalisasi tidak jalan, nomor ini tidak
+      // akan pernah sampai ke Fonnte.
+      customerPhone: "081298765432",
+      customerAddress: "Jl. Contoh No. 1",
+      destinationCity: "Bandung",
+      itemsSubtotal: 2_000_000,
+      shippingFee: 0,
+      totalAmount: 2_000_000,
+      dpAmount: 500_000,
+      orderStatus: "ready_to_ship",
+      paymentStatus: "dp_paid",
+    })
+    .returning({ id: orders.id });
+
+  const [notifyItem] = await db
+    .insert(orderItems)
+    .values({
+      orderId: notifyOrder.id,
+      productName: "Meja Kayu",
+      quantity: 1,
+      price: 2_000_000,
+    })
+    .returning({ id: orderItems.id });
+
+  if (!notifyItem) throw new Error("order_items gagal dibuat");
+
+  try {
+    /* ---- Pesan progres ---- */
+    const before = await quotaRemaining(notifyTenant.id, "pro");
+
+    globalThis.fetch = (async (url: string, init?: RequestInit) => {
+      sent.push({ url: String(url), body: JSON.parse(String(init?.body ?? "{}")) });
+      return new Response(JSON.stringify({ status: true }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }) as typeof fetch;
+
+    const prevToken = process.env.FONNTE_API_TOKEN;
+    process.env.FONNTE_API_TOKEN = "token-uji";
+
+    const delivered = await notifyOrderEvent({
+      tenantId: notifyTenant.id,
+      orderId: notifyOrder.id,
+      event: "progress_photo",
+      stage: "finishing",
+      notes: "Catatan hasil poles.",
+    });
+
+    check("pesan progres terkirim saat token ada", delivered === true, `delivered=${delivered}`);
+
+    const progress = sent.at(-1);
+    const msg = String(progress?.body.message ?? "");
+    check(
+      "nomor tujuan dinormalisasi ke 628…",
+      String(progress?.body.target) === "6281298765432",
+      `target=${String(progress?.body.target)}`,
+    );
+    check(
+      "pesan progres menyebut tahap & catatan tukang",
+      msg.includes("Finishing") && msg.includes("hasil poles"),
+      msg.split("\n")[3] ?? "(kosong)",
+    );
+    check(
+      "pesan progres tidak mengarang halaman lacak yang belum ada",
+      String(progress?.body.url).startsWith("/t/"),
+      `url=${String(progress?.body.url)}`,
+    );
+
+    const after = await quotaRemaining(notifyTenant.id, "pro");
+    check(
+      "kuota naik tepat 1 setelah terkirim",
+      after.used === before.used + 1,
+      `${before.used} -> ${after.used}`,
+    );
+
+    /* ---- Pesan resi ---- */
+    await notifyOrderEvent({
+      tenantId: notifyTenant.id,
+      orderId: notifyOrder.id,
+      event: "shipped",
+      cargoName: "Indah Logistik",
+      trackingNumber: "INH123456789",
+    });
+    const shipped = sent.at(-1);
+    const shippedMsg = String(shipped?.body.message ?? "");
+    check(
+      "pesan resi memuat nama kargo dan nomor resi",
+      shippedMsg.includes("Indah Logistik") && shippedMsg.includes("INH123456789"),
+      shippedMsg.split("\n")[3] ?? "(kosong)",
+    );
+
+    /* ---- Isolasi tenant: tenant lain tidak boleh pakai nomor ini ---- */
+    const otherTenantSlug = `uji-notif-lain-${Date.now()}`;
+    const [otherTenant] = await db
+      .insert(tenants)
+      .values({
+        name: "Toko Uji Notif Lain",
+        slug: otherTenantSlug,
+        plan: "pro",
+        subscriptionStatus: "active",
+        subscriptionExpiresAt: new Date(Date.now() + 30 * 86_400_000),
+        isActive: true,
+      })
+      .returning({ id: tenants.id });
+
+    try {
+      const sentBefore = sent.length;
+      const leaked = await notifyOrderEvent({
+        // Tenant B, tapi order milik tenant A.
+        tenantId: otherTenant.id,
+        orderId: notifyOrder.id,
+        event: "progress_photo",
+        stage: "qc",
+      });
+      check(
+        "order milik tenant lain TIDAK bisa dinotifikasi (nomor tidak bocor)",
+        leaked === false && sent.length === sentBefore,
+        `delivered=${leaked}, request baru=${sent.length - sentBefore}`,
+      );
+    } finally {
+      await db.delete(tenants).where(eq(tenants.slug, otherTenantSlug));
+    }
+
+    /* ---- Token kosong: aksi tetap aman, kuota tidak terpotong ---- */
+    delete process.env.FONNTE_API_TOKEN;
+    const beforeNoToken = await quotaRemaining(notifyTenant.id, "pro");
+    const sentBeforeNoToken = sent.length;
+
+    const noTokenResult = await notifyOrderEvent({
+      tenantId: notifyTenant.id,
+      orderId: notifyOrder.id,
+      event: "progress_photo",
+      stage: "qc",
+    });
+    const afterNoToken = await quotaRemaining(notifyTenant.id, "pro");
+
+    check(
+      "token kosong: tidak melempar, hanya melaporkan gagal",
+      noTokenResult === false,
+      `delivered=${noTokenResult}`,
+    );
+    check(
+      "token kosong: kuota TIDAK terpotong (tidak ada pesan terkirim)",
+      afterNoToken.used === beforeNoToken.used,
+      `${beforeNoToken.used} -> ${afterNoToken.used}`,
+    );
+    check(
+      "token kosong: tidak ada permintaan ke Fonnte sama sekali",
+      sent.length === sentBeforeNoToken,
+      `request baru=${sent.length - sentBeforeNoToken}`,
+    );
+
+    if (prevToken === undefined) delete process.env.FONNTE_API_TOKEN;
+    else process.env.FONNTE_API_TOKEN = prevToken;
+  } finally {
+    globalThis.fetch = realFetch;
+    await db.delete(orders).where(eq(orders.id, notifyOrder.id));
+    await db.delete(tenants).where(eq(tenants.slug, notifySlug));
   }
 
   const [leftover] = await db

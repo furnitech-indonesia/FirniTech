@@ -22,6 +22,7 @@ import {
   transitionStatusSchema,
 } from "@/lib/schemas/order";
 import { uploadProductImage } from "@/lib/storage";
+import { notifyOrderEvent } from "@/lib/wa-messages";
 
 /**
  * Pesanan: transisi status, penugasan tukang, Custom Order Builder, pembayaran,
@@ -331,6 +332,17 @@ export async function recordPayment(
         })
         .where(eq(orders.id, orderId));
 
+      // Nominal yang dikirim adalah `value` (bagian yang baru dibayar), bukan
+      // `nextDp` (total kumulatif). Kalau yang dikirim kumulatif, pembeli akan
+      // diberi tahu "terima kasih 1.500.000" dua kali untuk DP 1 juta + pelunasan
+      // 500 ribu.
+      await notifyOrderEvent({
+        tenantId: actor.tenantId,
+        orderId,
+        event: "payment_confirmed",
+        amount: value,
+      });
+
       revalidatePath(`/dashboard/pesanan/${orderId}`);
       revalidatePath("/dashboard/pesanan");
       return {
@@ -380,6 +392,25 @@ export async function setTracking(
         .update(orders)
         .set({ cargoName, trackingNumber })
         .where(eq(orders.id, orderId));
+
+      /*
+       * Kirim resi hanya kalau pesanan benar-benar SUDAH dikirim, bukan baru
+       * mencatat resi.
+       *
+       * `setTracking` juga dipakai saat status masih `ready_to_ship`, yaitu
+       * resi dicatat lebih dulu sebelum barang diserahkan ke kurir. Kalau modul itu
+       * mengirim WA, pembeli akan diberi tahu "sudah dikirim" padahal barangnya
+       * masih di bengkel.
+       */
+      if (order.orderStatus === "shipped" || order.orderStatus === "completed") {
+        await notifyOrderEvent({
+          tenantId: actor.tenantId,
+          orderId,
+          event: "shipped",
+          cargoName,
+          trackingNumber,
+        });
+      }
 
       revalidatePath(`/dashboard/pesanan/${orderId}`);
       return { message: "Data pengiriman disimpan." };
@@ -454,6 +485,23 @@ export async function addProductionProgress(
           .set({ orderStatus: target })
           .where(eq(orders.id, orderId));
       }
+
+      /*
+       * Notifikasi pembeli — SETELAH data tersimpan, bukan sebelumnya.
+       *
+       * Urutannya penting: kalau WA dikirim dulu lalu insert-nya gagal,
+       * pembeli sudah diberi tahu foto progres yang tidak pernah ada. Dan
+       * `notifyOrderEvent` tidak pernah melempar, jadi kegagalan Fonnte tidak
+       * bisa mengubah hasil aksi ini — foto tetap tersimpan apa pun yang
+       * terjadi di sisi WhatsApp.
+       */
+      await notifyOrderEvent({
+        tenantId: actor.tenantId,
+        orderId,
+        event: "progress_photo",
+        stage: stage as ProgressStage,
+        notes,
+      });
 
       revalidatePath(`/dashboard/pesanan/${orderId}`);
       return { message: "Progres produksi tersimpan." };
