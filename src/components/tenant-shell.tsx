@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { StorefrontIcon } from "@phosphor-icons/react/dist/ssr";
+import { StorefrontIcon, ShoppingCartIcon } from "@phosphor-icons/react/dist/ssr";
 
 /**
  * Kerangka tampilan storefront per-tenant.
@@ -24,6 +24,7 @@ export function TenantShell({
   plan,
   basePath,
   categories,
+  cartCount = 0,
   children,
 }: Readonly<{
   name: string;
@@ -31,6 +32,14 @@ export function TenantShell({
   basePath: string;
   /** Kategori yang benar-benar ada di katalog tenant ini. */
   categories: readonly string[];
+  /**
+   * Jumlah barang di keranjang pembeli. Dibaca server dari cookie, jadi
+   * header ini tidak perlu JS untuk menampilkan jumlah yang benar.
+   *
+   * 0 berarti tautannya tidak dirender sama sekali — tombol keranjang yang
+   * selalu ada tapi selalu kosong hanya menambah noise di header.
+   */
+  cartCount?: number;
   children: ReactNode;
 }>) {
   return (
@@ -51,6 +60,22 @@ export function TenantShell({
               <span className="truncate">{name}</span>
             </Link>
             <div className="flex shrink-0 items-center gap-2">
+              {/*
+                Angka keranjang dibaca server dari cookie, jadi jumlah di sini
+                benar sejak render pertama. Menghitungnya di klien akan
+                menampilkan 0 lalu melompat — flicker di header adalah hal
+                yang paling terlihat di halaman yang paling sering dibuka.
+              */}
+              {cartCount > 0 ? (
+                <Link
+                  href={`${basePath}/checkout`}
+                  className="flex min-h-11 items-center gap-1.5 rounded-xl border border-border px-3 text-label-lg text-foreground transition-colors hover:bg-muted"
+                >
+                  <ShoppingCartIcon size={18} weight="light" aria-hidden />
+                  <span className="text-code-tabular">{cartCount}</span>
+                  <span className="sr-only">barang di keranjang</span>
+                </Link>
+              ) : null}
               <Link
                 href="/lacak"
                 className="flex min-h-11 items-center rounded-xl border border-border px-3 text-label-lg text-foreground transition-colors hover:bg-muted"

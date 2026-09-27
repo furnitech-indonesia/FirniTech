@@ -4,7 +4,7 @@ import Link from "next/link";
 import { RegisterForm } from "@/components/register-form";
 import { getSession } from "@/lib/auth/session";
 import { PLANS, type PlanId } from "@/lib/plans";
-import { isMidtransConfigured } from "@/lib/midtrans/saas";
+import { isMidtransConfigured } from "@/lib/midtrans/snap";
 import { formatRupiah } from "@/lib/format";
 
 export const metadata = { title: "Daftar — FurniTech" };

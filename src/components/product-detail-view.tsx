@@ -6,6 +6,7 @@ import { ArrowLeftIcon, RulerIcon, TreeIcon } from "@phosphor-icons/react/dist/s
 import { db } from "@/db";
 import { products } from "@/db/schema";
 import { ProductImage } from "@/components/catalog-view";
+import { AddToCartForm } from "@/components/cart-view";
 import { createSignedUrls } from "@/lib/storage";
 import { formatNumber, formatRupiah } from "@/lib/format";
 
@@ -126,12 +127,13 @@ export async function ProductDetailView({
           </dl>
 
           {/*
-           * Tombol checkout sengaja belum ada. Checkout butuh ongkir per kota
-           * tujuan (matriks tarif milik pengrajin) dan pembuatan order escrow;
-           * keduanya adalah pekerjaan Sprint 5 berikutnya. Tombol yang belum
-           * berfungsi lebih buruk daripada tidak ada — pengguna akan
-           * menekan lalu merasa aplikasinya rusak.
-           */}
+            Tombol keranjang, bukan "Beli sekarang". Membeli langsung dari
+            halaman detail berarti pembeli melewati pemilihan keranjang, dan
+            untuk mebel kargo (yang ongkirnya bergantung pada kabupaten tujuan)
+            hampir selalu ada lebih dari satu barang yang akan dipesan.
+          */}
+          <AddToCartForm productSlug={product.slug} />
+
           <p className="text-body-sm text-muted-foreground">
             Ongkir kargo dihitung setelah Anda memilih kota tujuan pada
             langkah pemesanan.

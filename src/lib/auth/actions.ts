@@ -10,7 +10,8 @@ import { magicLinkSchema, signInSchema } from "@/lib/schemas/auth";
 import { registerFormSchema } from "@/lib/schemas/register";
 import { PLANS } from "@/lib/plans";
 import { isSlugAvailable, provisionOwner } from "@/lib/auth/provision";
-import { createSaasCharge, isMidtransConfigured } from "@/lib/midtrans/saas";
+import { createSaasCharge } from "@/lib/midtrans/saas";
+import { isMidtransConfigured } from "@/lib/midtrans/snap";
 import type { FormState } from "@/components/form-state";
 
 export type LoginState = {

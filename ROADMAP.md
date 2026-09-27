@@ -137,11 +137,17 @@ Fokus Utama: Halaman toko online publik pembeli berbasis multi-tenant.
      * Integration Midtrans Payment Gateway (Escrow Account FurniTech) dengan potongan MDR resmi.
      * Halaman publik Order Tracking (menampilkan timeline foto progres produksi & resi kargo).
      * Widget Live Chat Floating di toko online.
- * STATUS: 1 dari 4 bagian selesai.
+ * STATUS: 4 dari 4 bagian selesai.
    * Bagian 1 (SELESAI) — storefront: beranda, katalog, filter kategori, detail
-     produk. Detail di commit `2245e72`.
-   * Bagian 2, 3, 4 — rencana rinci di bawah. Semua fakta di bagian tersebut
-     sudah diverifikasi terhadap layanan sungguhan, bukan diasumsikan.
+     produk. Commit `2245e72`.
+   * Bagian 2 (SELESAI) — form alamat bertingkat + peta Leaflet. Commit
+     `5fee35c`.
+   * Bagian 3 (SELESAI) — tarif ongkir berbasis `regencyId` + CRUD di
+     `/dashboard/pengaturan/ongkir`. Commit `5fee35c`.
+   * Bagian 4 (SELESAI) — halaman lacak publik `/lacak`. Commit `3961d00`.
+   * Checkout & pembayaran Midtrans (bagian 5, yang tidak ada di daftar
+     aslinya) — sudah selesai juga, lihat "CHECKOUT & PEMBAYARAN MIDTRANS"
+     di bawah.
 
 ━━━ Sprint 5, Rencana Lanjutan ━━━
 
@@ -586,3 +592,77 @@ FIREBASE_ADMIN_CREDENTIALS="your-firebase-admin-json"
 
 # CAPACITOR (Phase 2) — ditulis di capacitor.config.ts, bukan di .env.
 # Native memakai server.url yang menunjuk ke deployment Vercel produksi.
+
+━━━ Checkout & Pembayaran Midtrans (escrow) ━━━
+
+STATUS: SELESAI dan terverifikasi end-to-end terhadap server Midtrans
+SANDBOX sungguhan. Bukan "belum bisa diuji" seperti seharusnya kalau
+kredensialnya kosong — kredensialnya sudah ada dan `npm run test:checkout`
+menjalankan 31 pemeriksaan, termasuk yang benar-benar membuat tagihan,
+membuka halaman pembayaran Midtrans, lalu mengirim notifikasi lunas dengan
+tanda tangan asli.
+
+ALUR PEMBAYI
+  1. Halaman detail produk punya tombol "Masukkan keranjang" (bukan "Beli
+     sekarang" — mebel kargo hampir selalu lebih dari satu barang, dan ongkirnya
+     bergantung pada kabupaten tujuan).
+  2. `/t/<slug>/checkout` membaca keranjang dari COOKIE, bukan dari query
+     string dan bukan dari FormData. Halaman ini juga bisa dibuka dengan
+     keranjang kosong untuk menyiapkan alamat; tombol bayar tetap mati.
+  3. Pembeli mengetik nomor WhatsApp → alamat tersimpan dimuat, atau form
+     alamat lengkap dibuka. Alamat yang dipilih menentukan ongkir.
+  4. Ongkir + total ditampilkan, lalu pembeli mengetik email dan menekan
+     "Bayar".
+  5. Server membuat `orders` + `order_items`, membuat tagihan Snap, menyimpan
+     `snapToken`, lalu mengembalikan URL Midtrans. Klien yang mengarahkan.
+
+INVARIANT YANG DIKUNCI `npm run test:checkout`
+  - Harga SELALU diambil ulang dari `products`; cookie keranjang tidak
+    ditandatangani dan memang boleh diedit, karena tidak ada nilai uang yang
+    dibaca darinya.
+  - `findShippingRate()` yang mengembalikan `null` MEMBLOKIR checkout. Tidak
+    ada `?? 0` dan tidak ada tarif terkecil. Sumber daya yang menguji ini juga
+    mengecek kata kuncinya di sumber, karena pemeriksaan angka saja tidak
+    menangkap `?? 0` yang ditambahkan belakangan.
+  - `addressId` dari FormData hanya dipakai bersama syarat `tenantId`. Alamat
+    milik tenant lain ditolak dengan pesan yang bisa dibaca, dan tidak ada
+    pesanan yang terbentuk.
+  - Notifikasi tanpa tanda tangan → 403. Notifikasi dengan nominal yang salah
+    (walaupun tanda tangannya benar) → 400. Notifikasi kedua untuk pesanan yang
+    sudah lunas → 200 tanpa mengubah apa pun.
+  - Keranjang satu pembeli tidak boleh bocor ke pembeli lain.
+
+YANG SENGAJA TIDAK ADA DI SINI
+  - Potongan MDR dan platform fee 1,5%. `orders` sudah punya kolomnya, tapi
+    perhitungannya milik Sprint 6 (pencairan), karena MDR hanya diketahui
+    setelah channel pembayaran benar-benar dipilih. Mengarangnya sekarang
+    berarti menebak angka yang dipakai untuk membagi uang.
+  - `pending` tidak dihitung lunas. Vault/VA yang baru dibuat belum menerima
+    uang; mengaktifkannya di sini membuat "tanpa free trial" tidak berarti.
+
+JEBAKAN YANG SUDAH TERLEWAT SEKALI
+  - `readCart()` pernah mengembalikan objek modul `EMPTY_CART` yang SAMA untuk
+    semua permintaan tanpa cookie, dan `addToCartLine()` memutasi objek itu.
+    Satu proses Next lalu mengumpulkan keranjang semua pembeli tanpa cookie ke
+    dalam satu objek: pembeli berikutnya menerima barang milik orang lain,
+    termasuk dari toko lain. Sekarang `emptyCart()` selalu mengembalikan objek
+    baru dan `addToCartLine()` tidak pernah memutasi hasil baca. Ada tes
+    regresinya.
+  - `clearCart()` TIDAK dipanggil di dalam `createCheckoutOrder`. Mengosongkan
+    cookie di server membuat Router me-render ulang halaman tanpa
+    `CheckoutClient`, sehingga komponen yang harus mengarahkan ke Midtrans
+    justru ter-unmount. Pembeli melihat halaman keranjang kosong padahal
+    tagihannya sudah dibuat. Keranjang dikosongkan di klien, tepat sebelum
+    navigasi, dan kegagalan pengosongan tidak menghalangi navigasi.
+  - Snap v1 TIDAK menerima field `expiry` sama sekali; pesannya
+    `expiry unit & duration must present` meskipun kedua fieldnya dikirim, dan
+    dicoba dengan 1, 86400, maupun 86400000. `expiry` itu fitur `/v2/charge`.
+  - Midtrans mengembalikan `redirect_url` sendiri (`.../snap/v4/redirection/...`)
+    dan nomor versi jalannya berubah dari waktu ke waktu. Pakai yang dikembalikan
+    API, jangan dirangkai dari token.
+  - Server Action yang dipanggil dari Client Component tidak bisa memanggil
+    `redirect()`. Yang dikembalikan adalah `redirectTo`, dan navigasinya
+    dilakukan di klien.
+  - `finishUrl` diambil dari Host request, bukan dari `NEXT_PUBLIC_APP_URL`
+    yang di-inline saat build — kalau tidak, satu build untuk staging lokal dan
+    Vercel akan mengarahkan pembeli ke domain yang tidak melayani pesanan itu.

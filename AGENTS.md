@@ -61,6 +61,7 @@ npm run test:carpenter # 16 pemeriksaan antrean tukang di 375px (butuh server)
 npm run test:alamat    # 25 pemeriksaan form alamat & peta (butuh server)
 npm run test:ongkir    # 13 pengujian tarif ongkir & lookup
 npm run test:lacak     # 17 pengujian privasi halaman lacak
+npm run test:checkout  # 31 uji checkout & pembayaran (butuh server + kredensial Midtrans)
 npm run test:webhook   # 46 uji: skema, signature, gerbang tenant, e2e webhook
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
@@ -218,6 +219,57 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 - **`/lacak` tidak punya `<main>` sendiri** — `app/layout.tsx` yang
   menyediakan, supaya tidak ada dua landmark. Pembungkus `px-4` ada di halamannya
   sendiri, bukan di layout, supaya halaman full-bleed tetap bisa.
+
+## Checkout & pembayaran Midtrans (Sprint 5)
+
+- **Tidak ada nilai uang dari klien, tanpa kecuali.** Keranjang hanya berisi
+  `slug` + `qty`, dan tidak ada satu pun nominal yang dibaca dari sana. Harga
+  dari `products`, ongkir dari `shipping_rates`. Cookie keranjang sengaja tidak
+  ditandatangani — mengeditnya hanya bisa salah pilih barang, dan itu akan
+  terhitung benar.
+- **`readCart()` tidak boleh mengembalikan objek yang dipakai bersama.**
+  `emptyCart()` selalu objek baru. `EMPTY_CART` versi lama dipakai bersama
+  antar permintaan, dan `addToCartLine()` memutasi objek itu, jadi satu
+  proses Next mengumpulkan keranjang semua pembeli tanpa cookie — pembeli
+  berikutnya menerima barang milik orang lain, termasuk dari toko lain.
+- **`clearCart()` tidak boleh dipanggil di `createCheckoutOrder`.** Mengosongkan
+  cookie di server membuat Router me-render ulang halaman tanpa
+  `CheckoutClient`, jadi komponen yang mengarahkan ke Midtrans ter-unmount dan
+  pembeli terjebak di halaman keranjang kosong padahal sudah ditagih.
+  Pengosongan terjadi di klien, sebelum navigasi, dan kegagalannya tidak
+  menghalangi navigasi.
+- **`?? 0` untuk ongkir tetap dilarang, dan sekarang juga dikunci tes.**
+  `test:checkout` memeriksa kata kuncinya di sumber, bukan cuma angka — karena
+  pemeriksaan angka tetap lulus kalau ada `?? 0` yang ditambahkan belakangan.
+- **Aturan lookup ongkir ada di `src/lib/shipping-lookup.ts`, bukan di
+  komponen.** Modul itu murni dan dipakai server (`findShippingRate`) maupun
+  klien (menampilkan ongkir sebelum bayar). Dua salinan aturan pasti
+  menyimpang; `test:checkout` mengunci urutan khusus → cadangan → `null`.
+- **`addressId` dari FormData wajib disaring `tenantId`**, bukan hanya `id`.
+  Alamat milik tenant lain ditolak dengan pesan yang bisa dibaca; tes memakai
+  setter native + event `input` untuk menusipkan id asing, karena
+  `field.value = x` pada controlled input ditimpa React di render berikutnya
+  dan pengujiannya jadi tidak menguji apa pun.
+- **Satu webhook, dua jenis tagihan.** `order_id` yang membedakan: `saas-…`
+  untuk langganan, `ord-…` untuk pesanan. Notifikasi tidak membawa knowledge
+  itu, jadi bentuknya yang jadi penanda.
+- **`pending` bukan lunas.** Status `capture`/`settlement` saja yang
+  mengirim pesanan; `deny`/`cancel`/`expire` mengembalikan pesanan ke
+  `pending_dp` supaya pembeli bisa mencoba lagi, dan TIDAK mengubah
+  `paymentStatus` jadi `refunded`.
+- **Snap v1 tidak menerima `expiry`.** Field itu ditolak dengan pesan
+  `expiry unit & duration must present` yang menyesatkan. `expiry` adalah fitur
+  `/v2/charge`.
+- **`redirect_url` dari API dipakai langsung**, bukan dirangkai dari token:
+  nomor versi jalannya (`snap/v4/redirection/…`) berubah dari waktu ke waktu.
+- **Server Action dari Client Component tidak bisa `redirect()`.** Kembalikan
+  `redirectTo`; navigasi dilakukan di klien.
+- **`finishUrl` dari Host request**, bukan `NEXT_PUBLIC_APP_URL` (di-inline
+  saat build, jadi satu build untuk lokal dan Vercel akan mengarahkan ke
+  domain yang salah).
+- **MDR dan platform fee 1,5% belum dihitung** — itu Sprint 6, karena MDR
+  baru diketahui setelah channel pembayaran terpilih. `orders` sudah punya
+  kolomnya.
 
 ## Tarif ongkir (Sprint 5 bagian 3)
 

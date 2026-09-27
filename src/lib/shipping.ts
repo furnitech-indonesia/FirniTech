@@ -4,6 +4,7 @@ import { and, eq, isNull, sql } from "drizzle-orm";
 
 import { db } from "@/db";
 import { shippingRates } from "@/db/schema";
+import { buildShippingIndex, lookupShippingRate } from "@/lib/shipping-lookup";
 
 /**
  * Query tarif ongkir (Sprint 5 bagian 3).
@@ -65,33 +66,15 @@ export async function findShippingRate(
   tenantId: string,
   regencyId: string | null,
 ): Promise<{ rateAmount: number; source: "specific" | "default" } | null> {
-  if (regencyId) {
-    const [exact] = await db
-      .select({ rateAmount: shippingRates.rateAmount })
-      .from(shippingRates)
-      .where(
-        and(
-          eq(shippingRates.tenantId, tenantId),
-          eq(shippingRates.regencyId, regencyId),
-        ),
-      )
-      .limit(1);
-    if (exact) return { rateAmount: exact.rateAmount, source: "specific" };
-  }
-
-  const [fallback] = await db
-    .select({ rateAmount: shippingRates.rateAmount })
-    .from(shippingRates)
-    .where(
-      and(
-        eq(shippingRates.tenantId, tenantId),
-        eq(shippingRates.isDefault, true),
-      ),
-    )
-    .limit(1);
-  if (fallback) return { rateAmount: fallback.rateAmount, source: "default" };
-
-  return null;
+  /*
+   * Query-nya satu, bukan dua, dan urutannya diambil dari modul murni
+   * `shipping-lookup.ts` — bukan diulang di sini. Aturan "khusus → cadangan →
+   * null" juga dipakai komponen klien untuk menampilkan ongkir sebelum tombol
+   * bayar ditekan, dan dua salinan aturan yang sama akan menyimpang pada
+   * salah satu revisi.
+   */
+  const rates = await listShippingRates(tenantId);
+  return lookupShippingRate(buildShippingIndex(rates), regencyId);
 }
 
 /**

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { MapPinIcon, PlusIcon } from "@phosphor-icons/react";
+import { useCallback, useState, useTransition } from "react";
+import { MapPinIcon, PlusIcon, SpinnerGapIcon } from "@phosphor-icons/react";
 
 import { AddressForm } from "@/components/address-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { formatRupiah } from "@/lib/format";
+import { listAddresses } from "@/lib/actions/storefront";
 import { normalizePhone } from "@/lib/wa-link";
 
 /**
@@ -14,7 +14,7 @@ import { normalizePhone } from "@/lib/wa-link";
  *
  * ALURNYA, sesuai requirement: pembeli WAJIB memilih alamat. Kalau belum punya,
  * form alamat lengkap terbuka untuk mereka. Tidak ada tombol "lewati" — alamat
- * tanpa tujuan tidak bisa dihitung onkirnya, jadi checkout tidak mungkin
+ * tanpa tujuan tidak bisa dihitung ongkirnya, jadi checkout tidak mungkin
  * diteruskan tanpa itu.
  *
  * IDENTITAS PEMBELI ADALAH NOMOR HP, bukan sesi. Pembeli storefront tidak
@@ -28,6 +28,12 @@ import { normalizePhone } from "@/lib/wa-link";
  * alamat orang itu. Itu perilaku umum di marketplace, dan yang membuat ini
  * tidak berbahaya adalah form ini tidak pernah menampilkan apa pun selain
  * alamatnya sendiri — bukan riwayat pesanan, bukan total belanja.
+ *
+ * Daftar alamat DIMUAT DI SINI, lewat `listAddresses`, bukan dikirim dari
+ * server halaman. Alasannya sederhana: server halaman tidak tahu nomor HP-nya
+ * — pembeli yang belum mengetik tidak punya apa pun untuk dicari. Dipasrahkan
+ * ke parent lewat `onAddressesChange` supaya langkah pembayaran bisa
+ * menghitung ongkir dari alamat yang sedang dipilih.
  */
 
 type SavedAddress = {
@@ -37,34 +43,71 @@ type SavedAddress = {
   cityName: string;
   postalCode: string | null;
   isDefault: boolean;
+  regencyId: string | null;
 };
 
 export function CheckoutAddressStep({
   tenantSlug,
-  savedAddresses,
-  itemsSubtotal,
-  itemCount,
+  onAddressesChange,
+  onSelectAddress,
 }: {
   tenantSlug: string;
-  /** Alamat yang sudah tersimpan untuk (tenant, nomor) bila ada. */
-  savedAddresses: SavedAddress[];
-  itemsSubtotal: number;
-  itemCount: number;
+  /** Melaporkan daftar alamat yang termuat ke parent (langkah pembayaran). */
+  onAddressesChange?: (addresses: SavedAddress[]) => void;
+  /** Melaporkan alamat yang sedang dipilih. */
+  onSelectAddress?: (id: string | null) => void;
 }) {
   const [phone, setPhone] = useState("");
-  const [checked, setChecked] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(
-    savedAddresses.find((a) => a.isDefault)?.id ?? savedAddresses[0]?.id ?? null,
-  );
-  const [showForm, setShowForm] = useState(savedAddresses.length === 0);
+  const [addresses, setAddresses] = useState<SavedAddress[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [pending, startTransition] = useTransition();
 
   const normalized = normalizePhone(phone);
   const validPhone = normalized !== null;
 
-  /*
-   * Alamat dihitung ulang di server saat order dibuat. Angka di sini hanya
-   * untuk memberi gambaran ke pembeli, bukan sumber kebenaran.
-   */
+  const applyAddresses = useCallback(
+    (rows: Awaited<ReturnType<typeof listAddresses>>) => {
+      const mapped: SavedAddress[] = rows.map((row) => ({
+        id: row.id,
+        recipientName: row.recipientName,
+        addressLine: row.addressLine,
+        cityName: row.cityName,
+        postalCode: row.postalCode,
+        isDefault: row.isDefault,
+        regencyId: row.regencyId,
+      }));
+
+      setAddresses(mapped);
+      setLoaded(true);
+
+      /*
+       * Alamat bawaan jadi pilihan awal kalau ada; kalau tidak, baris
+       * pertama. Kalau tidak ada alamat sama sekali, pilihannya `null` — dan
+       * itu yang membuat tombol bayar di langkah pembayaran mati.
+       */
+      const next =
+        mapped.find((a) => a.isDefault)?.id ?? mapped[0]?.id ?? null;
+      setSelectedId(next);
+      onAddressesChange?.(mapped);
+      onSelectAddress?.(next);
+    },
+    [onAddressesChange, onSelectAddress],
+  );
+
+  const load = useCallback(() => {
+    if (!normalized) return;
+    startTransition(async () => {
+      applyAddresses(await listAddresses(tenantSlug, normalized));
+    });
+  }, [applyAddresses, normalized, tenantSlug]);
+
+  const select = (id: string) => {
+    setSelectedId(id);
+    onSelectAddress?.(id);
+  };
+
   return (
     <div className="grid gap-6">
       <Card>
@@ -82,7 +125,7 @@ export function CheckoutAddressStep({
             mengembalikan `name: ""` — yang menimpa atribut `name` yang sudah
             benar dan membuat inputnya tidak punya nama sama sekali.
             Alasan yang lebih mendasar: field ini memang bukan bagian form
-            mana pun; ia estado lokal yang berdiri sendiri.
+            mana pun; ia state lokal yang berdiri sendiri.
           */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="flex-1">
@@ -108,9 +151,12 @@ export function CheckoutAddressStep({
               type="button"
               variant="outline"
               size="touch"
-              disabled={!validPhone}
-              onClick={() => setChecked(true)}
+              disabled={!validPhone || pending}
+              onClick={load}
             >
+              {pending ? (
+                <SpinnerGapIcon size={18} weight="light" aria-hidden />
+              ) : null}
               Lihat alamat saya
             </Button>
           </div>
@@ -122,15 +168,17 @@ export function CheckoutAddressStep({
         </CardContent>
       </Card>
 
-      {checked && validPhone ? (
+      {loaded ? (
         <Card>
           <CardContent className="grid gap-4">
-            <h2 className="text-title-md text-foreground">2. Alamat pengiriman</h2>
+            <h2 className="text-title-md text-foreground">
+              2. Alamat pengiriman
+            </h2>
 
-            {savedAddresses.length > 0 ? (
+            {addresses.length > 0 ? (
               <>
                 <ul className="grid gap-2">
-                  {savedAddresses.map((address) => (
+                  {addresses.map((address) => (
                     <li key={address.id}>
                       <label
                         className={`flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors ${
@@ -144,18 +192,22 @@ export function CheckoutAddressStep({
                           name="address"
                           value={address.id}
                           checked={selectedId === address.id}
-                          onChange={() => setSelectedId(address.id)}
+                          onChange={() => select(address.id)}
                           className="mt-1 size-4"
                         />
                         <span className="min-w-0 text-body-md">
                           <span className="block text-foreground">
-                            {address.addressLine}
+                            {address.recipientName} — {address.addressLine}
                           </span>
                           {address.postalCode ? (
                             <span className="block text-body-sm text-muted-foreground">
                               {address.postalCode} {address.cityName}
                             </span>
-                          ) : null}
+                          ) : (
+                            <span className="block text-body-sm text-muted-foreground">
+                              {address.cityName}
+                            </span>
+                          )}
                           {address.isDefault ? (
                             <span className="mt-1 inline-block rounded-full bg-muted px-2 py-0.5 text-label-sm text-muted-foreground">
                               Alamat bawaan
@@ -180,13 +232,18 @@ export function CheckoutAddressStep({
             ) : (
               <>
                 {/*
-                 * Tidak ada alamat tersimpan. Ini kondisi yang paling sering
-                 * terjadi — pembeli baru, atau pertama kali di toko ini.
-                 * Yang ditampilkan langsung formnya, dengan penjelasan kenapa
-                 * dia diminta mengetik, supaya tidak terasa seperti kesalahan.
-                 */}
+                  Tidak ada alamat tersimpan. Ini kondisi yang paling sering
+                  terjadi — pembeli baru, atau pertama kali di toko ini.
+                  Yang ditampilkan langsung formnya, dengan penjelasan kenapa
+                  dia diminta mengetik, supaya tidak terasa seperti kesalahan.
+                */}
                 <p className="flex items-start gap-2 rounded-xl border border-border bg-muted p-3 text-body-sm text-muted-foreground">
-                  <MapPinIcon size={16} weight="light" className="mt-0.5 shrink-0" aria-hidden />
+                  <MapPinIcon
+                    size={16}
+                    weight="light"
+                    className="mt-0.5 shrink-0"
+                    aria-hidden
+                  />
                   Belum ada alamat untuk nomor ini. Isi alamat lengkap di
                   bawah — nama jalan, desa, dan RT/RW membantu kurir menemukan
                   lokasi, dan ongkir dihitung dari kabupaten/kota tujuan.
@@ -194,38 +251,24 @@ export function CheckoutAddressStep({
                 <AddressForm
                   tenantSlug={tenantSlug}
                   phone={normalized ?? ""}
-                  onSaved={() => setChecked(true)}
+                  onSaved={load}
                 />
               </>
             )}
 
-            {savedAddresses.length > 0 && showForm ? (
+            {addresses.length > 0 && showForm ? (
               <AddressForm
                 tenantSlug={tenantSlug}
                 phone={normalized ?? ""}
-                onSaved={() => setChecked(true)}
+                onSaved={() => {
+                  setShowForm(false);
+                  load();
+                }}
               />
             ) : null}
           </CardContent>
         </Card>
       ) : null}
-
-      <Card>
-        <CardContent className="grid gap-3">
-          <h2 className="text-title-md text-foreground">3. Ringkasan</h2>
-          <div className="flex justify-between gap-3 text-body-md">
-            <span className="text-muted-foreground">
-              Subtotal {itemCount > 0 ? `(${itemCount} barang)` : ""}
-            </span>
-            <span className="text-code-tabular text-foreground">
-              {formatRupiah(itemsSubtotal)}
-            </span>
-          </div>
-          <p className="text-body-sm text-muted-foreground">
-            Ongkir dihitung setelah alamat dipilih dan ditambahkan ke total.
-          </p>
-        </CardContent>
-      </Card>
     </div>
   );
 }

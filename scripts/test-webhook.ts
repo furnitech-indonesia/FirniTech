@@ -131,7 +131,7 @@ async function main() {
 
   /* ---------- 2. Signature webhook ---------- */
 
-  const saas = await import("@/lib/midtrans/saas");
+  const saas = await import("@/lib/midtrans/snap");
   const { verifyWebhookSignature, isMidtransConfigured } = saas;
 
   /*

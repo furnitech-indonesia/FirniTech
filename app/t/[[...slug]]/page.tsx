@@ -9,6 +9,7 @@ import { CatalogView } from "@/components/catalog-view";
 import { ProductDetailView } from "@/components/product-detail-view";
 import { CheckoutView } from "@/components/checkout-view";
 import { resolveTenantForRequest } from "@/lib/tenants";
+import { readCart } from "@/lib/cart";
 import { resolveStorefrontRoute } from "@/lib/storefront-routes";
 
 /**
@@ -60,12 +61,22 @@ export default async function TenantStorefront({
     .orderBy(products.category);
   const categories = categoryRows.map((row) => row.category);
 
+  /*
+   * Keranjang dibaca per-request dari cookie, bukan di-cache. `cookies()` di
+   * Next membuat halaman ini dinamis, dan memang harus begitu: angka barang di
+   * header yang berasal dari cache akan tampil benar untuk pembeli berikutnya
+   * yang punya cookie berbeda.
+   */
+  const cart = await readCart();
+  const cartCount = cart.lines.reduce((sum, line) => sum + line.qty, 0);
+
   return (
     <TenantShell
       name={tenant.name}
       plan={tenant.plan}
       basePath={basePath}
       categories={categories}
+      cartCount={cartCount}
     >
       {route.kind === "notFound" ? notFound() : null}
 

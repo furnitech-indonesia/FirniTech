@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { integrationAuditLogs, saasInvoices, tenants } from "@/db/schema";
+import { integrationAuditLogs, orders, saasInvoices, tenants } from "@/db/schema";
 import {
   FAILED_STATUSES,
   SETTLED_STATUSES,
   verifyWebhookSignature,
-} from "@/lib/midtrans/saas";
+} from "@/lib/midtrans/snap";
 
 /**
  * Webhook Midtrans — satu-satunya jalan yang mengaktifkan tenant.
@@ -84,6 +84,100 @@ export async function POST(request: Request) {
   // kedua syaratnya digabung dalam satu query, kita tidak bisa membedakan
   // "order ini bukan milik kita" dari "nominalnya dipalsukan", dan audit log
   // untuk kasus kedua justru yang paling perlu disimpan.
+  /*
+   * ============================================================
+   * CABANG 1: TAGIHAN PESANAN PEMBELI ("ord-...")
+   * ============================================================
+   *
+   * Webhook ini melayani DUA jenis tagihan dan harus membedakannya dari
+   * `order_id` saja, karena notifikasi Midtrans tidak membawa knowlegya
+   * transaksi itu milik siapa.
+   *
+   * Bentuk `order_id` sengaja dibedakan sejak pembuatan tagihan:
+   *   "saas-<8 hex userId>-<timestamp>"  → tagihan langganan
+   *   "ord-<12 hex orderId>"             → tagihan pesanan pembeli
+   *
+   * Cabang ini dicentang lebih dulu karena lebih sering, dan karena
+   * `orders` punya kolom `midtrans_order_id` dengan index unik sendiri.
+   */
+  if (orderId.startsWith("ord-")) {
+    const [order] = await db
+      .select()
+      .from(orders)
+      .where(eq(orders.midtransOrderId, orderId))
+      .limit(1);
+
+    if (!order) {
+      console.warn("Webhook pesanan untuk order_id tak dikenal:", orderId);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (Number.isNaN(Number(grossAmount)) || Number(grossAmount) !== order.totalAmount) {
+      await db.insert(integrationAuditLogs).values({
+        tenantId: order.tenantId,
+        service: "midtrans",
+        action: "order_payment",
+        status: "failed",
+        requestMeta: { orderId, status, grossAmount },
+        errorMessage: "Nominal notifikasi tidak sama dengan total pesanan.",
+      });
+      return NextResponse.json({ error: "amount mismatch" }, { status: 400 });
+    }
+
+    // Idempoten: Midtrans mengirim notifikasi berkali-kali.
+    if (order.paymentStatus === "fully_paid" && settled) {
+      return NextResponse.json({ ok: true, already: true });
+    }
+
+    if (settled) {
+      /*
+       * Pembayaran penuh: seluruh pesanan lunas dan boleh masuk produksi.
+       *
+       * `dpAmount` disamakan dengan `totalAmount` karena untuk pesanan
+       * storefront tidak ada skema DP bertahap seperti di back-office — satu
+       * pembayaran untuk satu pesanan.
+       */
+      await db
+        .update(orders)
+        .set({
+          paymentStatus: "fully_paid",
+          transactionId: body.transaction_id ?? null,
+          paidAt: new Date(),
+          dpAmount: order.totalAmount,
+        })
+        .where(eq(orders.id, order.id));
+    } else if (failed) {
+      /*
+       * Gagal bayar TIDAK menghapus pesanan dan TIDAK mengubah `paymentStatus`
+       * menjadi `refunded` — itu status untuk uang yang sudah masuk lalu
+       * dikembalikan. Untuk pembayaran yang gagal, pesanan tetap `unpaid`
+       * supaya pembeli bisa mencoba lagi, dan `snapToken` masih hidup
+       * selama masa berlakunya tagihan.
+       */
+      await db.update(orders).set({ orderStatus: "pending_dp" }).where(eq(orders.id, order.id));
+    }
+
+    await db.insert(integrationAuditLogs).values({
+      tenantId: order.tenantId,
+      service: "midtrans",
+      action: "order_payment",
+      status: settled || failed ? "success" : "failed",
+      requestMeta: {
+        orderId,
+        orderCode: order.orderCode,
+        status,
+        transactionId: body.transaction_id ?? null,
+      },
+    });
+
+    return NextResponse.json({ ok: true });
+  }
+
+  /*
+   * ============================================================
+   * CABANG 2: TAGIHAN LANGGANAN SaaS ("saas-...")
+   * ============================================================
+   */
   const [invoice] = await db
     .select()
     .from(saasInvoices)

@@ -89,7 +89,7 @@ export async function findOrderForTracking(
       customerPhone: orders.customerPhone,
       customerAddress: orders.customerAddress,
       // Kota tujuan ada di `orders` sebagai `destinationCity`. Kode pos TIDAK
-      // diambil dari `customer_addresses`，虽然 purchaseryyaNfurohat নিজের
+      // diambil dari `customer_addresses`, walaupun pembeli mengedit
       // alamatnya sendiri — join ke tabel itu hanya membuka jalan untuk
       // menampilkan alamat record yang salah bila `customer_address_id`
       // menunjuk data lain. Alamat yang ditampilkan sudah berupa snapshot
