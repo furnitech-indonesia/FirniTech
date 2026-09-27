@@ -68,6 +68,23 @@ export const products = pgTable(
     slug: text("slug").notNull(),
     description: text("description"),
 
+    /**
+     * Kategori mebel untuk filter katalog storefront (ROADMAP Sprint 5:
+     * "filter kategori produk").
+     *
+     * PENTING: kolom ini tidak ada di desain awal. `category` yang ada di
+     * `materials` adalah kategori BAHAN (Kayu, Finishing, Hardware, Busa) dan
+     * sama sekali tidak bisa dipakai untuk produk jadi — tidak ada produk
+     * yang berkategori "Kayu". Tanpa kolom khusus ini, filter katalog tidak mungkin
+     * dibangun, karena memfilter produk dengan kategori bahan akan
+     * menghasilkan katalog kosong.
+     *
+     * Bebas teks, bukan enum: daftar kategori mebeljinak hurt dan tiap
+     * pengrajin punya katalognya sendiri. Daftar filter diambil dari nilai
+     * yang benar-benar dipakai tenant, bukan dari daftar tetap di kode.
+     */
+    category: text("category").notNull().default("Lainnya"),
+
     // Dimensi mebel (Panjang x Lebar x Tinggi) —cm
     lengthCm: integer("length_cm").notNull(),
     widthCm: integer("width_cm").notNull(),
