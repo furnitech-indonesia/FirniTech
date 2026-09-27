@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 import { ZodForm } from "@/components/zod-form";
 import { TextField } from "@/components/rhf-fields";
@@ -139,6 +140,21 @@ export function LoginForm({ nextPath }: { nextPath?: string }) {
           </ZodForm>
         )}
       </div>
+
+      {/*
+       * Tautan pendaftaran. Tanpa ini, pengunjung yang belum punya akun tiba
+       * di /login lalu buntu: satu-satunya jalan dari halaman publik ke akun
+       * baru terputus tepat di halaman masuk.
+       */}
+      <p className="mt-6 border-t border-border pt-4 text-body-sm text-muted-foreground">
+        Belum punya akun?{" "}
+        <Link
+          href="/daftar"
+          className="text-accent-foreground underline underline-offset-4"
+        >
+          Daftar workshop
+        </Link>
+      </p>
     </div>
   );
 }

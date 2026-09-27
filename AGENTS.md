@@ -56,6 +56,8 @@ npm run test:auth     # 11 uji auth & RBAC via HTTP (butuh server jalan)
 npm run test:schemas  # 14 uji skema validasi (guard uang, pesan, id)
 npm run test:responsive # 20 pemeriksaan struktural responsif & token
 npm run test:sprint3  # 16 uji halaman & pembatasan role Sprint 3
+npm run test:register # 6 pemeriksaan wizard /daftar (Playwright, butuh server)
+npm run test:webhook  # 23 uji keamanan: skema, signature, gerbang tenant
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
 ```
@@ -130,6 +132,51 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   Onboarding owner hanya boleh lewat kode server-side. Ini sudah diuji.
 - `npm run db:test-rls` membuktikan isolasi dengan JWT asli. Jalankan setelah
   menyentuh policy.
+
+## Pendaftaran owner & pembayaran (Sprint 10 Fase D)
+
+- **Tenant yang belum bayar HARUS terkunci di DUA tempat.** Menghapus salah
+  satu berarti ada jalan masuk: `app/dashboard/layout.tsx` (redirect ke
+  `/menunggu-pembayaran`) dan `src/lib/tenants.ts` (`isActive = false` tidak
+  ter-resolve jadi toko publik, jadi tidak muncul di `/t/<slug>`).
+  `npm run test:webhook` mengunci keduanya, dan uji itu terbukti menangkap
+  regresi saat filter `isActive` sengaja dihapus.
+- **`provisionOwner()` tidak boleh diekspor dari berkas `"use server"`.**
+  Setiap export di sana adalah endpoint HTTP yang bisa dipanggil siapa saja
+  dengan argumen pilihan sendiri; diekspor, provisioning owner berubah menjadi
+  endpoint publik. Karena itu ia tinggal di `src/lib/auth/provision.ts` (bukan
+  `"use server"`) dan hanya dipanggil `registerOwner` di
+  `src/lib/auth/actions.ts`.
+- **`subscriptionExpiresAt` tidak boleh diisi periode lengkap saat tenant
+  dibuat.** Kalau diisi, tenant yang belum bayar langsung dapat periode gratis
+  begitu webhook mengaktifkannya. Isi dengan *awal* periode; webhook yang
+  menggantinya dengan *akhir* periode setelah uang masuk.
+- **Pendaftaran tidak boleh berhenti hanya karena Midtrans belum
+  dikonfigurasi.** Tenant dibuat sebagai `pending` dan pengguna diberi tahu
+  pembayarannya belum bisa diproses. Menolak pendaftaran membuat wizard tidak
+  bisa diuji; membiarkan pembuatan berhasil lalu gagal di pembayaran
+  menyisakan akun yang emailnya sudah terpakai dan tidak bisa diulang.
+- **Kegagalan `createSaasCharge()` harus jadi nilai balik, bukan exception.**
+  Provisioning sudah berhasil saat charge dipanggil, jadi `throw` jadi 500
+  padahal akun sudah ada. Kirim lewat `message` + `redirectTo`, bukan
+  `error` — `ZodForm` hanya memanggil `onSuccess` kalau `error` kosong.
+- **Webhook Midtrans wajib: signature, idempoten, dan tidak boleh
+  membedakan `pending` dari lunas.** `X-Midtrans-Signature` =
+  sha512(order_id + status_code + gross_amount + server_key), dibandingkan
+  dengan `timingSafeEqual`. `pending` berarti VA sudah dibuat, uang belum
+  masuk — mengaktifkannya membuat prinsip "tanpa free trial" jadi tidak
+  berarti. Nominal pada notifikasi harus dicocokkan dengan tagihan, kalau
+  tidak siapa pun bisa melunasi invoice murah pakai order_id yang sah.
+- **`verifyWebhookSignature()` tidak boleh melempar error.** Server key
+  kosong berarti verifikasi tidak bisa dilakukan = gagal, jadi `false`.
+  Kalau melempar, server yang kredensialnya belum diisi membalas 500 ke
+  setiap notifikasi, dan Midtrans lalu mengulang terus-menerus.
+- **Pemeriksaan wizard pakai Playwright, bukan `main section`.** Di dalam
+  `<main>` ada juga pembungkus tata letak dan section toaster Base UI yang juga
+  punya `aria-label`. Selector langkah yang benar: `form section[aria-label]`.
+- **Harus `#konten-utama`** di `app/daftar/page.tsx` dan
+  `app/menunggu-pembayaran/page.tsx` — `test:responsive` mewajibkannya
+  untuk setiap halaman.
 
 ## Back-office Sprint 3
 

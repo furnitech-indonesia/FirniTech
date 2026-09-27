@@ -37,6 +37,7 @@ const VIEWPORTS: Viewport[] = [
 const PAGES = [
   { path: "/", name: "landing" },
   { path: "/login", name: "login" },
+  { path: "/daftar", name: "daftar" },
 ] as const;
 
 let failures = 0;

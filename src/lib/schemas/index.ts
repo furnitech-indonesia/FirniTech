@@ -14,3 +14,4 @@ export * from "./order";
 export * from "./chat";
 export * from "./auth";
 export * from "./address";
+export * from "./register";

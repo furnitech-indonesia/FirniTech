@@ -1,8 +1,9 @@
 ROADMAP.md — FurniTech SaaS Development Roadmap
 Proyek: FurniTech (Multi-Tenant SaaS for Furniture Craftsmen)
 Target Rilis: Phase 1 (PWA) & Phase 2 (Hybrid Mobile Native: Android + iOS via Capacitor)
-Status: Sprint 1–3 selesai. Sprint 10 Fase A–D (UI Redesign) sedang dikerjakan.
-Sprint 4–6 (PWA) dan Sprint 7–8 (Native) menyusul.
+Status: Sprint 1–3 selesai. Sprint 10 Fase A–D (UI Redesign) SELESAI.
+Berikutnya Sprint 4 (Visual Progress Tracker & WA Fonnte), lalu Sprint 5–6 (PWA),
+lalu Sprint 7–8 (Native).
 Tech Stack Utama: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4,
 shadcn/ui (Base UI), Phosphor Icons, Drizzle ORM + Zod, Supabase (PostgreSQL +
 Auth + RLS + Storage), Midtrans (Core + IRIS), Cloudflare for SaaS, Fonnte WA
@@ -270,21 +271,55 @@ Aturan yang mengikat sprint ini:
    meski `tenants`, `saas_invoices`, dan enum terkait sudah lengkap di
    `src/db/schema/`. Sprint ini membangun kodenya, bukan tabelnya.
  * Empat langkah: (1) Akun, (2) Workshop, (3) Paket, (4) Bayar.
- * `provisionOwner()` di `src/lib/auth/actions.ts`: membuat user Supabase
-   dengan `role: owner` yang ditetapkan DI SERVER (trigger `handle_new_user`
-   menolak role tinggi dari metadata, dan `tenant_id` selalu NULL saat signup),
-   lalu menulis `tenants` + `users` dengan `tenantId` yang sama, lalu
-   `saas_invoices` berstatus `pending`.
+ * `provisionOwner()` membuat user Supabase dengan `role: owner` yang
+   ditetapkan DI SERVER (trigger `handle_new_user` menolak role tinggi dari
+   metadata, dan `tenant_id` selalu NULL saat signup), lalu menulis `tenants` +
+   `users` dengan `tenantId` yang sama, lalu `saas_invoices` berstatus
+   `pending`.
+   PENYIMPANGAN dari rencana awal di atas: `provisionOwner()` TIDAK diekspor
+   dari `src/lib/auth/actions.ts`, tapi hidup di `src/lib/auth/provision.ts`
+   yang bukan `"use server"`. Alasannya teknis, bukan selera: setiap export
+   dari berkas `"use server"` menjadi endpoint HTTP yang bisa dipanggil siapa
+   saja dengan argumen pilihan sendiri. Kalau fungsi provisioning diekspor dari
+   sana, siapa pun bisa meminta pembuatan akun owner tanpa email terverifikasi
+   dan tanpa bayar. `registerOwner` di `actions.ts` tetap Server Action-nya; ia
+   hanya memanggil fungsi server biasa yang sudah tervalidasi skemanya.
  * Slug workshop divalidasi unik terhadap `tenant_slug_idx`, dengan live
-   preview URL `/t/<slug>` saat pengetikan.
- * Perlu migrasi: `subscriptionStatusEnum` belum punya nilai "menunggu bayar".
-   Tanpa itu tenant yang belum membayar akan otomatis `active`.
- * Terblokir: kredensial Midtrans Core belum diisi (lihat bagian Environment).
-   Kode charge akan ditulis, tetapi langkah 4 tidak dapat diuji end-to-end
-   sampai kredensial asli tersedia. `tenants.isActive` dinyalakan oleh
-   webhook Midtrans.
+   preview URL `/t/<slug>` saat pengetikan. Pengecekannya di `SlugField`
+   (src/components/register-form.tsx) memakai `useWatch` + debounce 400ms,
+   bukan `watch()` yang dipanggil saat render.
+ * Migrasi `0005`: `subscriptionStatusEnum` ditambah nilai `pending`. Tanpa itu
+   tenant yang belum membayar akan otomatis `active`.
+ * Pembayaran: `createSaasCharge()` (src/lib/midtrans/saas.ts) memakai Midtrans
+   Snap lewat `fetch` — tanpa dependensi baru. `NEXT_PUBLIC_MIDTRANS_CLIENT_KEY`
+   sengaja TIDAK dipakai: kita mengarahkan ke halaman Snap milik Midtrans, jadi
+   tidak ada popup Snap JS di browser dan tidak perlu kunci publishable.
+ * `app/api/webhooks/midtrans/route.ts` — satu-satunya jalan yang menyalakan
+   tenant. Verifikasi `X-Midtrans-Signature` (sha512) WAJIB, status `pending`
+   tidak boleh mengaktifkan, `subscriptionExpiresAt` baru diisi setelah bayar,
+   dan handler-nya idempoten karena Midtrans mengirim notifikasi berulang.
+ * Gerbang tenant yang belum bayar ada di DUA tempat dan keduanya wajib:
+   `app/dashboard/layout.tsx` (redirect ke `/menunggu-pembayaran`) dan
+   `src/lib/tenants.ts` (tenant `isActive = false` tidak ter-resolve menjadi
+   toko publik, jadi tidak muncul di `/t/<slug>`).
+ * STATUS: SELESAI. Langkah 4 sudah teruji end-to-end terhadap route webhook
+   sungguhan memakai kunci uji lokal: 15 pemeriksaan lulus, termasuk bahwa
+   `pending` tidak mengaktifkan, signature palsu ditolak 403, nominal tidak
+   cocok ditolak 400, settlement sah mengactivate tenant sekaligus mengisi
+   periode langganan, notifikasi berulang diabaikan, dan jejak audit tertulis.
+ * Kredensial Midtrans Core yang asli masih belum diisi. Perilaku yang dipilih
+   sementara: pendaftaran TIDAK berhenti, tenant dibuat dan ditandai `pending`,
+   lalu pengguna diberi tahu pembayarannya belum bisa diproses. Alasannya,
+   menolak pendaftaran membuat wizard sama sekali tidak bisa diuji, sedangkan
+   pendaftaran yang berhasil lalu gagal di langkah pembayaran menyisakan akun
+   yang emailnya sudah terpakai sehingga tidak bisa diulang. Tenant seperti
+   ini diaktifkan manual lewat panel super admin.
+ * Pengujian: `npm run test:register` (6 pemeriksaan wizard lewat Playwright)
+   dan `npm run test:webhook` (23 pemeriksaan keamanan: aturan skema,
+   verifikasi signature, dan gerbang tenant). Uji gerbang memakai tenant
+   sampling yang dibuat lalu dihapus, bukan dengan menonaktifkan tenant seed.
  * DoD: Pengrajin baru dapat mendaftar, memilih paket, dan tenant-nya aktif
-   hanya setelah pembayaran terverifikasi.
+   hanya setelah pembayaran terverifikasi — TERPENUHI.
 
 ⚙️ Environment Variables Required (.env.example)
 
@@ -312,8 +347,11 @@ DATABASE_URL="postgresql://postgres.your-ref:password@aws-0-ap-northeast-1.poole
 DIRECT_URL="postgresql://postgres.your-ref:password@aws-0-ap-northeast-1.pooler.supabase.com:5432/postgres"
 
 # MIDTRANS PAYMENT & IRIS PAYOUT
-NEXT_PUBLIC_MIDTRANS_CLIENT_KEY="SB-Mid-client-xxx"
+# NEXT_PUBLIC_MIDTRANS_CLIENT_KEY tidak dipakai: pendaftaran mengarahkan ke
+# halaman Snap Midtrans, jadi tidak ada popup Snap JS di browser.
 MIDTRANS_SERVER_KEY="SB-Mid-server-xxx"
+# "true" = sandbox (app.midtrans.com), "false" = produksi.
+MIDTRANS_IS_SANDBOX="true"
 MIDTRANS_IRIS_API_KEY="IRIS-xxx"
 
 # CLOUDFLARE FOR SAAS

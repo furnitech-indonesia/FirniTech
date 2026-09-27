@@ -15,4 +15,13 @@ export type FormState = {
    * tahu kolom mana yang salah.
    */
   fieldErrors?: Record<string, string>;
+  /**
+   * URL tujuan setelah aksi berhasil. Dipakai Server Action yang perlu
+   * mengarahkan klien ke halaman lain — pendaftaran yang harus melompat ke
+   * halaman pembayaran, misalnya.
+   *
+   * Dinyatakan di tipe bersama, bukan di tipe tiap action, supaya
+   * `onSuccess` di ZodForm bisa membacanya tanpa cast per formulir.
+   */
+  redirectTo?: string;
 };

@@ -347,7 +347,7 @@ export default function Home() {
                 {/* CTA utama. Tombol versi sebelumnya `type="button"` tanpa
                     handler, sehingga tidak melakukan apa pun. */}
                 <Link
-                  href="/login"
+                  href="/daftar"
                   className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-label-lg text-primary-foreground transition-colors hover:bg-primary-hover"
                 >
                   Mulai Sekarang
@@ -539,10 +539,10 @@ export default function Home() {
                 </p>
               </div>
               <Link
-                href="/login"
+                href="/daftar"
                 className="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-label-lg text-primary-foreground transition-colors hover:bg-primary-hover"
               >
-                Daftar Sekarang
+                Mulai Sekarang
                 <ArrowRightIcon size={18} weight="light" aria-hidden />
               </Link>
             </div>
@@ -606,6 +606,12 @@ export default function Home() {
                   className="flex min-h-11 items-center text-body-sm text-secondary hover:text-primary"
                 >
                   Contoh toko
+                </Link>
+                <Link
+                  href="/daftar"
+                  className="flex min-h-11 items-center text-body-sm text-secondary hover:text-primary"
+                >
+                  Daftar workshop
                 </Link>
                 <Link
                   href="/login"

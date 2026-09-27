@@ -30,6 +30,13 @@ export type ZodFormContext = {
   register: UseFormRegister<FieldValues>;
   errors: Record<string, { message?: string }>;
   setValue: (name: string, value: unknown) => void;
+  /**
+   * Validasi sebagian field, tanpa submits. Diperlukan form bertahap
+   * (wizard): tombol "Lanjut" harus menolak pindah langkah kalau isian
+   * langkah ini belum sah, supaya orang tidak melewati halaman bermasalah
+   * hanya untuk menemukan kesalahannya di akhir.
+   */
+  trigger: (names?: string[]) => Promise<boolean>;
 };
 
 export type ZodFormSchema = z.ZodType;
@@ -89,6 +96,7 @@ export function ZodForm<S extends ZodFormSchema>({
     reset,
     setError,
     setValue,
+    trigger,
     formState: { errors, isSubmitting },
   } = methods;
 
@@ -144,6 +152,10 @@ export function ZodForm<S extends ZodFormSchema>({
           errors: errors as Record<string, { message?: string }>,
           setValue: (name: string, value: unknown) =>
             setValue(name as never, value as never),
+          trigger: async (names?: string[]) => {
+            if (!names || names.length === 0) return true;
+            return trigger(names as never[]);
+          },
         })}
 
         {state.error ? (

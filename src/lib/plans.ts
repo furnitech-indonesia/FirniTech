@@ -49,7 +49,24 @@ export const PLANS = {
 } as const;
 
 export type PlanId = keyof typeof PLANS;
-export const PLAN_IDS = Object.keys(PLANS) as PlanId[];
+
+/**
+ * Id paket sebagai TUPLE KONSTAN, bukan `Object.keys(PLANS)`.
+ *
+ * Alasannya `z.enum()` untuk pilihan paket di wizard pendaftaran hanya bisa
+ * menerima tuple literal. Kalau ini `Object.keys()`, tipenya jadi `string[]`,
+ * skema zod-nya tidak bisa disusun, dan `plan` pada data hasil validasi
+ * bertipe `string` — sehingga `PLANS[data.plan]` gagal dikompilasi.
+ *
+ * `satisfies` menjaga daftar ini tetap subset dari kunci `PLANS`: menambah
+ * paket di `PLANS` tanpa menambah barisnya di sini = error typecheck, bukan
+ * paket yang diam-diam tidak bisa dipilih.
+ */
+export const PLAN_IDS = [
+  "basic",
+  "pro",
+  "max",
+] as const satisfies readonly PlanId[];
 
 /** Persentase Platform Service Fee FurniTech, dipotong sebelum saldo cair ke pengrajin. */
 export const PLATFORM_FEE_RATE = 0.015;

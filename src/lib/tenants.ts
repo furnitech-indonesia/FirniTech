@@ -15,6 +15,13 @@ import { ROOT_DOMAIN } from "./tenant-host";
  *
  * Custom domain hanya dipercaya bila customDomainVerified = true — Cloudflare
  * for SaaS harus lebih dulu memverifikasi CNAME-nya.
+ *
+ * `isActive = true` di kedua query di bawah, dan itu disengaja: tenant yang
+ * baru mendaftar tapi belum membayar (`subscriptionStatus = pending`,
+ * `isActive = false`) tidak boleh punya toko publik. Tanpa filter ini, satu
+ * tenant yang belum transfer pun akan tampil begitu daftarnya masuk.
+ * Back-office-nya ditahan terpisah di app/dashboard/layout.tsx; halaman
+ * publik cukup 404 di sini.
  */
 
 export type ResolvedTenant = typeof tenants.$inferSelect;
@@ -24,7 +31,12 @@ export const getTenantBySlug = cache(
     const [row] = await db
       .select()
       .from(tenants)
-      .where(eq(tenants.slug, slug.toLowerCase()))
+      .where(
+        and(
+          eq(tenants.slug, slug.toLowerCase()),
+          eq(tenants.isActive, true),
+        ),
+      )
       .limit(1);
     return row ?? null;
   },
@@ -53,6 +65,7 @@ export const getTenantByHost = cache(
           and(
             eq(tenants.customDomain, hostname),
             eq(tenants.customDomainVerified, true),
+            eq(tenants.isActive, true),
           ),
         )
         .limit(1);

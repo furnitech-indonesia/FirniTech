@@ -34,6 +34,27 @@ export default async function DashboardLayout({
     ? await db.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1)
     : [null];
 
+  /*
+   * Tenant yang belum membayar DITOLAK di sini.
+   *
+   * Pendaftaran Sprint 10 Fase D membuat tenant dengan `isActive = false` dan
+   * `subscriptionStatus = 'pending'`, lalu webhook Midtrans yang menyalakannya.
+   * Tanpa gerbang ini, orang bisa mendaftar, menutup tab sebelum membayar,
+   * lalu langsung masuk back-office — dan seluruh aturan "tanpa free trial"
+   * (PRD §2.A) tidak berlaku.
+   *
+   * Kenapa redirect, bukan `notFound()`: akunnya sah, sessinya ada, dan
+   * kebutuhannya cuma satu — menyelesaikan pembayaran. 404 akan membuat orang
+   * mengira akunnya hilang dan mendaftar ulang.
+   *
+   * `subscriptionStatus` ikut diperiksa, bukan hanya `isActive`, supaya
+   * langganan yang sudah pernah aktif lalu jatuh tempo (`past_due`) tidak
+   * ikut terkunci selamanya tanpa jalan keluar.
+   */
+  if (tenant && (!tenant.isActive || tenant.subscriptionStatus === "pending")) {
+    redirect("/menunggu-pembayaran");
+  }
+
   return (
     <DashboardNav
       role={role}

@@ -170,7 +170,7 @@ export function PricingTable() {
               </ul>
 
               <Link
-                href="/login"
+                href="/daftar"
                 className={`mt-6 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 text-label-lg transition-colors ${
                   featured
                     ? "bg-primary text-primary-foreground hover:bg-primary-hover"

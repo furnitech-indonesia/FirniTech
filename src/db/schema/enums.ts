@@ -11,8 +11,18 @@ export const subscriptionPlanEnum = pgEnum("subscription_plan", [
   "max",
 ]);
 
-/** Status langganan tenant. `past_due` = Midtrans gagal, `expired` = lewat periode. */
+/**
+ * Status langganan tenant. `past_due` = Midtrans gagal, `expired` = lewat periode.
+ *
+ * `pending` (2026-09-27) = tenant sudah dibuat tapi pembayarannya belum masuk.
+ * Nilai ini wajib ada: tanpa itu, wizard pendaftaran akan memakai `active`
+ * untuk tenant yang belum membayar, dan orang bisa masuk back-office tanpa
+ * pernah transfer uang. `tenants.isActive` sengaja tidak dipakai untuk ini —
+ * ia menandai "akun boleh dipakai", sedangkan `subscriptionStatus` menandai
+ * "sudah dibayar". Dua hal berbeda, dua kolom berbeda.
+ */
 export const subscriptionStatusEnum = pgEnum("subscription_status", [
+  "pending",
   "active",
   "past_due",
   "canceled",
