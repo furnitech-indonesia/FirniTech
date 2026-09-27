@@ -266,6 +266,25 @@ ISINYA: status pesanan, timeline 5 tahap beserta foto progres, nomor resi
   kargo, dan RINGKASAN items. Alamat ditampilkan sebagian (jalan + kota),
   koordinat GPS tidak pernah.
 
+ * STATUS bagian 4 — SELESAI. Halaman lacak publik ada di `/lacak`, di level
+   platform dan bukan di bawah `/t/<slug>`, karena pembeli sering tidak ingat
+   nama toko tempat ia memesan — ia ingat kodenya.
+   Verifikasi memakai kode pesanan DAN nomor WhatsApp. Ruang tebakan kode
+   memang ~10^14 sehingga tidak bisa ditebak dengan enumerate, tapi kode bisa
+   DIBAGIKAN — difoto dari struk, dikirim lewat chat, atau diberikan kepada
+   orang yang seharusnya tidak tahu — dan halamannya menampilkan nama pembeli,
+   alamat, serta foto progres.
+   "Kode tidak ada" dan "nomor salah" sengaja mengembalikan pesan yang PERSIS
+   sama. Kalau dibedakan, halaman ini berubah jadi alat untuk menebak keberadaan
+   pesanan orang.
+   Data margin toko (netTenantAmount, MDR, fee platform) dan koordinat GPS
+   tidak diambil sama sekali. Lima tahap produksi SELALU digambar, bukan hanya
+   yang sudah tercapai — pembeli berhak tahu masih ada tahap setelahnya, dan
+   kalau hanya tahap tercapai yang tampil, "belum ada foto" terlihat seperti
+   rusak. Link "Lacak" ditambahkan di header storefront.
+   `npm run test:lacak` (17 pengujian) mengunci seluruh perilaku privasi dan
+   timeline-nya.
+
 CATATAN SOAL PETA — SUDAH DIKERJAKAN dengan Leaflet + OpenStreetMap.
   Keputusannya: LEAFLET, bukan MapLibre. Kebutuhan di sini cuma menandai satu
   titik yang bisa diketuk; MapLibre harus 20,7 MB belum dikompres dan butuh

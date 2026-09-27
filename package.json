@@ -25,7 +25,8 @@
     "test:visual": "tsx scripts/test-visual.ts",
     "wilayah:snapshot": "tsx scripts/snapshot-wilayah.ts",
     "test:alamat": "tsx scripts/test-alamat.ts",
-    "test:ongkir": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-ongkir.ts"
+    "test:ongkir": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-ongkir.ts",
+    "test:lacak": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-lacak.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

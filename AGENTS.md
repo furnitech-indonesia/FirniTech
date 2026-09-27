@@ -60,6 +60,7 @@ npm run test:register  # 6 pemeriksaan wizard /daftar (Playwright, butuh server)
 npm run test:carpenter # 16 pemeriksaan antrean tukang di 375px (butuh server)
 npm run test:alamat    # 25 pemeriksaan form alamat & peta (butuh server)
 npm run test:ongkir    # 13 pengujian tarif ongkir & lookup
+npm run test:lacak     # 17 pengujian privasi halaman lacak
 npm run test:webhook   # 46 uji: skema, signature, gerbang tenant, e2e webhook
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
@@ -187,6 +188,36 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 - **Harus `#konten-utama`** di `app/daftar/page.tsx` dan
   `app/menunggu-pembayaran/page.tsx` — `test:responsive` mewajibkannya
   untuk setiap halaman.
+
+## Halaman lacak pesanan (Sprint 5 bagian 4)
+
+- **Kode pesanan SAJA TIDAK CUKUP.** Halaman ini publik, tanpa sesi, dan
+  menampilkan nama pembeli, alamat, serta foto progres. Ruang tebakan kode
+  (~10^14) memang besar, tapi kode bisa DIBAGIKAN — difoto dari struk, dikirim
+  lewat chat, atau diberikan kepada orang yang seharusnya tidak tahu. Karena itu
+  diverifikasi juga dengan nomor HP. `findOrderForTracking()` di
+  `src/lib/orders-public.ts`.
+- **Kegagalan TIDAK boleh dibeda-bedakan.** "Kode tidak ada" dan "nomor salah"
+  mengembalikan `null` DAN pesan yang persis sama. Kalau dibedakan, halaman ini
+  berubah jadi alat untuk menebak keberadaan pesanan orang.
+- **Nomor HP selalu dibandingkan setelah dinormalisasi.** Data bisa tersimpan
+  `08xx` (back-office) atau `628xx` (checkout), dan pembeli mengetik format
+  berbeda lagi. Membandingkan teks apa adanya menolak pembeli dengan pesan salah.
+- **Data yang tidak ditampilkan jangan diambil sama sekali.** Tidak ada
+  `netTenantAmount`, `midtransMdrFee`, `platformServiceFee`, `dpAmount`, email,
+  maupun koordinat GPS. Margin toko bukan urusan pembeli, dan koordinat adalah
+  lokasi rumah orang. `test:lacak` mengunci ini dengan mencari NAMA KUNCI di
+  hasil serialisasi — bukan angkanya, karena angka margin bisa kebetulan sama
+  dengan total yang memang boleh tampil.
+- **Jangan menulis ulang hasil normalisasi secara manual di tes.** Skrip test
+  pernah menulis `6281299888777` dengan tangan padahal `normalizePhone` memberi
+  `6281299988877` — satu angka beda di tengah, dan dua pengujian gagal terlihat
+  seperti bug produk. Hitung dari fungsi yang sama.
+- **Halaman lacak di level platform (`/lacak`), bukan di bawah `/t/<slug>`.**
+  Pembeli sering tidak ingat nama toko tempat ia memesan; ia ingat kodenya.
+- **`/lacak` tidak punya `<main>` sendiri** — `app/layout.tsx` yang
+  menyediakan, supaya tidak ada dua landmark. Pembungkus `px-4` ada di halamannya
+  sendiri, bukan di layout, supaya halaman full-bleed tetap bisa.
 
 ## Tarif ongkir (Sprint 5 bagian 3)
 

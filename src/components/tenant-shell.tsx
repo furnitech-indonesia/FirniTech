@@ -11,8 +11,10 @@ import { StorefrontIcon } from "@phosphor-icons/react/dist/ssr";
  * `[[...slug]]` ada di bawahnya. Resolusi tenant karena itu dilakukan di
  * page (yang memang menerima params), lalu hasilnya dioper ke sini.
  *
- * `basePath` adalah "/t/<slug>" dan dipakai untuk membangun semua tautan
- * internal. Kenapa tidak `basePath` otomatis: page-nya sudah tahu slug-nya,
+ * `basePath` adalah "/t/<slug>" dan dipakai untuk membangun tautan internal
+ * storefront. Satu tautan lagi TIDAK memakainya: "Lacak" menuju /lacak di
+ * level platform, karena pembeli sering tidak ingat nama toko tempat ia
+ * memesan — dan halaman lacak tidak butuh tahu tokonya. Kenapa tidak `basePath` otomatis: page-nya sudah tahu slug-nya,
  * sedangkan komponen ini tidak menerima `params` sama sekali — meneruskannya
  * berarti setiap komponen di subtree ikut membawa params, yang tidak pernah
  * mereka butuhkan.
@@ -48,12 +50,20 @@ export function TenantShell({
               />
               <span className="truncate">{name}</span>
             </Link>
-            <Link
-              href={`${basePath}/produk`}
-              className="flex min-h-11 shrink-0 items-center rounded-xl border border-border px-3 text-label-lg text-foreground transition-colors hover:bg-muted"
-            >
-              Katalog
-            </Link>
+            <div className="flex shrink-0 items-center gap-2">
+              <Link
+                href="/lacak"
+                className="flex min-h-11 items-center rounded-xl border border-border px-3 text-label-lg text-foreground transition-colors hover:bg-muted"
+              >
+                Lacak
+              </Link>
+              <Link
+                href={`${basePath}/produk`}
+                className="flex min-h-11 items-center rounded-xl border border-border px-3 text-label-lg text-foreground transition-colors hover:bg-muted"
+              >
+                Katalog
+              </Link>
+            </div>
           </div>
 
           {/*
