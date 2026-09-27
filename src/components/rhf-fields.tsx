@@ -195,6 +195,28 @@ export function SelectField({
   const watched = useWatch({ control, name, defaultValue });
   const value = typeof watched === "string" ? watched : (defaultValue ?? "");
 
+  /*
+   * `items` WAJIB diteruskan ke `Select.Root`.
+   *
+   * Tanpa itu, `<SelectValue>` tidak punya cara tahu nilai mana yang sedang
+   * dipilih, dan ia menampilkan VALUE-nya apa adanya. Gejalanya dropdown
+   * "Bank" menampilkan `bca` alih-alih "Bank Central Asia (BCA)", dan
+   * dropdown tahap produksi menampilkan `bahan_dipotong` alih-alih
+   * "Bahan Dipotong".
+   *
+   * Ini bukan détaille kecil: daftar ini dibaca orang yang sedang memilih
+   * rekening tujuan pencairannya, dan "bca" tidak يساعد siapa pun
+   * memastikan dia memilih bank yang benar.
+   *
+   * Peta ini juga membuat opsi yang nilainya tidak ada di daftar (mis. kode
+   * bank yang tersimpan tapi tidak lagi didukung) tetap tampil dengan label
+   * apa adanya, bukan string kosong.
+   */
+  const items = Object.fromEntries(
+    options.map((o) => [o.value, o.label]),
+  );
+  if (value && !(value in items)) items[value] = value;
+
   return (
     <FieldShell
       ctx={ctx}
@@ -210,6 +232,7 @@ export function SelectField({
           <SelectPrimitive
             value={value}
             onValueChange={(next) => ctx.setValue(name, next)}
+            items={items}
           >
             <SelectTrigger
               id={name}

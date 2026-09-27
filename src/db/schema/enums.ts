@@ -87,6 +87,26 @@ export const progressStageEnum = pgEnum("progress_stage", [
 ]);
 
 /** Slot jadwal payout IRIS. UTC: 06:00 WIB = 23:00 UTC (hari sebelumnya), 18:00 WIB = 11:00 UTC. */
+/**
+ * Status verifikasi rekening pengrajin (Sprint 6).
+ *
+ * `unverified` adalah keadaan paling sering, bukan kondisi kesalahan: rekening
+ * disimpan tapi belum diperiksa, karena `MIDTRANS_IRIS_API_KEY` belum diisi atau
+ * layanan sedang tidak bisa dihubungi. Itu BUKAN alasan menolak menyimpan
+ * rekening — alasannya, rekening yang tidak bisa diverifikasi hanya membuat
+ * pencairan ditahan, sedangkan rekening yang tidak tersimpan membuat pengrajin
+ * tidak bisa menarik uangnya sama sekali.
+ *
+ * `failed` menyimpan alasannya di `tenants.bankAccountValidationMessage`,
+ * karena "diverifikasi dan ditolak" berarti pengrajin harus memperbaiki
+ * rekeningnya, sedangkan "belum sempat dicek" tidak.
+ */
+export const bankAccountStatusEnum = pgEnum("bank_account_status", [
+  "unverified",
+  "verified",
+  "failed",
+]);
+
 export const payoutSlotEnum = pgEnum("payout_slot", ["morning", "evening"]);
 
 export const payoutStatusEnum = pgEnum("payout_status", [

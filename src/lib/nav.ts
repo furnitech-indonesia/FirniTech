@@ -11,6 +11,7 @@ import {
   SquaresFourIcon,
   StorefrontIcon,
   TruckIcon,
+  WalletIcon,
 } from "@phosphor-icons/react/dist/ssr";
 
 import type { UserRole } from "@/lib/auth/permissions";
@@ -72,6 +73,12 @@ const ALL_NAV: NavItem[] = [
     label: "Tarif Ongkir",
     shortLabel: "Ongkir",
     icon: TruckIcon,
+  },
+  {
+    href: "/dashboard/pengaturan/rekening",
+    label: "Rekening Pencairan",
+    shortLabel: "Rekening",
+    icon: WalletIcon,
   },
 ];
 

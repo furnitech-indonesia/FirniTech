@@ -45,11 +45,26 @@ export const tenants = pgTable(
       .default(false)
       .notNull(),
 
-    // Informasi bank untuk payout IRIS — nullable karena diisi saat onboarding,
-    // tenant harus bisa dibuat sebelum steward mengisinya.
-    bankName: text("bank_name"),
-    bankAccountNumber: text("bank_account_number"),
-    bankAccountName: text("bank_account_name"),
+    /*
+     * Rekening tujuan payout TIDAK disimpan di sini.
+     *
+     * Semula ada di tabel `tenants`, dan itu SALAH. Policy
+     * `tenants_select` adalah `id = current_tenant_id()` — tanpa
+     * penyaringan role — jadi kolom rekening ikut bisa dibaca oleh `kurir`,
+     * termasuk `bank_account_name` yang bisa jadi nama orang. Dan ini tidak
+     * bisa ditutup di tempat lain: RLS menyaring BARIS (dan baris tenancy
+     * ini memang milik kurir), sedangkan GRANT menyaring KOLOM per peran
+     * database — dan owner, admin penjualan, dan kurir
+     * semua memakai peran database yang sama: `authenticated`.
+     *
+     * Satu-satunya cara yang bisa ditegakkan adalah tabel terpisah dengan
+     * policy sendiri: tabel `tenant_bank_accounts`, dengan RLS yang hanya
+     * meloloskan owner dan admin penjualan.
+     *
+     * Alasannya teknis, tapi konsekuensinya produk: nomor rekening ini akan
+     * DITAMPILKAN ke pembeli pada COD transfer bank, jadi siapa pun yang
+     * bisa membacanya lewat jalur yang tidak ditampilkan adalah kebocoran.
+     */
 
     // Langganan SaaS
     plan: subscriptionPlanEnum("plan").default("basic").notNull(),

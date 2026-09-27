@@ -885,10 +885,49 @@ DUA TEMUAN DARI TES
      `test:kurir-ui`, yang benar-benar menekan tombol kirim dan membaca pesan
      errornya.
 
+━━━ Sprint 6 — Rekening pencairan (selesai 2026-09-27) ━━━
+
+YANG DIKERJAKAN
+  - Transport Payouts `src/lib/midtrans/payouts.ts`: `POST /account_validation`,
+    `GET /beneficiary_banks`. Autentikasi `iris-credential` (BUKAN Server Key)
+    + `iris-idempotency-key`.
+  - `idempotencyKeyFor()` = SHA-256 dari `path|body`, dipotong 32 hex.
+    Dipilih deterministik dengan sengaja: kunci yang dibuat ulang tiap
+    percobaan (`Date.now()`, `Math.random()`) justru MEMBATALIR jaminan retry
+    Payouts dan membuat payout ganda mungkin. `test:rekening` mengunci
+    determinismenya.
+  - Tabel `tenant_bank_accounts` (migrasi 0019, 0020) + halaman
+    `/dashboard/pengaturan/rekening` (khusus owner) + `saveBankAccount`.
+  - **Kegagalan verifikasi tidak memblokir penyimpanan.** `unverified` kalau
+    belum sempat dicek, `failed` kalau ditolak — keduanya menahan pencairan,
+    tapi hanya yang kedua yang perlu diperbaiki pengrajin. Error jaringan
+    TIDAK pernah dilaporkan sebagai "rekening Anda salah".
+  - Nama rekening yang disimpan setelah verifikasi berhasil adalah NAMA DARI
+    BANK, bukan yang diketik, karena itulah yang akan tampil ke pembeli. Kalau
+    berbeda, pengrajin diberi tahu eksplisit di pesan sukses.
+  - Audit log setiap perubahan rekening — tanpa nomor & nama, hanya 4 digit
+    terakhir, karena untuk rekonsiliasi cukup tahu BERUBAH oleh siapa kapan.
+  - `test:rekening` — 21 pemeriksaan (fungsi murni, determinisme key, RLS).
+
+DUA TEMUAN
+  1. **Kolom rekening di `tenants` BOCOR ke akun kurir.** Policy
+     `tenants_select` adalah `id = current_tenant_id()` tanpa penyaringan
+     role, jadi siapa pun dengan `tenantId` bisa membaca baris itu —
+     termasuk `bank_account_name` yang bisa berisi nama orang. Dan ini TIDAK
+     bisa ditutup di tempat lain: RLS menyaring baris (baris ini memang milik
+     kurir juga), GRANT menyaring kolom per peran DATABASE (owner, admin,
+     dan kurir semuanya `authenticated`). Satu-satunya jalan: tabel terpisah
+     dengan policy sendiri. Migrasi 0018 menghapus kolomnya dari `tenants`.
+     `test:rekening` mengunci baik kebocorannya maupun bahwa kolomnya tidak
+     dikembalikan ke sana.
+  2. **Dropdown menampilkan nilai mentah, bukan label.** `SelectField` tidak
+     meneruskan `items` ke `Select.Root` Base UI, jadi `<SelectValue>`
+     menampilkan `bca` alih-alih "Bank Central Asia (BCA)" dan
+     `bahan_dipotong` alih-alih "Bahan Dipotong". Bug lama di seluruh aplikasi,
+     baru terlihat karena halaman rekening memakai dropdown pertama kali.
+     Diperbaiki di `src/components/rhf-fields.tsx` — satu tempat, semua form.
+
 YANG MASIH HARUS DIKERJAKAN
-  3. Rekening pengrajin: kolom di `tenants`, verifikasi lewat
-     `POST /account_validation` Payouts, dan halaman COD transfer bank yang
-     menampilkan nomor + atas nama rekening.
   4. Mesin payout: `payout_logs`/`payout_items`, pemicu bukti, fee
      Rp5.550 per penerima, `iris-idempotency-key` per permintaan.
      PENTING: payout wajib memeriksa bahwa `cod_amount` pada bukti benar-benar
@@ -897,6 +936,17 @@ YANG MASIH HARUS DIKERJAKAN
   5. COD di checkout: metode bayar baru, tanpa Midtrans, dengan bukti yang
      diunggah kurir. Field COD di form kurir sengaja belum dirender sampai
      metodenya ada, supaya kurir tidak diminta nominal untuk pesanan yang
-     memang bukan COD.
+     memang bukan COD. Halaman COD transfer bank yang menampilkan nomor +
+     atas nama rekening mengikuti di titik ini juga, karena baru ada meaning
+     setelah metode pembayarannya ada.
   6. Pengaturan fee platform & harga paket di panel super admin, dengan
      aturan: invoice yang sudah terbit mengunci harga saat dibuat.
+
+CATATAN: `MIDTRANS_IRIS_API_KEY` masih kosong, jadi `POST /account_validation`
+belum pernah dipanggil sungguhan. Bentuk respons dibaca defensif (tiga jalur
+nama pemilik), dan respons tanpa nama pemilik diperlakukan sebagai KEGAGALAN
+bukan "terverifikasi tanpa nama" — menganggapnya sukses berarti meloloskan
+rekening milik orang lain karena layanan tidak mengirim field yang kita kira
+ada. Daftar bank cadangan di `src/lib/banks.ts` juga belum diverifikasi;
+`verifyBankCodesAgainstMidtrans()` ada untuk membandingkannya dengan
+`GET /beneficiary_banks` sebelum produksi.

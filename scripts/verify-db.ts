@@ -28,6 +28,7 @@ const EXPECTED_TABLES = [
   "integration_audit_logs",
   "notification_usage",
   "delivery_proofs",
+  "tenant_bank_accounts",
 ];
 
 async function main() {

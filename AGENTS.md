@@ -60,6 +60,7 @@ npm run test:register  # 6 pemeriksaan wizard /daftar (Playwright, butuh server)
 npm run test:carpenter # 16 pemeriksaan antrean tukang di 375px (butuh server)
 npm run test:kurir    # 25 pemeriksaan RLS kurir & bukti, JWT sungguhan
 npm run test:kurir-ui # 24 pemeriksaan halaman kurir di 375px (butuh server)
+npm run test:rekening # 21 pemeriksaan rekening, idempotency key, & RLS
 npm run db:buckets    # pastikan bucket Storage ada & privat
 npm run test:alamat    # 25 pemeriksaan form alamat & peta (butuh server)
 npm run test:ongkir    # 13 pengujian tarif ongkir & lookup
@@ -279,6 +280,52 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   di-chargeback) serta tidak ada refund. Begitu kartu kredit atau QRIS
   ditambahkan, keputusan "tidak ada refund" berubah jadi tanggung jawab
   platform.
+
+## Rekening pencairan & Payouts (Sprint 6)
+
+- **Rekening pengrajin TIDAK BOLEH ada di `tenants`.** Policy
+  `tenants_select` adalah `id = current_tenant_id()` tanpa penyaringan role,
+  jadi kolom rekening di sana bisa dibaca akun `kurir` — termasuk
+  `account_name` yang bisa berisi nama orang. Tidak bisa ditutup di tempat
+  lain: RLS menyaring BARIS (baris itu memang milik kurir juga), GRANT
+  menyaring KOLOM per peran DATABASE (owner, admin, kurir semuanya
+  `authenticated`). Tabel `tenant_bank_accounts` dengan policy sendiri adalah
+  satu-satunya jalan. `test:rekening` mengunci kolomnya tidak kembali ke sana.
+- **Satu tenant satu rekening, ditegakkan `PRIMARY KEY (tenant_id)`.** Dan
+  itu yang membuat `onConflictDoUpdate` di action idempoten tanpa logika
+  "cari dulu lalu insert atau update" yang punya race condition sendiri.
+- **`admin_penjualan` boleh MEMBACA rekening, tidak boleh MENULIS.**
+  Admin mengurus pesanan; rekening adalah keputusan siapa yang menarik uang.
+- **Kegagalan verifikasi TIDAK memblokir penyimpanan rekening.** `unverified`
+  = belum sempat dicek, `failed` = ditolak. Keduanya menahan pencairan, tapi
+  hanya `failed` yang perlu diperbaiki pengrajin. Error jaringan TIDAK boleh
+  dilaporkan sebagai "rekening Anda salah".
+- **`iris-idempotency-key` harus deterministik dari isi permintaan.**
+  SHA-256 dari `path|body`, bukan `Date.now()` atau `Math.random()`. Kunci
+  yang dibuat ulang tiap percobaan MEMBATALIR jaminan retry Payouts — bukan
+  strengthening, justru sebaliknya.
+- **Respons Payouts dibaca defensif.** Bentuk respons belum pernah dilihat
+  (`MIDTRANS_IRIS_API_KEY` kosong). Nama pemilik dibaca dari tiga jalur, dan
+  respons tanpa nama diperlakukan sebagai KEGAGALAN — bukan "terverifikasi
+  tanpa nama", yang akan berarti meloloskan rekening milik orang lain.
+- **Setelah verifikasi berhasil, simpan NAMA DARI BANK, bukan yang diketik
+  pengrajin.** Nama itu yang akan ditampilkan ke pembeli pada COD transfer
+  bank. Kalau berbeda, beri tahu eksplisit.
+- **Nomor rekening dinormalisasi di server** (`normalizeBankAccount`):
+  hanya angka, maksimal 20 digit. Tanpa itu rekening yang sama bisa tersimpan
+  dalam dua bentuk tergantung cara diketik, dan payout gagal atau — lebih
+  buruk — berhasil ke rekening berbeda.
+- **`SelectField` wajib meneruskan `items` ke `Select.Root`.** Tanpa itu
+  `<SelectValue>` menampilkan nilai mentah (`bca`, `bahan_dipotong`) bukan
+  label. Bug lama di seluruh aplikasi; sudah diperbaiki di
+  `src/components/rhf-fields.tsx`.
+- **Daftar bank cadangan di `src/lib/banks.ts` belum diverifikasi dari
+  Midtrans.** Daftar authoritative datang dari `GET /beneficiary_banks` lewat
+  `loadBankOptions()`. Daftar cadangan hanya 6 bank, sama dengan kanal VA yang
+  sudah dipakai checkout — daftar panjang hasil tebakan terlihat seperti
+  sudah lengkap lalu gagal di langkah terakhir. Kode yang salah akan DITOLAK,
+  bukan menyebabkan transfer ke bank keliru, dan kode tidak pernah
+  ditampilkan ke siapa pun.
 
 ## PWA & luring (Sprint 6)
 

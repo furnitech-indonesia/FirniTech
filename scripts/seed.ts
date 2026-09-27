@@ -16,6 +16,7 @@ import { db, sqlClient } from "../src/db/client";
 import {
   products,
   shippingRates,
+  tenantBankAccounts,
   tenants,
   users,
   type Tenant,
@@ -42,14 +43,41 @@ async function main() {
         subscriptionExpiresAt: new Date(
           Date.now() + 30 * 24 * 60 * 60 * 1000,
         ),
-        bankName: "BCA",
-        bankAccountNumber: "1234567890",
-        bankAccountName: "PT Mebel Jaya",
       })
       .returning();
     console.log(`+ tenant dibuat: ${tenant.name} (${tenant.slug})`);
   } else {
     console.log(`= tenant sudah ada: ${tenant.name} (${tenant.slug})`);
+  }
+
+  /*
+   * Rekening pencairan contoh.
+   *
+   * Statusnya `unverified`, BUKAN `verified`, dan itu disengaja: nomor
+   * rekening di sini tidak pernah melewati `POST /account_validation`, jadi
+   * menandainya terverifikasi akan mengarang fakta yang belum ada. Seed
+   * yang dimulai dengan rekening "sudah dicek" juga membuat `test:kurir` tidak
+   * bisa membedakan akun yang benar-benar terverifikasi dari yang tidak.
+   */
+  const [existingBank] = await db
+    .select({ tenantId: tenantBankAccounts.tenantId })
+    .from(tenantBankAccounts)
+    .where(eq(tenantBankAccounts.tenantId, tenant.id))
+    .limit(1);
+  if (!existingBank) {
+    await db.insert(tenantBankAccounts).values({
+      tenantId: tenant.id,
+      bankCode: "bca",
+      bankName: "Bank Central Asia (BCA)",
+      accountNumber: "1234567890",
+      accountName: "PT Mebel Jaya",
+      status: "unverified",
+      validationMessage:
+        "Contoh dari seed — belum pernah diverifikasi lewat Payouts.",
+    });
+    console.log("+ rekening pencairan: BCA 1234567890 (unverified)");
+  } else {
+    console.log("= rekening pencairan sudah ada");
   }
 
   // 2. Produk contoh (harga rupiah penuh, tanpa desimal)
