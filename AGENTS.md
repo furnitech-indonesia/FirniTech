@@ -306,9 +306,19 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 - **`finishUrl` dari Host request**, bukan `NEXT_PUBLIC_APP_URL` (di-inline
   saat build, jadi satu build untuk lokal dan Vercel akan mengarahkan ke
   domain yang salah).
-- **MDR dan platform fee 1,5% belum dihitung** — itu Sprint 6, karena MDR
-  baru diketahui setelah channel pembayaran terpilih. `orders` sudah punya
-  kolomnya.
+- **MDR dan platform fee 1,5% belum dihitung** — itu Sprint 6. `orders` sudah
+  punya kolomnya. Sumber tarifnya sudah dicek dan ditulis di
+  `docs/midtrans-fee.md`; **bacanya sebelum implementasi payout.**
+  Dua temuan dari sana yang mengubah desain:
+  - **Tidak ada field biaya di payload webhook maupun respons GET status.**
+    Semua contoh resmi tidak memuat `fee_amount`. Jadi MDR TIDAK boleh diambil
+    dari notifikasi, dan `?? 0` jelas dilarang — pencairan harus DIBLOKIR kalau
+    tarif channel-nya belum diisi.
+  - **MDR adalah komponen terpisah dari fee Midtrans** (kolom "Total MDR" vs
+    "Total Transaction Fee … excluding MDR" di halaman Billings), dan PPN 11%
+    diambil dari nilai fee — kecuali QRIS, GoPay, dan ShopeePay.
+  - Tarif di halaman publik adalah **batas bawah**, bukan angka final untuk
+    akun merchant kita; diskon tidak pernah dipublikasikan.
 
 ## Tarif ongkir (Sprint 5 bagian 3)
 
