@@ -14,4 +14,5 @@ export * from "./order";
 export * from "./chat";
 export * from "./auth";
 export * from "./address";
+export * from "./address-form";
 export * from "./register";

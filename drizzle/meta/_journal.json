@@ -50,6 +50,13 @@
       "when": 1790517603477,
       "tag": "0006_young_agent_zero",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790519183534,
+      "tag": "0007_safe_swarm",
+      "breakpoints": true
     }
   ]
 }

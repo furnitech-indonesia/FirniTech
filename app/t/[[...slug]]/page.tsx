@@ -7,6 +7,7 @@ import { products } from "@/db/schema";
 import { TenantShell } from "@/components/tenant-shell";
 import { CatalogView } from "@/components/catalog-view";
 import { ProductDetailView } from "@/components/product-detail-view";
+import { CheckoutView } from "@/components/checkout-view";
 import { resolveTenantForRequest } from "@/lib/tenants";
 import { resolveStorefrontRoute } from "@/lib/storefront-routes";
 
@@ -105,6 +106,14 @@ export default async function TenantStorefront({
         <ProductDetailView
           tenantId={tenant.id}
           productSlug={route.productSlug}
+          basePath={basePath}
+        />
+      ) : null}
+
+      {route.kind === "checkout" ? (
+        <CheckoutView
+          tenantSlug={tenant.slug}
+          tenantId={tenant.id}
           basePath={basePath}
         />
       ) : null}
