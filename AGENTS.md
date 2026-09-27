@@ -57,8 +57,7 @@ npm run test:schemas  # 14 uji skema validasi (guard uang, pesan, id)
 npm run test:responsive # 23 pemeriksaan struktural responsif & token
 npm run test:sprint3  # 16 uji halaman & pembatasan role Sprint 3
 npm run test:register  # 6 pemeriksaan wizard /daftar (Playwright, butuh server)
-npm run test:wa         # 31 uji mesin notifikasi WhatsApp & kuota atomik
-npm run test:carpenter # 12 pemeriksaan antrean tukang di 375px (butuh server)
+npm run test:carpenter # 16 pemeriksaan antrean tukang di 375px (butuh server)
 npm run test:webhook   # 46 uji: skema, signature, gerbang tenant, e2e webhook
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
@@ -187,43 +186,47 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   `app/menunggu-pembayaran/page.tsx` — `test:responsive` mewajibkannya
   untuk setiap halaman.
 
-## Notifikasi WhatsApp & antrean tukang (Sprint 4)
+## Kirim foto progres via WhatsApp (Sprint 4)
 
-- **Kegagalan WA tidak boleh membatalkan aksi bisnisnya.** `sendWhatsApp()`
-  tidak pernah melempar. Kalau tukang mengunggah foto progres lalu Fonnte
-  down, foto HARUS tetap tersimpan; kalau tidak, satu gangguan pihak ketiga
-  bisa menghentikan seluruh produksi di bengkel.
-- **Urutan: aksi bisnis menulis data → baru kirim WA.** Kalau WA dikirim
-  lebih dulu lalu insert-nya gagal, pembeli sudah diberi tahu foto progres
-  yang tidak pernah ada.
-- **Kuota WA harus atomik.** Baca counter lalu tulis raced: dua request
-  bersamaan sama-sama membaca angka yang sama, sama-sama lolos, dan tenant
-  Basic menembus jatah 100/bulan. Pakai conditional upsert dengan
-  `where used_count < quota` (`consumeQuota`). `test:wa` menjalankan 30
-  consumption berbareng dengan kuota 10 dan mengunci hasilnya di 10.
-- **Kuota TIDAK dipotong kalau kredensial kosong.** Tidak ada pesan yang
-  terkirim, jadi menghitungnya akan memotong jatah tanpa alasan.
-- **Nomor tujuan SELALU dari baris yang sudah difilter `tenantId`, bukan
-  dari FormData.** `customer_phone` diisi bebas; kalau bisa datang dari
-  klien, satu tenant bisa mengirim WA ke nomor pembeli tenant lain.
-- **`setTracking` hanya mengirim WA kalau status sudah `shipped`/
-  `completed`.** Action itu juga dipakai saat `ready_to_ship` — resi
-  dicatat lebih dulu sebelum barang diserahkan ke kurir. Tanpa pengecekan
-  itu pembeli diberi tahu "sudah dikirim" padahal barangnya masih di
-  bengkel.
-- **Jangan menautkan halaman yang belum ada.** Halaman lacak pesanan baru
-  ada di Sprint 5; pesan_progress saat ini menunjuk `/t/<slug>`.
-- **Layar tukang bukan halaman pesanan yang disamarkan.**
-  `src/components/carpenter-queue.tsx` menampilkan hanya pesanan yang
-  ditugaskan ke tukang itu, dimensi dalam cm, tahap terakhir dari lima, dan
-  tidak ada satu pun nominal rupiah. Data keuangan tidak relevan di bengkel,
-  dan `test:carpenter` mengunci "tidak ada nominal" itu — yang
-  mustahil dibuktikan dari source code.
+- **TIDAK ada gateway WhatsApp pihak ketiga.** Tidak ada Fonnte, tidak ada
+  `wa.me` yang dikirim server, tidak ada kredensial WA di `.env`. Foto dikirim
+  manual oleh tukang lewat tautan `wa.me` yang dibangun di
+  `src/lib/wa-link.ts` dan dirender di `src/components/carpenter-queue.tsx`.
+  Alasan lengkapnya di PRD.md §4 Modul 4.
+- **Alasan tekniknya yang paling penting:** foto progres disimpan di bucket
+  privat dan hanya dilayani signed URL berumur satu jam
+  (`src/lib/storage.ts`). Gateway WA bisa mengirim teks dan satu tautan, tidak
+  bisa melampirkan foto. Kalau dulu otomatis, yang sampai ke pembeli cuma
+  "produksi Anda sudah di tahap Finishing" tanpa bukti pekerjaan.
+- **Label tombol harus jujur.** Tombolnya "Kirim lewat WhatsApp", bukan
+  "Kirim foto", dan ada teks "Pilih fotonya di sana". `wa.me` hanya membuka
+  percakapan; fotonya tetap dipilih tukang. Kalau labelnya "Kirim foto",
+  orang menekan sekali lalu mencari-cari kenapa belum terkirim.
+- **Normalisasi nomor WA WAJIB** dan dilakukan di server
+  (`loadCarpenterQueue`), bukan di komponen: `wa.me` menolak nomor diawali 0
+  sedangkan data bisa `08xx`, `628xx`, atau `+62 812-3456-7890`. Nomor gagal
+  dinormalisasi jadi `null` supaya tombolnya tidak dirender — `wa.me` tanpa
+  nomor membuka WhatsApp tanpa tujuan dan pengguna baru sadar setelah
+  menekan kirim, ke nomor yang salah.
+- **Tidak ada kuota WA.** `monthlyWaQuota` sudah dihapus dari
+  `src/lib/plans.ts` dan barisnya dibuang dari tabel harga publik. Kalau
+  dibiarkan, halaman itu mengiklarkan batas yang tidak ditegakkan kode mana
+  pun. Tabel `notification_usage` tetap ada untuk kuota push notification
+  Sprint 6.
 - **Uji yang membersihkan fikstur harus menghapus audit-nya juga.**
   `integration_audit_logs.tenant_id` memakai `onDelete: "set null"`, jadi
   baris audit tidak ikut terhapus bersama tenant. Kalau tidak dihapus
   eksplisit, setiap menjalankan skrip mencampur sampah test ke tabel yang
   dibaca super admin.
+- **Yang hilang dan itu sadar:** percakapan terjadi di WhatsApp, bukan di
+  FurniTech. FurniTech tidak tahu pesan terkirim atau dibaca, dan timeline
+  pesanan tidak mencatat "pembeli sudah diberi tahu".
+- **Layar tukang bukan halaman pesanan yang disamarkan.**
+  `src/components/carpenter-queue.tsx` menampilkan hanya pesanan yang
+  ditugaskan ke tukang itu, dimensi dalam cm, tahap terakhir dari lima, dan
+  tidak ada satu pun nominal rupiah. Data keuangan tidak relevan di bengkel,
+  dan `test:carpenter` mengunci "tidak ada nominal" itu — yang mustahil
+  dibuktikan dari source code.
 
 ## Back-office Sprint 3
 
@@ -481,7 +484,7 @@ python3 .opencode/skills/ui-ux-pro-max/scripts/search.py "form validation" --sta
   `SUPABASE_ANON_JWT` / `SUPABASE_SERVICE_ROLE_JWT`.
 - `sb_secret_*` (service role) = admin penuh. Tidak boleh masuk `NEXT_PUBLIC_*`
   maupun kode client. Kalau bocor, rotasi lewat dashboard Supabase.
-- Midtrans (Core + IRIS), Cloudflare, Fonnte, dan Firebase **belum diisi**.
+- Midtrans (Core + IRIS), Cloudflare, dan Firebase **belum diisi**.
 
 ## Konvensi
 

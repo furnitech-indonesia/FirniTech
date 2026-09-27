@@ -248,6 +248,33 @@ async function main() {
     check("tidak ada nominal rupiah di layar tukang", !/Rp\s?[\d.]+/.test(text), "tidak ada");
     check("ada tombol Unggah foto", text.includes("Unggah foto progres"), "ada");
 
+    /*
+     * Tautan `wa.me`. Yang diuji bukan cuma "tombolnya ada" — kalau nomornya
+     * salah format, WhatsApp terbuka tanpa tujuan dan tukang baru sadar
+     * setelah menekan kirim, jadi ke pembeli yang salah.
+     */
+    const waHref = await page
+      .locator('a[href^="https://wa.me/"]')
+      .first()
+      .getAttribute("href");
+    check("ada tombol Kirim lewat WhatsApp", text.includes("Kirim lewat WhatsApp"), "ada");
+    check(
+      "tautan wa.me memakai format 628… (nomor 08xx dinormalisasi)",
+      /^https:\/\/wa\.me\/62\d{9,13}\?text=/.test(waHref ?? ""),
+      waHref ? waHref.split("?")[0] : "(tidak ada tautan)",
+    );
+    const waText = decodeURIComponent((waHref ?? "").split("?text=")[1] ?? "");
+    check(
+      "pesan pembuka menyebut nama pembeli & kode pesanan",
+      waText.includes("Ibu Ratna") && waText.includes("ORD-UJI-BNGK-1"),
+      waText.split("\n").filter(Boolean)[0] ?? "(kosong)",
+    );
+    check(
+      "label jujur: aplikasi tidak mengirim fotonya",
+      text.includes("Pilih fotonya di sana"),
+      "ada penjelasan",
+    );
+
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
     );

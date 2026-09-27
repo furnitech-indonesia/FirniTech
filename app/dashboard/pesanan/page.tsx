@@ -2,7 +2,8 @@ import Link from "next/link";
 import { and, desc, eq, inArray, notInArray } from "drizzle-orm";
 
 import { db } from "@/db";
-import { orderItems, orders, productionProgress, users } from "@/db/schema";
+import { orderItems, orders, productionProgress, tenants, users } from "@/db/schema";
+import { normalizePhone } from "@/lib/wa-link";
 import { requireTenantWrite } from "@/lib/auth/guard";
 import { CarpenterQueue, type CarpenterQueueItem } from "@/components/carpenter-queue";
 import type { ProgressStage } from "@/lib/order-status";
@@ -230,9 +231,15 @@ async function loadCarpenterQueue(
       orderCode: orders.orderCode,
       orderStatus: orders.orderStatus,
       customerName: orders.customerName,
+      customerPhone: orders.customerPhone,
+      workshopName: tenants.name,
       createdAt: orders.createdAt,
     })
     .from(orders)
+    // Join ke tenant untuk nama workshop pada pesan WhatsApp. `innerJoin`
+    // sekaligus menjamin baris yang lolos benar-benar milik tenant yang
+    // sedang dibuka, bukan hanya yang cocok angka tenantId-nya.
+    .innerJoin(tenants, eq(tenants.id, orders.tenantId))
     .where(
       and(
         eq(orders.tenantId, tenantId),
@@ -303,6 +310,17 @@ async function loadCarpenterQueue(
     orderCode: row.orderCode,
     orderStatus: row.orderStatus as CarpenterQueueItem["orderStatus"],
     customerName: row.customerName,
+    /*
+     * Normalisasi dilakukan di sini, bukan di komponen. Komponen hanya
+     * memutuskan tampil atau tidak; kalau komponen yang memanggil
+     * `normalizePhone`, logikanya bercabang di tempat yang tidak punya
+     * akses ke data pesanan.
+     * Nomor yang gagal dinormalisasi jadi `null` supaya tombol WhatsApp-nya
+     * tidak dirender — `wa.me` tanpa nomor membuka WhatsApp tanpa tujuan, dan
+     * pengguna baru sadar setelah menekan kirim.
+     */
+    customerPhone: normalizePhone(row.customerPhone),
+    workshopName: row.workshopName,
     items: itemsByOrder.get(row.id) ?? [],
     lastStage: lastStageByOrder.get(row.id)?.stage ?? null,
   }));

@@ -13,8 +13,6 @@ export const PLANS = {
     /** null = unlimited */
     maxProducts: 20,
     maxStaff: 1, // Owner + 1 staf = 2 akun
-    /** null = unlimited; kuota WA per bulan */
-    monthlyWaQuota: 100,
     features: {
       financialReport: "basic",
       customDomain: true,
@@ -27,7 +25,6 @@ export const PLANS = {
     priceYearly: 5_400_000,
     maxProducts: 100,
     maxStaff: 5,
-    monthlyWaQuota: 500,
     features: {
       financialReport: "profit_loss",
       customDomain: true,
@@ -40,7 +37,6 @@ export const PLANS = {
     priceYearly: 10_800_000,
     maxProducts: null,
     maxStaff: null,
-    monthlyWaQuota: null,
     features: {
       financialReport: "executive",
       customDomain: true,

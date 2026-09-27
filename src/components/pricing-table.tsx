@@ -31,21 +31,18 @@ const DETAILS: Record<string, readonly string[]> = {
   basic: [
     "20 produk di katalog",
     "1 staf produksi selain owner",
-    "100 pesan WhatsApp per bulan",
     "Laporan keuangan dasar",
     "Tanpa biaya setup",
   ],
   pro: [
     "100 produk di katalog",
     "5 staf produksi",
-    "500 pesan WhatsApp per bulan",
     "Laporan laba-rugi",
     "Domain sendiri + SSL",
   ],
   max: [
     "Produk katalog tanpa batas",
     "Staf tanpa batas",
-    "Pesan WhatsApp tanpa batas",
     "Laporan eksekutif",
     "Domain sendiri + SSL",
   ],

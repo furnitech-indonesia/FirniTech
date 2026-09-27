@@ -1,5 +1,9 @@
 import Link from "next/link";
-import { CameraIcon, RulerIcon } from "@phosphor-icons/react/dist/ssr";
+import {
+  CameraIcon,
+  RulerIcon,
+  WhatsappLogoIcon,
+} from "@phosphor-icons/react/dist/ssr";
 
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/panels";
@@ -11,6 +15,7 @@ import {
 } from "@/lib/labels";
 import { PROGRESS_STAGE_ORDER, type ProgressStage } from "@/lib/order-status";
 import { formatNumber } from "@/lib/format";
+import { buildWhatsAppLink, progressMessageFor } from "@/lib/wa-link";
 
 /**
  * Antrean produksi untuk tukang (ROADMAP Sprint 4, "Carpenter Mobile
@@ -40,6 +45,13 @@ export type CarpenterQueueItem = {
   orderCode: string;
   orderStatus: OrderStatus;
   customerName: string;
+  /**
+   * Nomor WhatsApp pembeli. Disimpan sudah ternormalisasi ke `628…` oleh
+   * `loadCarpenterQueue`; `null` berarti nomornya tidak bisa dipakai untuk
+   * tautan `wa.me` dan tombolnya tidak dirender sama sekali.
+   */
+  customerPhone: string | null;
+  workshopName?: string | null;
   items: {
     productName: string;
     quantity: number;
@@ -146,17 +158,62 @@ function QueueCard({ item }: { item: CarpenterQueueItem }) {
       </ul>
 
       {/*
-       * Aksi utama. `min-h-11` (44px) bukan decorasi: ini tombol yang paling
-       * sering ditekan, dan jempol orang di bengkel tidak selalu dalam
-       * kondisi Consent.
+       * Dua aksi, dan urutannya disengaja.
+       *
+       * "Unggah foto progres" ke FurniTech dulu, karena itulah yang membuat
+       * foto tercatat di timeline pesanan dan bisa dilihat owner, Super Admin,
+       * dan pembeli lewat halaman lacak. "Kirim lewat WhatsApp" adalah
+       * pelengkap: dipakai tukang untuk mengirim fotonya ke pembeli.
+       *
+       * Keduanya memakai `min-h-11` (44px). Ini bukan decorasi — tombol yang
+       * paling sering ditekan di bengkel tidak boleh jadi yang terkecil.
        */}
-      <Link
-        href={`/dashboard/pesanan/${item.id}`}
-        className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-label-lg text-primary-foreground transition-colors hover:bg-primary-hover"
-      >
-        <CameraIcon size={18} weight="light" aria-hidden />
-        Unggah foto progres
-      </Link>
+      <div className="grid gap-2">
+        <Link
+          href={`/dashboard/pesanan/${item.id}`}
+          className="flex min-h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-label-lg text-primary-foreground transition-colors hover:bg-primary-hover"
+        >
+          <CameraIcon size={18} weight="light" aria-hidden />
+          Unggah foto progres
+        </Link>
+
+        {item.customerPhone ? (
+          <a
+            href={buildWhatsAppLink({
+              to: item.customerPhone,
+              message: progressMessageFor({
+                customerName: item.customerName,
+                orderCode: item.orderCode,
+                workshopName: item.workshopName,
+              }),
+            })!}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 text-label-lg text-foreground transition-colors hover:bg-muted"
+          >
+            <WhatsappLogoIcon size={18} weight="fill" aria-hidden />
+            Kirim lewat WhatsApp
+          </a>
+        ) : null}
+
+        {/*
+         * Labelnya jujur: aplikasi ini TIDAK mengirim fotonya. `wa.me` hanya
+         * membuka percakapan dengan pesan yang sudah terisi; foto tetap
+         * dipilih tukang sendiri di WhatsApp. Kalau tombolnya berbunyi "Kirim
+         * foto", orang akan menekan sekali lalu mencari-cari kenapa fotonya
+         * belum terkirim.
+         */}
+        {item.customerPhone ? (
+          <p className="text-body-sm text-muted-foreground">
+            WhatsApp terbuka dengan pesan pembuka. Pilih fotonya di sana.
+          </p>
+        ) : (
+          <p className="text-body-sm text-muted-foreground">
+            Nomor WhatsApp pembeli tidak tersedia, jadi foto belum bisa dikirim
+            dari sini.
+          </p>
+        )}
+      </div>
     </article>
   );
 }

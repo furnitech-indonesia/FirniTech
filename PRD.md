@@ -1,9 +1,15 @@
 Product Requirement Document (PRD) — FurniTech
 Nama Produk: FurniTech
 Tipe Platform: SaaS Multi-Tenant (B2B2C E-Commerce & Internal Operations for Furniture Makers)
-Versi PRD: 1.2
+Versi PRD: 1.3
 Status: Approved for Development
 Catatan Revisi:
+ * v1.3 — Mengganti Integrasi Notifikasi WhatsApp (§4 Modul 4) dari Fonnte
+   API menjadi pengiriman manual lewat tautan `wa.me`. Modul otomatis
+   (checkout, pembayaran, payout) BELUM diimplementasikan dan dicatat sebagai
+   pekerjaan yang ditunda, bukan sebagai bagian dari ruang lingkup sekarang.
+   Matriks fitur §2.B dan daftar environment menyesuaikan: tidak ada lagi
+   kuota notifikasi WhatsApp per paket.
  * v1.2 — Menambahkan §7 (Rencana Rilis PWA & Native) beserta keputusan
    arsitektur Capacitor, dan persyaratan tampilan responsif sebagai kebutuhan
    lintas modul.
@@ -27,7 +33,7 @@ B. Matriks Fitur & Batasan Paket (Feature Differentiation)
 | Custom Domain (namatoko.com) | Tersedia | Tersedia | Tersedia |
 | Maksimal Katalog Produk | Hingga 20 Produk | Hingga 100 Produk | Unlimited Produk |
 | Jumlah Akun Staf (RBAC) | 2 Akun (Owner + 1 Staf) | 5 Akun Staf/Tukang | Unlimited Akun Staf/Tukang |
-| Notifikasi WhatsApp (Fonnte) | Kuota Standar (100 WA/bln) | Kuota Sedang (500 WA/bln) | Unlimited WA Notification |
+| Kirim foto progres via WhatsApp | ✅ (tanpa batas) | ✅ (tanpa batas) | ✅ (tanpa batas) |
 | Laporan Keuangan & Kas | Transaksi Dasar | Rekap Laba/Rugi Bulanan | Laporan Eksekutif & Analytics |
 | Jadwal Payout IRIS | Included (2x/hari) | Included (2x/hari) | Included (2x/hari) |
 C. Kebijakan Transaksi & Potongan Biaya (Fees)
@@ -57,7 +63,7 @@ C. Kebijakan Transaksi & Potongan Biaya (Fees)
                ▼                    ▼                    ▼
 ┌──────────────────────┐ ┌────────────────────┐ ┌──────────────────────┐
 │  PAYMENT & PAYOUT    │ │    NOTIFIKASI      │ │   CRON SCHEDULER     │
-│ Midtrans Core & IRIS │ │ Fonnte (WhatsApp)  │ │    cron-job.org      │
+│ Midtrans Core & IRIS │ │  WhatsApp (wa.me)  │ │    cron-job.org      │
 └──────────────────────┘ └────────────────────┘ └──────────────────────┘
 
  * Frontend: Next.js (App Router), Tailwind CSS v4, shadcn/ui di atas
@@ -68,7 +74,9 @@ C. Kebijakan Transaksi & Potongan Biaya (Fees)
  * Domain Routing: proxy.ts + Cloudflare for SaaS (Custom Hostnames API).
    Catatan: pada Next.js 16 middleware.ts sudah deprecated, digantikan proxy.ts
    dengan fungsi export `proxy` dan runtime Node.js.
- * Notifikasi: Fonnte (WhatsApp Gateway API) & Firebase Cloud Messaging (Push Notification PWA/Mobile).
+ * Notifikasi WhatsApp: TIDAK memakai gateway API pihak ketiga. Foto progres
+   dikirim manual oleh tukang lewat tautan `wa.me` (§4 Modul 4).
+ * Notifikasi Push: Firebase Cloud Messaging (Push Notification PWA/Mobile).
  * Cron Job: cron-job.org (Trigger webhook pencairan IRIS & pembaruan status sistem).
  * Hosting & Source Control: Vercel (Hosting Platform) & GitHub (Repository Codebase).
  * Rencana Rilis Aplikasi: lengkap di §7.
@@ -138,12 +146,51 @@ Modul 3: Otomatisasi Payout (Midtrans IRIS) & Cron
  * Alur Pencairan:
    * Sistem membaca saldo settled milik tenant yang sudah dikurangi potongan MDR Midtrans.
    * Mengirim instruksi batch payout via API Midtrans IRIS ke rekening bank pengrajin.
-Modul 4: Integrasi Notifikasi WhatsApp (Fonnte API)
- * Picu Pesan Otomatis:
-   * Checkout Baru: Kirim rincian pesanan dan petunjuk pembayaran ke WhatsApp Pembeli.
-   * Pembayaran Diterima: Konfirmasi pembayaran berhasil dari Midtrans.
-   * Update Progres Produksi: Kirim link foto progres pengerjaan mebel yang diunggah oleh tukang.
-   * Notifikasi Payout: Kirim bukti transfer pencairan dana IRIS ke WhatsApp Owner Pengrajin (06.00 & 18.00 WIB).
+Modul 4: Kirim Foto Progres ke Pembeli (tautan WhatsApp)
+ * STATUS SAAT INI: hanya alur foto progres yang diimplementasikan. Alur notifikasi
+   otomatis (checkout, pembayaran, payout) BELUM ADA — lihat "Pekerjaan yang
+   Ditunda" di bawah modul ini.
+ * Alur yang berjalan sekarang:
+   * Di Antrean Produksi, tiap pesanan punya tombol "Kirim lewat WhatsApp".
+   * Tombol membuka `wa.me` dengan nomor pembeli (sudah ternormalisasi ke
+     format 628…) dan pesan pembuka yang menyebut nama pembeli & kode pesanan.
+   * Foto dipilih sendiri oleh tukang di WhatsApp, lalu dikirim.
+   * Aplikasi tidak mengirim foto apa pun. Label tombol dan teks pendamping
+     menyatakan ini terbuka, agar pengguna tidak mencari-cari alasan foto belum
+     terkirim setelah menekan sekali.
+ * Normalisasi nomor: wajib, karena `wa.me` menolak nomor diawali 0 sedangkan
+   data bisa tersimpan sebagai 08xx, 628xx, atau +62 812-3456-7890. Dilakukan
+   satu kali di server (`src/lib/wa-link.ts`), bukan di komponen.
+ * Alasan tidak memakai Fonnte atau gateway WA lain:
+   1. Foto progres disimpan di bucket privat dan hanya dilayani lewat signed
+      URL berumur satu jam. Gateway WA bisa mengirim teks dan satu tautan, tidak
+      bisa melampirkan foto — jadi pesan otomatis hanya sampai sebagai "produksi
+      Anda sudah di tahap Finishing", tanpa bukti pekerjaan sama sekali.
+   2. Tukang sudah memegang HP-nya di bengkel. Berhenti sebentar untuk
+      melampirkan foto di WhatsApp jauh lebih sedikit gesekan daripada mengisi
+      form lalu mengunggah berkas.
+   3. Percakapan menjadi dua arah. Pembeli hampir selalu membalas — "warna yang
+      lebih terang bisa?", "kapan selesai?" — dan tidak ada tugas yang lebih
+      penting bagi tukang daripada menjawab pembeli.
+   4. Tanpa pihak ketiga: tidak ada kredensial yang bisa kedaluwarsa, tidak ada
+      biaya per pesan, dan tidak ada layanan yang bisa menolak pengiriman.
+ * Yang dikorbankan, dan itu keputusan sadar: percakapan terjadi di WhatsApp,
+   bukan di FurniTech. FurniTech tidak tahu pesan terkirim atau dibaca, dan
+   timeline pesanan tidak mencatat "pembeli sudah diberi tahu". Untuk tahap
+   produk ini trade-off itu diterima, karena yang paling penting adalah bukti
+   fotonya sampai kepada pembeli.
+ * CATATAN KUOTA: tidak ada lagi kuota notifikasi WhatsApp per paket (§2.B).
+   Tabel `notification_usage` tetap ada di skema untuk keperluan kuota push
+   notification di Sprint 6, dan kolom `monthlyWaQuota` sudah dihapus dari
+   `src/lib/plans.ts` supaya tidak ada batas yang tidak ditegakkan.
+ * PEKERJAAN YANG DITUNDA (belum ada di roadmap saat ini):
+   * Notifikasi otomatis saat checkout baru dan konfirmasi pembayaran.
+   * Notifikasi bukti pencairan IRIS ke owner (06.00 & 18.00 WIB).
+   * Kalau notifikasi otomatis nanti dibutuhkan, yang hilang bukan hanya
+     "kirim pesan", melainkan CATATAN bahwa pesan terkirim. `wa.me` tidak
+     memberi status pengiriman maupun pembacaan, jadi sistem otomatis akan
+     memakai gateway WA berbayar (mis. lewat WhatsApp Business API Meta),
+     yang biayanya harus masuk ke model paket langganan.
 Modul 5: Super Admin Panel & SaaS Billing Engine (FurniTech sebagai SaaS Owner)
  * Dashboard Platform:
    * Direktori seluruh tenant beserta status langganan & domain yang dipakai.
@@ -155,7 +202,8 @@ Modul 5: Super Admin Panel & SaaS Billing Engine (FurniTech sebagai SaaS Owner)
    * Riwayat invoice, renewal, serta upgrade/downgrade plan.
    * Manajemen Custom Domain melalui Cloudflare for SaaS API.
  * Audit & Keamanan:
-   * Audit log integrasi pihak ketiga (Midtrans Core/IRIS, Cloudflare, Fonnte).
+   * Audit log integrasi pihak ketiga (Midtrans Core/IRIS, Cloudflare, Meta/
+     WhatsApp Business API bila notifikasi otomatis-poorongan diaktifkan nanti).
    * Peran super_admin bersifat global (tenant_id kosong) dan HANYA dapat
      ditetapkan lewat kode server-side yang tepercaya, tidak boleh berasal dari
      metadata pendaftaran yang dikirim klien.
@@ -180,7 +228,8 @@ stok bahan tetap numeric karena satuannya dapat pecahan (m3, Liter).
  * payout_logs & payout_items: Riwayat eksekusi IRIS pada pukul 06.00 & 18.00 WIB
    beserta rincian order yang tercakup dalam setiap batch payout.
  * saas_invoices: Tagihan langganan SaaS (paket, periode, nominal, status, Midtrans).
- * integration_audit_logs: Jejak integrasi Midtrans, Cloudflare, Fonnte, Firebase.
+ * integration_audit_logs: Jejak integrasi Midtrans, Cloudflare, Meta/WhatsApp
+   Business API, Firebase.
  * notification_usage: Pemakaian kuota notifikasi WhatsApp per bulan per tenant.
 6. Milestones & Timeline Pengembangan
 Cakupan sprint mengikuti ROADMAP.md (6 sprint); urutan di bawah diselaraskan dengan
@@ -194,9 +243,11 @@ nama sprint di ROADMAP.md.
  * Sprint 3 — Back-Office (Dashboard, Order, RBAC & Inventory):
    * Dashboard toko, manajemen katalog & variasi, Custom Order Builder (DP/pelunasan),
      inventaris bahan baku dengan Low Stock Alert, inbox CS.
- * Sprint 4 — Visual Progress Tracker & WA Fonnte Engine:
+ * Sprint 4 — Visual Progress Tracker & Kirim Foto Progres via WhatsApp:
    * Antarmuka mobile untuk tukang & unggah foto progres.
-   * Trigger notifikasi WhatsApp (checkout, pembayaran, progres, resi, payout).
+   * Tautan `wa.me` di Antrean Produksi agar tukang bisa mengirim foto ke
+     pembeli. Notifikasi otomatis (checkout, pembayaran, payout) ditunda —
+     lihat §4 Modul 4.
  * Sprint 5 — Storefront Public (Catalog, Auto-Ongkir & Checkout Midtrans):
    * Katalog & filter per tenant, kalkulasi ongkir per kota, checkout escrow,
      halaman order tracking publik, widget live chat.

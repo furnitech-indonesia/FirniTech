@@ -2,12 +2,15 @@ ROADMAP.md — FurniTech SaaS Development Roadmap
 Proyek: FurniTech (Multi-Tenant SaaS for Furniture Craftsmen)
 Target Rilis: Phase 1 (PWA) & Phase 2 (Hybrid Mobile Native: Android + iOS via Capacitor)
 Status: Sprint 1–3 selesai. Sprint 10 Fase A–D (UI Redesign) SELESAI.
-Berikutnya Sprint 4 (Visual Progress Tracker & WA Fonnte), lalu Sprint 5–6 (PWA),
-lalu Sprint 7–8 (Native).
+Sprint 4 (Visual Progress Tracker & kirim foto via WhatsApp) SELESAI.
+Berikutnya Sprint 5 (Storefront Public), lalu Sprint 6 (PWA/QA), lalu Sprint 7–8
+(Native).
 Tech Stack Utama: Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4,
 shadcn/ui (Base UI), Phosphor Icons, Drizzle ORM + Zod, Supabase (PostgreSQL +
-Auth + RLS + Storage), Midtrans (Core + IRIS), Cloudflare for SaaS, Fonnte WA
-API, Firebase FCM, cron-job.org, Vercel, Capacitor (Android & iOS).
+Auth + RLS + Storage), Midtrans (Core + IRIS), Cloudflare for SaaS, Firebase FCM,
+cron-job.org, Vercel, Capacitor (Android & iOS).
+CATATAN: Fonnte WhatsApp API TIDAK dipakai. Notifikasi foto progres dikirim
+manual oleh tukang lewat tautan `wa.me` — alasan lengkapnya di PRD.md §4 Modul 4.
 🗺️ Gambaran Umum Milestones
 [Sprint 1] Foundation, DB Schema & Multi-Tenant Routing
    │
@@ -18,7 +21,7 @@ API, Firebase FCM, cron-job.org, Vercel, Capacitor (Android & iOS).
 [Sprint 3] Back-Office Craftsman (Dashboard, Order, RBAC & Inventory)
    │
    ▼
-[Sprint 4] Visual Progress Tracker (Carpenter UI) & WA Fonnte Engine
+[Sprint 4] Visual Progress Tracker (Carpenter UI) & Kirim Foto via WhatsApp
    │
    ▼
 [Sprint 5] Storefront Public (Catalog, Auto-Ongkir & Checkout Midtrans)
@@ -61,7 +64,8 @@ Fokus Utama: Halaman pengawasan platform bagi penyedia layanan (SaaS Owner) dan 
    * Super Admin Dashboard:
      * Halaman direktori tenant, monitoring MRR, GMV, dan Impersonate Login.
      * Panel Global Financial Analytics (SaaS Subscription + Platform Fee 1.5%).
-     * Audit log integrasi API (Midtrans IRIS, Cloudflare, Fonnte).
+     * Audit log integrasi API (Midtrans IRIS, Cloudflare, dan Meta/WhatsApp
+       Business API bila notifikasi otomatis diaktifkan nanti).
    * SaaS Onboarding & Billing:
      * Halaman registrasi pengrajin & pilih paket langganan (Basic Rp300rb, Pro Rp500rb, Max Rp1jt).
      * Integration Midtrans Core API untuk pembayaran langganan SaaS (Direct Payment without trial).
@@ -83,19 +87,44 @@ Fokus Utama: Modul operasional internal untuk pemilik toko (Owner) dan admin pen
  * Definition of Done (DoD):
    * Admin dapat membuat produk, mencatat pesanan kustom, dan mengelola stok bahan baku secara real-time.
    * Seluruh halaman back-office dapat dipakai di mobile, tablet, dan desktop.
-📍 Sprint 4: Visual Progress Tracker (Carpenter UI) & WA Fonnte Engine
-Fokus Utama: Antarmuka khusus tukang kayu dan otomatisasi notifikasi WhatsApp.
+📍 Sprint 4: Visual Progress Tracker (Carpenter UI) & Kirim Foto via WhatsApp
+Fokus Utama: Antarmuka khusus tukang kayu, dan cara tukang mengirim foto progres
+kepada pembeli.
  * Deliverables Utama:
    * Carpenter Mobile Interface:
      * Layout mobile-first khusus tukang kayu (antrean pekerjaan & detail dimensi mebel).
      * Fitur unggah foto progres produksi, 5 tahap: Bahan Dipotong \rightarrow Perakitan \rightarrow
        Finishing \rightarrow QC \rightarrow Packing (pemetaan ke status pesanan di src/lib/order-status.ts).
-   * WhatsApp Notification Engine (Fonnte API):
-     * Handler pemicu notifikasi otomatis saat checkout, konfirmasi pembayaran, update foto progres pengerjaan, dan pengiriman resi kargo.
+   * Kirim Foto Progres ke Pembeli (tautan WhatsApp, BUKAN gateway API):
+     * Tombol "Kirim lewat WhatsApp" di Antrean Produksi → membuka `wa.me`
+       dengan nomor pembeli (sudah ternormalisasi ke 628…) dan pesan pembuka
+       yang menyebut nama pembeli & kode pesanan. Foto dipilih tukang sendiri
+       di WhatsApp. Logikanya di src/lib/wa-link.ts.
+   * NOTIFIKASI OTOMATIS (checkout, konfirmasi pembayaran, bukti payout IRIS)
+     TIDAK DIBAWA. Belum ada di roadmap dan belum ada di kode. Pertimbangannya
+     ada di PRD.md §4 Modul 4: foto progres hidup di bucket privat dengan
+     signed URL berumur satu jam, jadi gateway WA hanya bisa mengirim teks dan
+     tautan — tidak bisa melampirkan foto, padahal bukti itulah yang dibutuhkan
+     pembeli. Tidak ada gateway WA yang berarti juga tidak ada kuota WA per
+     paket; `monthlyWaQuota` sudah dihapus dari src/lib/plans.ts.
  * Definition of Done (DoD):
-   * Tukang dapat mengambil dan mengunggah foto progres dari HP di bengkel, yang secara otomatis memicu pesan WhatsApp ke pembeli.
+   * Tukang dapat mengambil dan mengunggah foto progres dari HP di bengkel,
+     lalu mengirimnya ke pembeli lewat WhatsApp dalam satu ketukan.
    * UI tukang mobile-first: target sentuh >= 44px, satu tangan, tetap jelas di
      layar 375px tanpa geser horizontal.
+ * STATUS: SELESAI.
+   * Antrean Produksi (src/components/carpenter-queue.tsx) menampilkan hanya
+     pesanan yang ditugaskan ke tukang itu, belum selesai, urutan lama ke baru.
+     Dimensi tampil dalam cm (`P 180 × L 90 × T 75 cm`) karena itulah yang
+     dipakai memotong kayu — sebelumnya sama sekali tidak terlihat. Lima tahap
+     produksi ditampilkan sebagai strip ber-`aria-hidden` dengan teksnya yang
+     membawa makna, karena lima label tidak muat di 375px. Tidak ada satu pun
+     nominal rupiah di layar ini.
+   * `npm run test:carpenter` (16 pemeriksaan, Playwright pada 375px) mengunci
+     DoD: tanpa geser horizontal, tanpa target sentuh di bawah 44px, pesanan
+     rekan kerja tidak bocor, pesanan selesai tidak muncul, tahap yang tampil
+     adalah yang terakhir, dan tautan `wa.me` memakai format 628… bukan
+     nomor mentah dari database.
 📍 Sprint 5: Storefront Public (Catalog, Auto-Ongkir & Checkout Midtrans)
 Fokus Utama: Halaman toko online publik pembeli berbasis multi-tenant.
  * Deliverables Utama:
@@ -358,8 +387,9 @@ MIDTRANS_IRIS_API_KEY="IRIS-xxx"
 CLOUDFLARE_API_TOKEN="your-cloudflare-api-token"
 CLOUDFLARE_ZONE_ID="your-zone-id"
 
-# FONNTE WHATSAPP API
-FONNTE_API_TOKEN="your-fonnte-token"
+# WHATSAPP — tidak memakai gateway API pihak ketiga.
+# Foto progres dikirim manual oleh tukang lewat tautan wa.me
+# (src/lib/wa-link.ts). Tidak ada kredensial yang perlu diisi.
 
 # FIREBASE PUSH NOTIFICATION (PWA Phase 1 & Native Phase 2)
 NEXT_PUBLIC_FIREBASE_API_KEY="your-firebase-key"
