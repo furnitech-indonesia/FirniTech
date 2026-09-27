@@ -62,6 +62,7 @@ npm run test:alamat    # 25 pemeriksaan form alamat & peta (butuh server)
 npm run test:ongkir    # 13 pengujian tarif ongkir & lookup
 npm run test:lacak     # 17 pengujian privasi halaman lacak
 npm run test:checkout  # 31 uji checkout & pembayaran (butuh server + kredensial Midtrans)
+npm run test:pwa      # 20 pemeriksaan PWA & luring (menyalakan servernya sendiri)
 npm run test:webhook   # 46 uji: skema, signature, gerbang tenant, e2e webhook
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
@@ -219,6 +220,44 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 - **`/lacak` tidak punya `<main>` sendiri** — `app/layout.tsx` yang
   menyediakan, supaya tidak ada dua landmark. Pembungkus `px-4` ada di halamannya
   sendiri, bukan di layout, supaya halaman full-bleed tetap bisa.
+
+## PWA & luring (Sprint 6)
+
+- **`public/sw.js` tidak boleh menyimpan HTML halaman per-orang.** Navigasi
+  selalu network-first, dan tidak ada satu pun dokumen storefront/lacak/
+  back-office yang masuk cache. Alasannya bukan quota: HTML-nya berbeda per
+  orang (keranjang dari cookie, menu dari role, pesanan yang dilacak), jadi
+  HTML yang tersimpan adalah kebocoran.
+- **Navigasi harus `fetch(request, { cache: "no-store" })`.** Tanpa itu
+  Chromium tetap menyajikan navigasi dari HTTP cache saat luring — gejalanya
+  halaman orang lain yang muncul tepat saat jaringan putus, dan tidak
+  terlihat sama sekali saat online.
+- **Precache harus mengambil chunk-nya juga, bukan cuma HTML.** Kalau hanya
+  HTML `/offline` yang tersimpan, halamannya tampil tapi React tidak pernah
+  hydrasi karena chunk JS-nya belum pernah diunduh. Gejalanya tombol yang
+  diam-diam tidak bekerja.
+- **Fallback luring dua tingkat:** dokumen yang di-precache untuk path yang
+  diminta, lalu `/offline`. Selalu melompat ke `/offline` membuat precache
+  beranda jadi mubazir.
+- **Halaman yang di-precache hanya `/` dan `/offline`.** `/` aman karena
+  landing page platform tidak memuat apa pun dari cookie.
+- **Tombol "Coba lagi" harus `location.reload()`, bukan `<Link href="">`.**
+  `href` kosong = navigasi ke dokumen yang sama, bukan memuat ulang, jadi saat
+  server masih mati orang menekan tombol yang tidak melakukan apa-apa.
+- **`/api/**` dan non-GET tidak pernah dilayani dari cache.** Kalau notifikasi
+  dilayani dari cache, Midtrans menerima 200 palsu lalu berhenti mengirim.
+- **Tidak ada tombol "Pasang aplikasi" buatan sendiri.** Chrome dan iOS sudah
+  menawarkannya; tombol yang hanya muncul di sebagian peramban lebih
+  membingungkan daripada membantu.
+- **SW tidak didaftarkan di `next dev`** (HMR akan menampilkan versi lama).
+  `test:pwa` karena itu harus jalan terhadap `npm run start`.
+- **`test:pwa` menyalakan `next start` sendiri di port 3199** dan benar-benar
+  mematikan prosesnya untuk menguji luring. Alasannya: `context.setOffline()`
+  Playwright tidak berlaku untuk permintaan service worker, jadi cara itu
+  "lolos" tanpa menguji apa pun. Server port 3000 tidak boleh disentuh.
+- **`finally` itu wajib di `test:pwa`.** Eksekusi yang gagal di tengah
+  akan meninggalkan proses `next start` yatim; jalankan ulang selalu aman
+  karena `stopServer()` membebaskan port 3199 lebih dulu.
 
 ## Checkout & pembayaran Midtrans (Sprint 5)
 

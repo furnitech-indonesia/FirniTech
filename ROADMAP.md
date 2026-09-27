@@ -666,3 +666,61 @@ JEBAKAN YANG SUDAH TERLEWAT SEKALI
   - `finishUrl` diambil dari Host request, bukan dari `NEXT_PUBLIC_APP_URL`
     yang di-inline saat build — kalau tidak, satu build untuk staging lokal dan
     Vercel akan mengarahkan pembeli ke domain yang tidak melayani pesanan itu.
+
+━━━ PWA & luring (bagian 1 dari Sprint 6) ━━━
+
+STATUS: SELESAI dan terverifikasi dengan `npm run test:pwa` (20 pemeriksaan).
+
+YANG DIKERJAKAN
+  - `app/manifest.ts` — manifest PWA: `display: standalone`, ikon 192/512
+    plus maskable, shortcut "Lacak pesanan" dan "Daftar toko". Sengaja
+    `standalone`, bukan `fullscreen`: aplikasi ini dipakai sambil membuka
+    WhatsApp untuk kirim foto progres, dan `fullscreen` menyembunyikan bilah
+    status sehingga tidak ada cara melihat jam atau sinyal.
+  - Ikon PNG (`public/icon-*.png`) dibuat oleh `scripts/make-icons.ts` yang
+    merender SVG lewat Chromium. Tidak ada dependensi gambar baru untuk
+    menghasilkan empat file sekali seumur proyek.
+  - `public/sw.js` — service worker dengan dua prinsip: TIDAK ADA HTML
+    per-orang yang di-cache, dan hanya aset hashed (`/_next/static/…`) yang
+    aman di-cache. Navigasi network-first, fallback ke dokumen yang
+    di-precache lalu ke `/offline`.
+  - `app/offline/page.tsx` + `src/components/retry-button.tsx` — halaman
+    cadangan yang jujur: tidak mengarang isi pesanan atau katalog, punya
+    tombol "Coba lagi" yang benar-benar memuat ulang, dan `noindex`.
+  - Pendaftaran service worker di root layout
+    (`src/components/service-worker-registrar.tsx`), hanya di produksi.
+
+EMPAT BUG NYATA YANG TERLEWAT — SEMUANYA HANYA MUNCUL SAAT LURING
+  1. `cache.match("/offline")` mencari di cache RUNTIME, sedangkan halaman
+     luring ada di cache STATIC. Fallback ke HTML minimalist selalu terjadi
+     padahal halaman yang jauh lebih baik sudah tersimpan. Diganti
+     `caches.match`, yang menelusuri semua cache.
+  2. Navigasi tanpa `cache: "no-store"` dilayani HTTP cache peramban saat
+     luring — jadi yang muncul adalah HTML lama milik orang yang pernah
+     membuka URL itu, dan justru ketika orang itu sedang tidak bisa
+     apa-apa. Persis kebocoran yang PWA ini dirancang untuk mencegah.
+  3. Precache hanya menyimpan HTML `/offline`, tanpa chunk JS-nya. Halamannya
+     tampil tapi React tidak pernah hydrasi, jadi tombol "Coba lagi" mati
+     tanpa error apa pun. Sekarang `install` ikut mengambil setiap URL
+     `/_next/static/…` yang dirujuk dokumen itu.
+  4. Precache beranda tidak pernah dipakai: fallback luring langsung melompat
+     ke `/offline`. "Shell aplikasi termuat saat luring" hanya berupa halaman
+     permintaan maaf. Sekarang fallback dua tingkat.
+  Plus: `<Link href="">` untuk "Coba lagi" ternyata `href` kosong = navigasi ke
+  dokumen yang sama, bukan memuat ulang. Diganti `location.reload()`.
+
+CATATAN SOAL CARA MENGUJI — INI YANG PALING SERING SALAH
+  `context.setOffline()` milik Playwright TIDAK berlaku untuk permintaan yang
+  lewat service worker: permintaan itu datang dari target service worker,
+  bukan dari page, dan emulasi jaringan di level context tidak menjangkaunya.
+  Percobaan pertama "menguji luring" begitu justru berhasil memuat halaman
+  NYATA dan melaporkan lulus, padahal tidak ada yang diuji.
+  `test:pwa` karena itu menyalakan `next start` sendiri di port 3199 dan
+  benar-benar MEMATIKAN prosesnya. Server yang sedang dipakai orang (port
+  3000) tidak disentuh.
+
+YANG MASIH KOSONG DARI SPRINT 6
+  - IRIS Batch Payout + cron 06.00/18.00 WIB (butuh `MIDTRANS_IRIS_API_KEY`).
+  - Firebase push notification (butuh kredensial Firebase).
+  - Cache Gambar Cloudflare (Vercel sudah menangani resize sendiri; yang
+    tersisa hanya memilih penyedia CDN berizin).
