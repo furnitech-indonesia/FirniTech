@@ -101,6 +101,25 @@ export const assignCarpenterSchema = assignCarpenterFormSchema.extend({
   orderId: z.uuid("Pesanan tidak valid."),
 });
 
+/**
+ * Skema bentuk (tanpa `orderId`) untuk penugasan kurir, lalu skema penuh
+ * dengan `orderId` milik server — pola yang sama seperti tukang di atas.
+ *
+ * `orderId` TIDAK boleh ada di skema bentuk: ia adalah milik server, dan
+ * field yang dikirim klien tidak boleh dipercaya.
+ */
+export const assignCourierFormSchema = z.object({
+  courierId: z
+    .string()
+    .trim()
+    .optional()
+    .transform((v) => (v && v.length > 0 ? v : "")),
+});
+
+export const assignCourierSchema = assignCourierFormSchema.extend({
+  orderId: z.uuid("Pesanan tidak valid."),
+});
+
 export const recordPaymentFormSchema = z
   .object({
     mode: z.enum(["dp", "lunas"]),

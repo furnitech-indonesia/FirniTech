@@ -88,8 +88,27 @@ const CARPENTER_NAV: NavItem[] = [
   },
 ];
 
+/**
+ * Kurir: satu halaman saja.
+ *
+ * Bukan sekadar "menu ringkas" — memang hanya ada satu. Mengubah nav
+ * kurir berarti menambah fitur baru di alur pengiriman, dan setiap tambahan
+ * adalah satu permukaan akses yang harus diawasi. `PATH_ACCESS` sudah
+ * membatasi `/kurir` untuk role kurir, jadi halaman lain sudah menolak dia
+ * walau dia mengetik URL-nya langsung.
+ */
+const COURIER_NAV: NavItem[] = [
+  {
+    href: "/kurir",
+    label: "Pengiriman",
+    shortLabel: "Kirim",
+    icon: TruckIcon,
+  },
+];
+
 export function navForRole(role: UserRole): NavItem[] {
   if (role === "tukang") return CARPENTER_NAV;
+  if (role === "kurir") return COURIER_NAV;
   if (role === "super_admin") return [];
   return ALL_NAV;
 }

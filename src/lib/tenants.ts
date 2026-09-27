@@ -42,6 +42,24 @@ export const getTenantBySlug = cache(
   },
 );
 
+/**
+ * Tenant berdasarkan id, untuk halaman yang sudah tahu tenantId-nya (misalnya
+ * halaman kurir, yang tidak punya slug di URL).
+ *
+ * `cache()` supaya beberapa pemanggilan dalam satu render tidak mengulang
+ * query yang sama.
+ */
+export const getTenantById = cache(
+  async (id: string): Promise<ResolvedTenant | null> => {
+    const [row] = await db
+      .select()
+      .from(tenants)
+      .where(eq(tenants.id, id))
+      .limit(1);
+    return row ?? null;
+  },
+);
+
 export const getTenantByHost = cache(
   async (host: string): Promise<ResolvedTenant | null> => {
     const hostname = host.toLowerCase();

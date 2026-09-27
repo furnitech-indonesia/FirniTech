@@ -98,6 +98,19 @@ export const orders = pgTable(
       { onDelete: "set null" },
     ),
 
+    /**
+     * Kurir yang ditunjuk pengrajin untuk mengantar pesanan ini.
+     *
+     * NULL = belum ada yang ditunjuk, dan pesanan ini TIDAK muncul di halaman
+     * kurir mana pun. Itu yang membuat penugasan terasa benar: kurir tidak
+     * melihat seluruh pengiriman tenant-nya, hanya yang benar-benar ditugaskan
+     * kepadanya. Satu tenant dengan dua kurir tidak akan membuat keduanya
+     * melihat pekerjaan yang milik orang lain.
+     */
+    assignedCourierId: uuid("assigned_courier_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+
     // Resi pengiriman
     cargoName: text("cargo_name"), // e.g., Indah Logistik Kargo
     trackingNumber: text("tracking_number"),
@@ -108,6 +121,8 @@ export const orders = pgTable(
   (table) => [
     index("order_tenant_idx").on(table.tenantId),
     index("order_tenant_status_idx").on(table.tenantId, table.orderStatus),
+    // Halaman kurir selalu memfilter kolom ini, jadi index-nya wajib.
+    index("order_courier_idx").on(table.assignedCourierId),
     index("order_customer_addr_idx").on(table.customerAddressId),
     uniqueIndex("order_code_idx").on(table.orderCode),
     uniqueIndex("order_midtrans_idx").on(table.midtransOrderId),

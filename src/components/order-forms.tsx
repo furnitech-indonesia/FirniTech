@@ -4,10 +4,16 @@ import { ZodForm } from "@/components/zod-form";
 import { SelectField, TextField } from "@/components/rhf-fields";
 import {
   assignCarpenterFormSchema,
+  assignCourierFormSchema,
   recordPaymentFormSchema,
   setTrackingFormSchema,
 } from "@/lib/schemas/order";
-import { assignCarpenter, recordPayment, setTracking } from "@/lib/actions/orders";
+import {
+  assignCarpenter,
+  assignCourier,
+  recordPayment,
+  setTracking,
+} from "@/lib/actions/orders";
 
 /**
  * Form aksi pesanan yang punya input: penugasan tukang, pembayaran, dan resi.
@@ -46,6 +52,58 @@ export function AssignCarpenterForm({
           ctx={ctx}
           label="Tukang produksi"
           name="carpenterId"
+          defaultValue={current}
+          options={options}
+          placeholder="— belum ditugaskan —"
+        />
+      )}
+    </ZodForm>
+  );
+}
+
+/**
+ * Penugasan kurir pengantar.
+ *
+ * Komponen terpisah dari `AssignCarpenterForm`, bukan mode yang sama dengan
+ * parameter `role`. Alasannya bentuknya memang sama, tapi label,-Allowlist
+ * candidate, dan pesan kesalahannya berbeda — dan menyatukannya berarti
+ * setiap perubahan pada satu alur bisa diam-diam mengubah yang lain.
+ *
+ * `couriers` sudah difilter `role = 'kurir'` di server. Kalau daftar ini
+ * ikut menampilkan user lain, pengrajin akan menugaskan orang yang tidak
+ * punya akses halaman `/kurir`, dan orang itu akan melihat daftar kosong
+ * tanpa penjelasan.
+ */
+export function AssignCourierForm({
+  orderId,
+  couriers,
+  assignedTo,
+}: {
+  orderId: string;
+  couriers: ReadonlyArray<{ id: string; fullName: string }>;
+  assignedTo: string | null;
+}) {
+  const current = assignedTo ?? "";
+  const options = [
+    { value: "", label: "— belum ditugaskan —" },
+    ...couriers
+      .filter((c) => c.id !== assignedTo)
+      .map((c) => ({ value: c.id, label: c.fullName })),
+  ];
+
+  return (
+    <ZodForm
+      schema={assignCourierFormSchema}
+      action={assignCourier}
+      hidden={{ orderId }}
+      defaultValues={{ courierId: current }}
+      submitLabel="Simpan penugasan"
+    >
+      {(ctx) => (
+        <SelectField
+          ctx={ctx}
+          label="Kurir pengantar"
+          name="courierId"
           defaultValue={current}
           options={options}
           placeholder="— belum ditugaskan —"

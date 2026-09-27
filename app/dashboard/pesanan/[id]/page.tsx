@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
@@ -14,6 +14,7 @@ import { recordPayment, transitionOrderStatus } from "@/lib/actions/orders";
 import { ProgressForm } from "@/components/progress-form";
 import {
   AssignCarpenterForm,
+  AssignCourierForm,
   RecordPaymentForm,
   TrackingForm,
 } from "@/components/order-forms";
@@ -60,10 +61,41 @@ export default async function OrderDetailPage({
     .where(eq(productionProgress.orderId, id))
     .orderBy(asc(productionProgress.createdAt));
 
+  /*
+   * Dua query terpisah, satu per role — bukan satu query lalu dipilah.
+   *
+   * Versi pertama mengambil `where tenantId = ...` saja, jadi dropdown
+   * "Tukang produksi" menampilkan owner, admin penjualan, dan siapa pun yang
+   * lain di tenant itu. Action-nya menolak dengan benar (ia mengecek
+   * `role = 'tukang'`), jadi tidak ada$data yang bisa salah ditulis — tapi
+   * daftar yang ditampilkan salah, dan pengrajin akan melihat nomornya sendiri
+   * di pilihan "Tukang" lalu bingung kenapa ditolak.
+   *
+   * Dipisah juga karena keduanya masuk ke select yang berbeda, bukan satu
+   * `options` yang lalu dibelah: itu hanya menyembunyikan bug yang sama
+   * di tempat lain.
+   */
   const carpenters = await db
     .select({ id: users.id, fullName: users.fullName })
     .from(users)
-    .where(eq(users.tenantId, actor.tenantId));
+    .where(
+      and(
+        eq(users.tenantId, actor.tenantId),
+        eq(users.role, "tukang"),
+        eq(users.isActive, true),
+      ),
+    );
+
+  const couriers = await db
+    .select({ id: users.id, fullName: users.fullName })
+    .from(users)
+    .where(
+      and(
+        eq(users.tenantId, actor.tenantId),
+        eq(users.role, "kurir"),
+        eq(users.isActive, true),
+      ),
+    );
 
   const progressImageMap = await createSignedUrls(
     progress.map((p) => p.photoUrl),
@@ -233,6 +265,21 @@ export default async function OrderDetailPage({
                   orderId={order.id}
                   assignedTo={order.assignedCarpenterId}
                   carpenters={carpenters}
+                />
+              </SectionCard>
+
+              <SectionCard
+                title="Tugaskan kurir"
+                description={
+                  couriers.length === 0
+                    ? "Belum ada akun kurir di toko ini. Akun kurir dibuat lewat Supabase Auth dengan role kurir, lalu muncul di sini."
+                    : "Kurir hanya melihat kiriman yang ditugaskan kepadanya."
+                }
+              >
+                <AssignCourierForm
+                  orderId={order.id}
+                  assignedTo={order.assignedCourierId}
+                  couriers={couriers}
                 />
               </SectionCard>
 

@@ -16,6 +16,7 @@ import { parseForm } from "@/lib/schemas/primitives";
 import {
   addProgressSchema,
   assignCarpenterSchema,
+  assignCourierSchema,
   customOrderSchema,
   recordPaymentSchema,
   setTrackingSchema,
@@ -270,6 +271,83 @@ export async function assignCarpenter(
 
       revalidatePath(`/dashboard/pesanan/${orderId}`);
       return { message: "Tukang ditugaskan." };
+    },
+    (error) => ({ error }),
+  );
+}
+
+/**
+ * Tetapkan atau lepas kurir pengantar untuk satu pesanan.
+ *
+ * Menggantikan `assignCarpenter` dalam bentuknya, bukan menambah kode baru
+ * yang paralel: keduanya "pilih satu user dalam tenant ini dan tempel ke
+ * pesanan", dan dua versi yang berbeda pasti akan menyimpang.
+ *
+ * PERBEDAAN PENTING DARI `assignCarpenter`:
+ *   - Syarat role-nya `role = 'kurir'`, bukan `'tukang'`. Menugaskan tukang
+ *     sebagai kurir akan membuat orang yang tidak punya akun pengiriman
+ *     melihat halaman `/kurir` — kosong, karena `loadCourierQueue` memfilter
+ *     `assignedCourierId` dan id tukang tidak pernah ada di sana.
+ *   - Mengambil `orderId` dari hasil validasi, dan `tenantId` dari guard.
+ *     `orderId` dari FormData dipakai HANYA setelah pesanan dipastikan milik
+ *     tenant aktif; tanpa itu, satu UUID cukup untuk menugaskan kurir di
+ *     workshop lain.
+ */
+export async function assignCourier(
+  _prev: OrderFormState,
+  formData: FormData,
+): Promise<OrderFormState> {
+  return guard<OrderFormState>(
+    async () => {
+      const actor = await requireTenantWrite(WRITE_ROLES);
+
+      const parsed = parseForm(assignCourierSchema, formData);
+      if (!parsed.success) {
+        return { error: parsed.message, fieldErrors: parsed.fieldErrors };
+      }
+      const { orderId, courierId } = parsed.data;
+
+      const [order] = await db
+        .select({ id: orders.id })
+        .from(orders)
+        .where(
+          and(eq(orders.id, orderId), eq(orders.tenantId, actor.tenantId)),
+        )
+        .limit(1);
+      if (!order) return { error: "Pesanan tidak ditemukan." };
+
+      if (!courierId) {
+        await db
+          .update(orders)
+          .set({ assignedCourierId: null })
+          .where(eq(orders.id, orderId));
+        revalidatePath(`/dashboard/pesanan/${orderId}`);
+        revalidatePath("/kurir");
+        return { message: "Kurir dilepas dari pesanan." };
+      }
+
+      const [courier] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          and(
+            eq(users.id, courierId),
+            eq(users.tenantId, actor.tenantId),
+            eq(users.role, "kurir"),
+            eq(users.isActive, true),
+          ),
+        )
+        .limit(1);
+      if (!courier) return { error: "Kurir tidak ditemukan di toko ini." };
+
+      await db
+        .update(orders)
+        .set({ assignedCourierId: courierId })
+        .where(eq(orders.id, orderId));
+
+      revalidatePath(`/dashboard/pesanan/${orderId}`);
+      revalidatePath("/kurir");
+      return { message: "Kurir ditugaskan." };
     },
     (error) => ({ error }),
   );

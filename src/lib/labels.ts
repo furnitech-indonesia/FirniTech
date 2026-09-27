@@ -52,6 +52,7 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   owner: "Owner",
   admin_penjualan: "Admin Penjualan",
   tukang: "Tukang",
+  kurir: "Kurir",
 };
 
 export const ADJUSTMENT_REASON_LABELS: Record<string, string> = {

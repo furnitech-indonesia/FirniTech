@@ -11,6 +11,7 @@ export const USER_ROLES: readonly UserRole[] = [
   "owner",
   "admin_penjualan",
   "tukang",
+  "kurir",
 ] as const;
 
 export const ROLE_LABELS: Record<UserRole, string> = {
@@ -18,6 +19,7 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   owner: "Owner",
   admin_penjualan: "Admin Penjualan",
   tukang: "Tukang / Produksi",
+  kurir: "Kurir Pengiriman",
 };
 
 /** Halaman tujuan setelah login, per peran. */
@@ -26,6 +28,12 @@ export const ROLE_HOME: Record<UserRole, string> = {
   owner: "/dashboard",
   admin_penjualan: "/dashboard",
   tukang: "/dashboard",
+  /**
+   * Kurir TIDAK diberi `/dashboard`. Halaman itu memuat ringkasan keuangan
+   * tenant, dan kurir tidak punya alasan melihatnya. Mengerahkan ia ke
+   * `/kurir` juga membuat batasan aksesnya terlihat jelas.
+   */
+  kurir: "/kurir",
 };
 
 /**
@@ -44,6 +52,10 @@ export const PATH_ACCESS: ReadonlyArray<{
   {
     prefix: "/dashboard",
     roles: ["owner", "admin_penjualan", "tukang"],
+  },
+  {
+    prefix: "/kurir",
+    roles: ["kurir", "owner", "admin_penjualan"],
   },
 ];
 

@@ -1,0 +1,39 @@
+-- =====================================================================
+-- Pencabutan AKSES PostgREST ke tabel orders (Sprint 6, cacah pada GRANT)
+-- =====================================================================
+--
+-- MENGAPA MIGRASI INI ADA, DAN MENGAPA 0011 TIDAK CUKUP:
+--
+-- `0011_kurir_columns` sudah mencoba `revoke select (net_tenant_amount, ...)`
+-- dan hasilnya TIDAK berlaku. `test:kurir` membuktikannya: kurir tetap membaca
+-- `net_tenant_amount` (nilainya 0, bukan error), padahal policy-nya sudah
+-- benar sejak 0010.
+--
+-- Penyebabnya adalah cara Postgres menyelesaikan hak akses kolom: izin di
+-- level TABEL sudah memenuhi seluruh kebutuhan kolom di bawahnya. Jadi
+-- `revoke` per kolom diabaikan selama masih ada `grant select` untuk seluruh
+-- tabel — dan Supabase memberi grant itu di awal (anon + authenticated).
+-- Untuk benar-benar menutup satu kolom, grant level tabelnya juga harus
+-- dicabut, lalu tiap kolom yang boleh dibaca diberikan grant satu per satu.
+--
+-- MEMILIH CABUT SELURUH TABEL, BUKAN GRANT PER KOLOM:
+--
+-- Halaman lacak (`/lacak`) dan seluruh back-office membaca `orders` lewat
+-- Drizzle dengan user postgres yang BYPASS RLS. Tidak ada satu pun pembacaan
+-- tabel ini lewat PostgREST di seluruh repo — PostgREST hanya dipakai untuk
+-- storage (`src/lib/storage.ts`), dan izin storage ada di `storage.objects`.
+-- Jadi mencabut `select` di sini tidak menyentuh apa pun yang berjalan.
+--
+-- Dan mencabut seluruh tabel lebih aman daripada grant per kolom, karena
+-- daftar kolom yang "boleh dibaca" itu sendiri bisa관을 berubah:
+-- `net_tenant_amount` hari ini adalah margin, tapi `total_amount` besok bisa
+-- ikut disisipkan. Grant eksplisit memaksa penEMUAN kolom baru untuk
+-- ditambahkan satu per satu; cabut utuh tidak bisa diloloskan oleh kolom
+-- yang tidak disangka.
+--
+-- Yang dip宣传部 balik: anonymous tetap boleh MENYISIPKAN ke `orders`? Tidak.
+-- `test:kurir` dan `db:test-rls` sama-sama menguji penolakan INSERT
+-- anonim, dan itu berasal dari RLS (`orders` tidak punya policy INSERT untuk
+-- anon), bukan dari hak akses tabel. Dicabut atau tidak, hasilnya sama.
+
+revoke select on public.orders from anon, authenticated;

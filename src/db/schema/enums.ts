@@ -31,14 +31,27 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", [
 
 /**
  * Peran pengguna. `super_admin` milik FurniTech sebagai SaaS owner
- * (tenantId NULL), tiga lainnya milik pengrajin.
+ * (tenantId NULL), empat lainnya milik pengrajin.
  * PENTING: tidak ada default — role harus selalu dipilih eksplisit.
+ *
+ * `kurir` (2026-09-27) — Peran dengan akses paling sempit di seluruh sistem:
+ * hanya melihat pengiriman yang ditugaskan kepadanya, dan satu-satunya yang
+ * boleh ia lakukan adalah mengunggah bukti barang diterima plus tanda tangan
+ * pembeli. Tidak ada katalog, tidak ada keuangan, tidak ada pesanan lain —
+ * bukan karena disembunyikan, tapi karena RLS memang tidak meloloskan baris
+ * yang bukan miliknya.
+ *
+ * Peran ini dipisah dari `tukang` dengan sengaja. Tukang bekerja di bengkel
+ * dan butuh melihat seluruh antrean produksi; kurir ada di jalan dan butuh
+ * satu hal saja. Menggabungkannya akan memaksa kurir melihat data produksi
+ * yang tidak boleh ia lihat, dan memaksa tukang masuk ke alur pengiriman.
  */
 export const userRoleEnum = pgEnum("user_role", [
   "super_admin",
   "owner",
   "admin_penjualan",
   "tukang",
+  "kurir",
 ]);
 
 /** Status siklus hidup pesanan (bukan status pembayaran). */

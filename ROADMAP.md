@@ -782,12 +782,64 @@ YANG SUDAH DIKERJAKAN
   - `test:checkout` mengunci 20+ pemeriksaan fee, termasuk "pembagian escrow
     menutup" dan "harga minimum menutup KEDUA fee".
 
-YANG MASIH HARUS DIKERJAKAN (urutan)
-  1. Peran **Kurir**: enum role baru, halaman terbatas (daftar pengiriman +
-     unggah bukti), dan RLS yang hanya meloloskan baris yang ditugaskan.
-     Ini prasyarat semua langkah berikutnya.
+CATATAN SOAL RISIKO YANG DISEPAKAI SENDIRI
+  Tanda tangan digambar di layar HP kurir, dan foto bukti transfer COD hanya
+  bukti foto. Keduanya lemah secara pembuktian. Ini DITERIMA karena: tidak
+  ada sengketa, tidak ada refund, dan kanal pembayaran hanya VA (transfer
+  bank tidak bisa di-chargeback). Kalau nanti kartu kredit atau QRIS
+  ditambahkan, keputusan "tidak ada refund" menjadi tanggung jawab platform
+  dan bukan cuma urusan pengrajin.
+
+━━━ Sprint 6 — Peran Kurir (selesai 2026-09-27) ━━━
+
+YANG DIKERJAKAN
+  - Enum `user_role` bertambah `kurir` (migrasi 0009), terpisah dari `tukang`
+    dengan sengaja: tukang perlu seluruh antrean produksi, kurir ada di jalan
+    dan butuh satu hal saja. `orders.assigned_courier_id` + index.
+  - RLS khusus (migrasi 0010). `is_tenant_staff()` mengembalikan TRUE untuk
+    SEMUA peran tenant, jadi kurir tidak boleh memakainya — kalau ikut, satu
+    akun kurir akan melihat seluruh pesanan workshop-nya. Policy `orders_courier_read`
+    hanya meloloskan `assigned_courier_id = auth.uid()`, dan `orders_staff_read`
+    dikecualikan untuk kurir. Kurir juga TIDAK boleh menulis apa pun ke
+    `orders`: itu menutup jalan samping mengubah `payment_status` sendiri lalu
+    memicu pencairan.
+  - `loadCourierQueue` memfilter `assignedCourierId` di query, bukan
+    menyembunyikan lewat UI — klien Drizzle bypass RLS, jadi filter di sini
+    adalah lapisan aplikasi yang sebenarnya. Nominal TIDAK diambil sama
+    sekali; nomor HP hanya empat digit terakhir.
+  - Halaman `/kurir` (satu-satunya untuk peran ini, `ROLE_HOME["kurir"]`),
+    penugasan dari detail pesanan, `assignCourier` dengan syarat
+    `role = 'kurir'`. Sekalian diperbaiki bug lama: dropdown "Tukang" menampilkan
+    SEMUA user tenant karena query-nya hanya memfilter `tenantId`.
+  - `test:kurir` — 11 pemeriksaan RLS dengan JWT kurir sungguhan lewat PostgREST.
+
+TEMUAN YANG PERLU DIPERHATIKAN (tiga, dan semuanya ketahuan karena tes)
+  1. **RLS tidak bisa menyembunyikan KOLOM.** `GET /rest/v1/orders?select=
+     net_tenant_amount` tetap berhasil untuk kurir pada barisnya sendiri, karena
+     RLS menyaring baris saja. Klaim "kurir tidak melihat nominal" di kode
+     aplikasi_permissions to Be Polite, bukan jaminan — anon key memang
+     ikut terkirim ke browser.
+  2. **`revoke select (kolom)` DITOLAK DIAM-DIAM.** Postgres memenuhi hak
+     akses kolom dari grant level TABEL, jadi selama Supabase memberi
+     `grant select` untuk seluruh tabel, revoke per kolom tidak berpengaruh.
+     Tidak ada error — `test:kurir` melihat `net_tenant_amount` bernilai 0,
+     bukan 403. Diperbaiki dengan mencabut di level tabel lalu memberi grant
+     per kolom aman (migrasi 0012 lalu 0013). `snap_token` ikut tercabut: ini
+     kredensial pembayaran.
+  3. **Mencabut seluruh tabel membuat tes RLS lulus hampa.** Setelah 0012
+     PostgREST mengembalikan nol baris untuk semua orang, jadi "kurir A tidak
+     melihat pesanan kurir B" tetap lulus — tanpa menguji apa pun. Ini lebih
+     buruk dari kebocoran yang ditutup: tes hijau yang tidak menguji. Grant
+     per kolom dipulangkan supaya emitenya benar.
+
+  Ketiganya sudah tertulis sebagai komentar di berkas migrasinya, supaya
+  tidak ada yang menyimpulkan "sudah kita revoke" sambil nilainya masih bisa
+  dibaca.
+
+YANG MASIH HARUS DIKERJAKAN
   2. Bukti penerimaan: foto barang + tanda tangan pelanggan di layar HP
-     kurir. Bucket privat + signed URL, seperti foto progres.
+     kurir. Bucket privat + signed URL, seperti foto progres. Policy RLS-nya
+     harus INSERT-only dan hanya untuk kurir yang ditugaskan.
   3. Rekening pengrajin: kolom di `tenants`, verifikasi lewat
      `POST /account_validation` Payouts, dan halaman COD transfer bank yang
      menampilkan nomor + atas nama rekening.
@@ -797,11 +849,3 @@ YANG MASIH HARUS DIKERJAKAN (urutan)
      diunggah kurir.
   6. Pengaturan fee platform & harga paket di panel super admin, dengan
      aturan: invoice yang sudah terbit mengunci harga saat dibuat.
-
-CATATAN SOAL RISIKO YANG DISEPAKAI SENDIRI
-  Tanda tangan digambar di layar HP kurir, dan foto bukti transfer COD hanya
-  bukti foto. Keduanya lemah secara pembuktian. Ini DITERIMA karena: tidak
-  ada sengketa, tidak ada refund, dan kanal pembayaran hanya VA (transfer
-  bank tidak bisa di-chargeback). Kalau nanti kartu kredit atau QRIS
-  ditambahkan, keputusan "tidak ada refund" menjadi tanggung jawab platform
-  dan bukan cuma urusan pengrajin.

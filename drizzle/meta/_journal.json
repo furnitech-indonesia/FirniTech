@@ -64,6 +64,41 @@
       "when": 1790521876980,
       "tag": "0008_curved_randall",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790548535166,
+      "tag": "0009_noisy_true_believers",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790548654707,
+      "tag": "0010_rls_courier",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790549277040,
+      "tag": "0011_kurir_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790549328414,
+      "tag": "0012_orders_postgrest_lock",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790549364173,
+      "tag": "0013_orders_column_grants",
+      "breakpoints": true
     }
   ]
 }
