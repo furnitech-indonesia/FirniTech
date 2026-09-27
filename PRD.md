@@ -1,9 +1,16 @@
 Product Requirement Document (PRD) — FurniTech
 Nama Produk: FurniTech
 Tipe Platform: SaaS Multi-Tenant (B2B2C E-Commerce & Internal Operations for Furniture Makers)
-Versi PRD: 1.3
+Versi PRD: 1.4
 Status: Approved for Development
 Catatan Revisi:
+ * v1.4 — Menetapkan model biaya yang sebenarnya: kanal pembayaran hanya Bank
+   Transfer/VA, fee masuk Rp 4.440 dipotong dari platform fee 1,5% (bukan dari
+   bagian pengrajin), dan fee pencairan Rp 5.000 ditanggung FurniTech. Model
+   lama di §2.C, Modul 1, dan Modul 3 menyatakan fee Midtrans dipotong dari
+   total pembayaran, dan itu tidak sesuai keputusan bisnis terbaru. Sumber
+   tarif dan risikonya ada di `docs/midtrans-fee.md`. Modul 3 juga memakai
+   penamaan resmi "Payouts" (produk ini sebelumnya bernama IRIS).
  * v1.3 — Mengganti Integrasi Notifikasi WhatsApp (§4 Modul 4) dari Fonnte
    API menjadi pengiriman manual lewat tautan `wa.me`. Modul otomatis
    (checkout, pembayaran, payout) BELUM diimplementasikan dan dicatat sebagai
@@ -35,10 +42,58 @@ B. Matriks Fitur & Batasan Paket (Feature Differentiation)
 | Jumlah Akun Staf (RBAC) | 2 Akun (Owner + 1 Staf) | 5 Akun Staf/Tukang | Unlimited Akun Staf/Tukang |
 | Kirim foto progres via WhatsApp | ✅ (tanpa batas) | ✅ (tanpa batas) | ✅ (tanpa batas) |
 | Laporan Keuangan & Kas | Transaksi Dasar | Rekap Laba/Rugi Bulanan | Laporan Eksekutif & Analytics |
-| Jadwal Payout IRIS | Included (2x/hari) | Included (2x/hari) | Included (2x/hari) |
+| Jadwal Pencairan (Payouts) | Included (2x/hari) | Included (2x/hari) | Included (2x/hari) |
 C. Kebijakan Transaksi & Potongan Biaya (Fees)
- * Biaya Transfer Payout IRIS (06.00 & 18.00 WIB): Gratis (Sudah ditanggung/termasuk dalam biaya paket langganan FurniTech).
- * Payment Gateway Merchant Fee (Midtrans): Biaya MDR/potongan transaksi Midtrans dipotong langsung dari total nilai pembayaran sebelum sisa dana ditransfer ke saldo pengrajin.
+   Model ini ditetapkan pemilik produk pada 2026-09-27 dan ME-REPLACE model
+   lama yang menyatakan fee Midtrans dipotong "dari total nilai pembayaran".
+   Angka, sumber, dan risikonya: `docs/midtrans-fee.md`.
+   * **Kanal pembayaran: HANYA Bank Transfer dan Virtual Account.** Tidak ada
+     QRIS, e-wallet, maupun kartu kredit. Alasannya ekonomi, bukan teknis: fee
+     VA Rp 4.000 itu flat per transaksi, sedangkan kanal lain memakai MDR
+     persen — lapisan biaya tambahan yang tidak ada kebutuhan bisnisnya di
+     sini. Tarif semua kanal ada di `docs/midtrans-fee.md` §1.
+   * **Fee masuk (VA):** Rp 4.000 + PPN 11% = **Rp 4.440 per transaksi
+     berhasil**. Midtrans memotongnya dari saldo saat pencairan dana, bukan
+     langsung per transaksi.
+   * **Fee keluar (payout):** **Rp 5.000 per pencairan**, ditanggung FurniTech.
+     Nilai yang dikirim ke pengrajin tidak dikurangi.
+   * **Platform Service Fee: 1,5%** dari nilai transaksi produk, dan fee
+     Midtrans dipotong dari fee tersebut — bukan dari bagian pengrajin.
+
+   RUMUS PER ALUR
+   1. Pembayaran langganan (pembayar = pengrajin):
+      Pengrajin membayar harga paket apa adanya, tanpa biaya layanan tambahan.
+      `diterima FurniTech = harga paket − Rp 4.440`
+      Contoh: Basic Rp 300.000 → FurniTech menerima **Rp 295.560**.
+   2. Pembelian produk (pembayar = pembeli storefront):
+      Pembeli membayar `harga produk + ongkir` tanpa biaya layanan tambahan.
+      `platform fee = 1,5% × total pesanan`
+      `pendapatan platform = 1,5% × total pesanan − Rp 4.440`
+      `dibayar ke pengrajin = total pesanan − 1,5% × total pesanan`
+      Contoh: Rp 10.000.000 → pengrajin **Rp 9.850.000**, FurniTech
+      **Rp 145.560**. Cek buku: 9.850.000 + 145.560 = 9.995.560, sama
+      dengan saldo escrow setelah fee Midtrans.
+   3. Pencairan (FurniTech → rekening pengrajin):
+      `dikirim = saldo bersih pengrajin` (penuh, tidak dipotong)
+      `beban FurniTech = Rp 5.000 per pencairan`
+
+   CATATAN YANG WAJIB DIPERHATIKAN
+   * Fee payout Rp 5.000 TIDAK termasuk dalam hitungan 1,5%. Beban riil
+     FurniTech per pesanan adalah **Rp 9.440** (Rp 4.440 masuk + Rp 5.000
+     keluar), sehingga **titik impas platform ada di Rp 629.333 per pesanan**.
+     Di bawah angka itu FurniTech rugi pada setiap transaksi, dan ruginya
+     tidak terlihat dari laporan penjualan karena yang error adalah fee-nya.
+     Keputusan minimum pesanan masih terbuka — `docs/midtrans-fee.md` §8.
+   * Skema DP + pelunasan di back-office akan **mengalikan fee masuk dua
+     kali** (Rp 8.880 per pesanan). Checkout storefront menagih sekali penuh
+     secara sengaja; itu tidak boleh diubah tanpa menghitung ulang dampaknya.
+   * Pengrajin menunggu 1–2 hari: uang masuk ke saldo setelah settlement,
+     baru cair pada slot 06.00/18.00 WIB. Ini wajib ditulis di halaman
+     "saldo siap cair", kalau tidak pertanyaan pertama ke customer support
+     akan tentang hal ini.
+   * Biaya pencairan per-batch atau per-penerima belum dikonfirmasi ke
+     Midtrans, dan selisihnya pada 100 pengrajin bisa mencapai Rp 29,7 juta
+     per bulan. **Mesin payout tidak boleh dibangun sebelum ini terjawab.**
 3. Tech Stack & Arsitektur Sistem
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        CLIENT / USER INTERFACE                         │
@@ -77,7 +132,7 @@ C. Kebijakan Transaksi & Potongan Biaya (Fees)
  * Notifikasi WhatsApp: TIDAK memakai gateway API pihak ketiga. Foto progres
    dikirim manual oleh tukang lewat tautan `wa.me` (§4 Modul 4).
  * Notifikasi Push: Firebase Cloud Messaging (Push Notification PWA/Mobile).
- * Cron Job: cron-job.org (Trigger webhook pencairan IRIS & pembaruan status sistem).
+ * Cron Job: cron-job.org (Trigger webhook pencairan & pembaruan status sistem).
  * Hosting & Source Control: Vercel (Hosting Platform) & GitHub (Repository Codebase).
  * Rencana Rilis Aplikasi: lengkap di §7.
  * Fase 1: Progressive Web App (PWA) — dipasang, dapat diinstal, offline-capable.
@@ -118,8 +173,13 @@ Modul 1: Toko Online Pembeli (Storefront / Front-Office)
    * Sistem melakukan kalkulasi otomatis berbasis matriks tarif kargo kota tujuan:
      
  * Checkout & Midtrans Gateway:
-   * Pembayaran ditampung di akun escrow FurniTech via Midtrans.
-   * MDR Midtrans otomatis memotong total penerimaan.
+ * Pembayaran ditampung di akun escrow FurniTech via Midtrans, kanal Bank
+   Transfer / Virtual Account saja.
+ * Pembeli membayar `harga produk + ongkir` apa adanya. Platform Service Fee
+   1,5% dipotong dari nilai itu, dan fee Midtrans Rp 4.440 dipotong dari fee
+   platform — bagian pengrajin tidak pernah kena pemotongan (§2.C).
+ * Satu pesanan = satu pembayaran. Skema DP + pelunasan tidak dipakai di
+   storefront karena akan mengalikan fee masuk dua kali.
 Modul 2: Dashboard Internal Pengrajin (Back-Office)
  * Manajemen Peran & Akses (RBAC via Supabase RLS):
    * Owner (Pemilik): Akses penuh keuangan, saldo, request payout, laporan, & manajemen tim.
@@ -140,12 +200,23 @@ Modul 2: Dashboard Internal Pengrajin (Back-Office)
    * Warna indikator tiap tahap mengikuti DESIGN.md §3.
  * Pencatatan Pesanan Kustom:
    * Modul input spesifikasi khusus jika ada permintaan ukuran/desain luar katalog standar.
-Modul 3: Otomatisasi Payout (Midtrans IRIS) & Cron
+Modul 3: Otomatisasi Payout (Midtrans Payouts) & Cron
  * Jadwal Pencairan Dana:
    * Dieksekusi otomatis via cron-job.org ke webhook FurniTech setiap pukul 06.00 WIB dan 18.00 WIB.
  * Alur Pencairan:
-   * Sistem membaca saldo settled milik tenant yang sudah dikurangi potongan MDR Midtrans.
-   * Mengirim instruksi batch payout via API Midtrans IRIS ke rekening bank pengrajin.
+   * Sistem membaca saldo bersih pengrajin:
+     `total pesanan − 1,5% × total pesanan` untuk setiap pesanan lunas.
+     Bagian pengrajin TIDAK dipotong fee Midtrans (§2.C) — biayanya ditanggung
+     dari fee platform.
+   * Mengirim instruksi batch payout via API Midtrans Payouts (produk ini
+     sebelumnya bernama IRIS) ke rekening bank pengrajin, dengan biaya
+     Rp 5.000 per pencairan yang ditanggung FurniTech.
+   * Nominal yang dikirim ke pengrajin TIDAK dikurangi fee pencairan; yang
+     dipotong hanya catatan bebannya.
+   * Fee dihitung ulang di server dari `orders`, tidak pernah dari nilai yang
+     dikirim klien.
+   * Kalau konstanta fee belum diisi, pencairan DIBLOKIR dengan pesan yang bisa
+     dibaca — bukan memakai 0.
 Modul 4: Kirim Foto Progres ke Pembeli (tautan WhatsApp)
  * STATUS SAAT INI: hanya alur foto progres yang diimplementasikan. Alur notifikasi
    otomatis (checkout, pembayaran, payout) BELUM ADA — lihat "Pekerjaan yang
@@ -185,7 +256,7 @@ Modul 4: Kirim Foto Progres ke Pembeli (tautan WhatsApp)
    `src/lib/plans.ts` supaya tidak ada batas yang tidak ditegakkan.
  * PEKERJAAN YANG DITUNDA (belum ada di roadmap saat ini):
    * Notifikasi otomatis saat checkout baru dan konfirmasi pembayaran.
-   * Notifikasi bukti pencairan IRIS ke owner (06.00 & 18.00 WIB).
+   * Notifikasi bukti pencairan ke owner (06.00 & 18.00 WIB).
    * Kalau notifikasi otomatis nanti dibutuhkan, yang hilang bukan hanya
      "kirim pesan", melainkan CATATAN bahwa pesan terkirim. `wa.me` tidak
      memberi status pengiriman maupun pembacaan, jadi sistem otomatis akan
@@ -202,7 +273,7 @@ Modul 5: Super Admin Panel & SaaS Billing Engine (FurniTech sebagai SaaS Owner)
    * Riwayat invoice, renewal, serta upgrade/downgrade plan.
    * Manajemen Custom Domain melalui Cloudflare for SaaS API.
  * Audit & Keamanan:
-   * Audit log integrasi pihak ketiga (Midtrans Core/IRIS, Cloudflare, Meta/
+   * Audit log integrasi pihak ketiga (Midtrans Core/Payouts, Cloudflare, Meta/
      WhatsApp Business API bila notifikasi otomatis-poorongan diaktifkan nanti).
    * Peran super_admin bersifat global (tenant_id kosong) dan HANYA dapat
      ditetapkan lewat kode server-side yang tepercaya, tidak boleh berasal dari
@@ -212,7 +283,8 @@ Rancangan tabel utama dengan isolasi tenant_id. Kolom uang memakai bigint
 (satuan rupiah penuh tanpa desimal) karena Rupiah tidak memakai satuan pecahan;
 stok bahan tetap numeric karena satuannya dapat pecahan (m3, Liter).
  * tenants: Data pengrajin, domain (slug & custom domain + status verifikasinya),
-   paket langganan (Basic/Pro/Max), periode langganan, dan data rekening bank IRIS.
+   paket langganan (Basic/Pro/Max), periode langganan, dan data rekening bank
+   tujuan payout.
  * users: Profil pengguna (Super Admin, Owner, Admin Penjualan, Tukang) terhubung
    ke auth.users.id; tenant_id kosong untuk super_admin.
  * products: Katalog mebel terisolasi per tenant_id (dimensi P x L x T, jenis kayu,
@@ -222,11 +294,14 @@ stok bahan tetap numeric karena satuannya dapat pecahan (m3, Liter).
  * customer_addresses: Alamat pengiriman pembeli agar dapat dipakai ulang.
  * shipping_rates: Matriks tarif kargo per kota/kabupaten milik pengrajin.
  * orders & order_items: Transaksi pembeli, status pembayaran, rincian biaya
-   (subtotal, ongkir, total all-in), DP/pelunasan, fee MDR, fee platform 1.5%,
-   saldo bersih pengrajin, serta referensi transaksi Midtrans.
+   (subtotal, ongkir, total all-in), DP/pelunasan, fee Midtrans Rp 4.440 per
+   invoice, platform fee 1.5%, saldo bersih pengrajin, serta referensi
+   transaksi Midtrans. Fee MDR tidak dipakai karena kanal pembayaran hanya
+   Bank Transfer/VA (§2.C).
  * production_progress: Tahapan pengerjaan + URL foto progres produksi dari tukang.
- * payout_logs & payout_items: Riwayat eksekusi IRIS pada pukul 06.00 & 18.00 WIB
-   beserta rincian order yang tercakup dalam setiap batch payout.
+ * payout_logs & payout_items: Riwayat eksekusi payout pada pukul 06.00 & 18.00 WIB
+   beserta rincian order yang tercakup dalam setiap batch payout, dan biaya
+   pencairan Rp 5.000 per eksekusi.
  * saas_invoices: Tagihan langganan SaaS (paket, periode, nominal, status, Midtrans).
  * integration_audit_logs: Jejak integrasi Midtrans, Cloudflare, Meta/WhatsApp
    Business API, Firebase.
@@ -251,8 +326,8 @@ nama sprint di ROADMAP.md.
  * Sprint 5 — Storefront Public (Catalog, Auto-Ongkir & Checkout Midtrans):
    * Katalog & filter per tenant, kalkulasi ongkir per kota, checkout escrow,
      halaman order tracking publik, widget live chat.
- * Sprint 6 — IRIS Auto-Payout, Cron, PWA & QA:
-   * Engine payout batch IRIS 2x/hari (06.00 & 18.00 WIB) via cron-job.org.
+ * Sprint 6 — Auto-Payout, Cron, PWA & QA:
+   * Engine payout batch 2x/hari (06.00 & 18.00 WIB) via cron-job.org.
    * PWA, Firebase push, audit keamanan RLS, dan deployment Vercel Production.
 
 7. Rencana Rilis: Phase 1 (PWA) & Phase 2 (Native)

@@ -339,10 +339,29 @@ KESULITAN YANG TERBUKA (perlu keputusan, bukan hanya pengerjaan):
 📍 Sprint 6: Midtrans IRIS Auto-Payout, Cron, PWA Optimization & QA
 Fokus Utama: Otomatisasi pencairan dana, pengujian end-to-end, dan persiapan rilis PWA.
  * Deliverables Utama:
-   * Automated IRIS Payout Engine:
-     * Integrasi Midtrans IRIS Batch Payout API.
-     * Perhitungan otomatis pemotongan Platform Service Fee (1.5%) dan Midtrans MDR sebelum pencairan.
-     * Setup cron-job.org webhook untuk eksekusi payout setiap pukul 06.00 WIB dan 18.00 WIB.
+   * Automated Payout Engine (Midtrans Payouts, dulu bernama IRIS):
+     * Integrasi Midtrans Batch Payout API.
+     * Perhitungan Platform Service Fee 1,5% dan fee Midtrans sebelum pencairan,
+       mengikuti model yang ditetapkan di PRD.md §2.C:
+       - Hanya Bank Transfer / VA sebagai kanal pembayaran. Tidak ada MDR
+         persen, jadi fee-nya konstanta, bukan tabel per channel.
+       - `dibayar ke pengrajin = total pesanan − 1,5% × total pesanan`
+       - `beban platform = 1,5% × total pesanan − Rp 4.440`
+       - `beban pencairan = Rp 5.000 per eksekusi`, ditanggung FurniTech
+     * Fee dihitung ulang di server dari `orders`; kalau konstanta fee belum
+       diisi, pencairan diblokir dengan pesan yang terbaca — bukan `?? 0`.
+     * Setup cron-job.org webhook untuk eksekusi payout setiap pukul 06.00 WIB
+       dan 18.00 WIB, dengan secret yang wajib diverifikasi supaya route tidak
+       bisa dipicu siapa saja.
+   * CATATAN BIAYA — HARUS DIBACA SEBELUM MULAI (detail di
+     docs/midtrans-fee.md):
+     - Beban riil FurniTech per pesanan adalah Rp 9.440 (Rp 4.440 masuk +
+       Rp 5.000 keluar), sehingga titik impas platform ada di Rp 629.333 per
+       pesanan. Di bawah itu FurniTech rugi, dan ruginya tidak terlihat dari
+       laporan penjualan. Keputusan minimum pesanan masih terbuka.
+     - Apakah Rp 5.000 berlaku per-penerima atau per-batch belum dikonfirmasi
+       ke Midtrans. Selisihnya pada 100 pengrajin bisa Rp 29,7 juta/bulan.
+       Mesin payout tidak boleh dibangun sebelum ini terjawab.
    * PWA & Performance Optimization:
      * Konfigurasi manifest.json, Service Workers, dan Firebase Push Notifications.
      * Cloudflare Image Optimization & caching strategy di Vercel.
@@ -724,3 +743,77 @@ YANG MASIH KOSONG DARI SPRINT 6
   - Firebase push notification (butuh kredensial Firebase).
   - Cache Gambar Cloudflare (Vercel sudah menangani resize sendiri; yang
     tersisa hanya memilih penyedia CDN berizin).
+
+━━━ Model Biaya & Payout (keputusan pemilik produk, 2026-09-27) ━━━
+
+STATUS: model bisnis ditetapkan dan ditulis ke PRD.md §2.C + v1.4, dan angka
+sumbernya di docs/midtrans-fee.md. Mesin payout BELUM dibangun, dan sengaja
+ditahan sampai pertanyaan“MIDTRANS_IRIS_API_KEY” dan tarif per-batch terjawab.
+
+TIGA ALUR UANG, DUA KONSTANTA FEE
+
+  Alur 1 — Langganan. Pengrajin bayar harga paket apa adanya.
+           `diterima = harga − Rp4.440`
+           Basic Rp300.000 → Rp295.560. Tidak ada pencairan; ini pendapatan
+           platform langsung.
+
+  Alur 2 — Pembelian produk. Pembeli bayar `harga + ongkir` tanpa biaya
+           layanan tambahan.
+           `platform fee = 1,5% × total pesanan`
+           `pendapatan platform = 1,5% × total pesanan − Rp4.440`
+           `dibayar ke pengrajin = total pesanan − 1,5% × total pesanan`
+           Rp10.000.000 → pengrajin Rp9.850.000, platform Rp145.560.
+           Cek buku: 9.850.000 + 145.560 = 9.995.560 = saldo escrow setelah
+           fee. Balance.
+
+  Alur 3 — Pencairan. Nilai ke pengrajin TIDAK dipotong.
+           `dikirim = saldo bersih pengrajin`
+           `beban FurniTech = Rp5.000 per pencairan`
+
+KENAPA HANYA BANK TRANSFER/VA
+  Fee VA Rp4.000 itu FLAT per transaksi, sedangkan semua kanal lain memakai MDR
+  persen. MDR adalah lapisan biaya tambahan (kolom "Total MDR" terpisah dari
+  "Total Transaction Fee" di halaman Billings) yang tidak ada kebutuhan
+  bisnisnya di sini. Konsekuensi yang bagus: fee menjadi KONSTANTA, bukan
+  tabel per channel — jadi tidak ada channel yang bisa salah pilih dan tidak
+  ada tarif MDR yang perlu dikelola. Seluruh tarif kanal lain didokumentasikan
+  di docs/midtrans-fee.md §1 supaya tidak perlu dicek ulang.
+
+  PERUBAHAN KODE YANG WAJIB MENYUSUL
+  `enabled_payments` di src/lib/midtrans/snap.ts masih mendaftarkan `qris`,
+  `gopay`, `shopeepay`, dan `credit_card`. Semua itu harus dihapus, dan
+  `test:checkout` harus mengunci daftar kanal itu — kalau kanal yang
+  tidak dimaksud masih bisa dipakai, seluruh hitungan fee di atas jadi tidak
+  berlaku karena angkanya berbeda per kanal.
+
+BIAYA YANG BELUM TERHITUNG — DAN INI YANG PALING BERBAHAYA
+  Beban riil FurniTech per pesanan adalah Rp9.440 (Rp4.440 masuk + Rp5.000
+  keluar), bukan Rp4.440 seperti pada contoh di atas:
+
+  | Harga pesanan | Fee 1,5% | Bersih |            |
+  |----------------|----------|--------|------------|
+  | Rp10.000.000   | Rp150.000| Rp140.560| sehat     |
+  | Rp1.000.000    | Rp15.000 | Rp 5.560 | tipis     |
+  | Rp630.000      | Rp 9.450 | Rp10     | impas     |
+  | Rp296.000      | Rp 4.440 | −Rp5.000 | RUGI      |
+  | Rp100.000      | Rp 1.500 | −Rp7.940 | RUGI      |
+
+  Titik impas Rp629.333. Di bawah itu FurniTech kehilangan uang pada setiap
+  transaksi, dan kerugian itu tidak terlihat di laporan penjualan karena yang
+  salah bukan omzetnya melainkan fee-nya. Mebel custom jarang sekecil itu,
+  tapi pesanan aksesori/Perbaikan bisa. Keputusan minimum pesanan masih
+  terbuka — lihat docs/midtrans-fee.md §8.
+
+  VARIABEL TERBESAR YANG BELUM DIKETAHUI: Rp5.000 itu per-penerima atau
+  per-batch?
+
+  | Pengrajin aktif | Disbursement/hari | Fee/hari | Fee/bulan   |
+  |-----------------|-------------------|----------|-------------|
+  | 1               | 2                 | Rp10.000 | Rp 300.000  |
+  | 10              | 20                | Rp100.000| Rp3.000.000 |
+  | 50              | 100               | Rp500.000| Rp15.000.000|
+  | 100             | 200               | Rp1.000.000 | Rp30.000.000 |
+
+  Kalau per batch, biayanya Rp10.000–Rp300.000/bulan tanpa tergantung jumlah
+  pengrajin. Selisihnya pada 100 pengrajin: Rp29,7 juta per bulan. Itu satu
+  pertanyaan, dan menentukan apakah model ini layak atau tidak.
