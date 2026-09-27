@@ -3,6 +3,7 @@
 import type { Icon } from "@phosphor-icons/react";
 import {
   ArmchairIcon,
+  BankIcon,
   ChartBarIcon,
   ChatIcon,
   HammerIcon,
@@ -73,6 +74,12 @@ const ALL_NAV: NavItem[] = [
     label: "Tarif Ongkir",
     shortLabel: "Ongkir",
     icon: TruckIcon,
+  },
+  {
+    href: "/dashboard/pencairan",
+    label: "Pencairan",
+    shortLabel: "Cair",
+    icon: BankIcon,
   },
   {
     href: "/dashboard/pengaturan/rekening",

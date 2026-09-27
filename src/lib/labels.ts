@@ -6,8 +6,10 @@
  * enum tetap kunci teknis untuk logika; file ini hanya untuk manusia.
  */
 
-import type { conversations, orders } from "@/db/schema";
+import type { conversations, orders, payoutLogs } from "@/db/schema";
 import { PROGRESS_STAGE_ORDER } from "./order-status";
+
+type PayoutStatus = typeof payoutLogs.$inferSelect["status"];
 import type { UserRole } from "./auth/permissions";
 
 export type OrderStatus = (typeof orders.$inferSelect)["orderStatus"];
@@ -45,6 +47,22 @@ export const CONVERSATION_STATUS_LABELS: Record<ConversationStatus, string> = {
   open: "Baru",
   pending: "Menunggu pembeli",
   resolved: "Selesai",
+};
+
+/**
+ * Label status payout.
+ *
+ * `blocked` TIDAK dilabeli "Gagal" — itu inti daribedanya. Penolakan kita
+ * sendiri (rekening belum terverifikasi) dan penolakan bank (transfer ditolak)
+ * menghasilkan tindakan yang sama sekali berbeda, dan owner tidak bisa
+ * menindaklanjuti kalau keduanya disebut sama.
+ */
+export const PAYOUT_STATUS_LABELS: Record<PayoutStatus, string> = {
+  queued: "Disiapkan",
+  processing: "Sedang dikirim",
+  success: "Selesai",
+  failed: "Ditolak bank",
+  blocked: "Ditahan",
 };
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {

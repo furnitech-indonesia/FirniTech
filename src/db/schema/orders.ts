@@ -9,7 +9,12 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { orderSourceEnum, orderStatusEnum, paymentStatusEnum } from "./enums";
+import {
+  orderSourceEnum,
+  orderStatusEnum,
+  paymentMethodEnum,
+  paymentStatusEnum,
+} from "./enums";
 import { products } from "./catalog";
 import { customerAddresses } from "./shipping";
 import { tenants, users } from "./tenants";
@@ -60,6 +65,16 @@ export const orders = pgTable(
     // Rincian biaya (rupiah penuh)
     itemsSubtotal: bigint("items_subtotal", { mode: "number" }).notNull(),
     shippingFee: bigint("shipping_fee", { mode: "number" }).notNull(),
+    /**
+     * Metode pembayaran. Selalu `va` sampai UI COD ada (Sprint 6 bagian 5).
+     *
+     * Kolomnya sudah ada sekarang karena mesin payout MEMBUTUHKANNYA:
+     * pesanan COD uangnya sudah diterima kurir atau ditransfer langsung ke
+     * rekening pengrajin, jadi kalau ikut payout, pengrajin dibayar dua kali.
+     * Menundanya sampai UI-nya siap berarti ada jendela di mana payout salah.
+     */
+    paymentMethod: paymentMethodEnum("payment_method").default("va").notNull(),
+
     /** All-in total = itemsSubtotal + shippingFee, yang dilihat pembeli. */
     totalAmount: bigint("total_amount", { mode: "number" }).notNull(),
 

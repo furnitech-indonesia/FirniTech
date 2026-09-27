@@ -313,6 +313,126 @@ function friendlyAccountError(
 }
 
 /**
+ * `POST /payouts` — kirim transfer ke satu rekening.
+ *
+ * `POST /payouts` secara resmi menerima BANYAK payout dalam satu
+ * permintaan. Modul ini sengaja hanya mengirim SATU per panggilan, bukan
+ * karena REQUESTNYA tidak bisa banyak, tapi karena machines pencairan kita
+ * sudah menggabungkan pesanan SEBELUM ke sini: satu panggilan berisi satu
+ * tujuan rekening. Mengirim banyak rekening dalam satu permintaan berarti
+ * satu permintaan gagal = satu pengrajin tidak tertunaikan, dan status
+ * recipient lain di permintaan itu jadi tidak jelas.
+ *
+ * `idempotencySeed` yang diberikan caller harus berisi SEMUA hal yang
+ * menentukan apakah ini transfer yang sama: penerima, nominal, dan
+ * pesanan-pesanan yang dicakup. Kalau hanya `payoutId` yang dipakai, maka
+ * membuat log payout baru untuk nominal yang sama akan menghasilkan kunci
+ * yang sama — dan layanan akan menganggapnya retry, yaitu diam-diam
+ * menghilangkan pencairan yang seharusnya dikirim.
+ */
+export type SendPayoutInput = {
+  bankCode: string;
+  accountNumber: string;
+  accountName: string;
+  /** Rupiah penuh, sudah dikurangi fee pencairan. */
+  amount: number;
+  idempotencySeed: unknown;
+};
+
+export type SendPayoutResult =
+  | { ok: true; referenceId: string | null; alreadySent: boolean }
+  | { ok: false; message: string };
+
+export async function sendPayout(
+  input: SendPayoutInput,
+): Promise<SendPayoutResult> {
+  if (input.amount <= 0) {
+    // Dicek di sini juga, bukan hanya di mesin payout. Panggil dari mana
+    // pun, nominalnya tidak boleh negatif.
+    return { ok: false, message: "Nominal pencairan harus lebih besar dari nol." };
+  }
+
+  const body = {
+    bank_code: input.bankCode,
+    account_holder_name: input.accountName,
+    account_number: input.accountNumber,
+    amount: input.amount,
+    description: "Pencairan FurniTech",
+  };
+
+  // SHA-256 dari seed yang diberikan caller, bukan dari `body`: nama field
+  // body Payouts bisa berubah, dan perubahan nama field tidak boleh
+  // mengubah identitas transfer. Yang menentukan adalah isi transfernya.
+  const key = createHash("sha256")
+    .update(JSON.stringify(input.idempotencySeed))
+    .digest("hex")
+    .slice(0, 32);
+
+  const { status, data, raw } = await callPayouts("/payouts", body, key);
+
+  if (status >= 400 || !data) {
+    return {
+      ok: false,
+      message: friendlyPayoutError(status, data as never, raw),
+    };
+  }
+
+  const root = asRecord(data);
+  const inner = asRecord(root?.data);
+  // `already_sent` dicoba dari beberapa nama karena belum ada respons nyata
+  // yang pernah dilihat. Yang penting: kalau layanan memberi tahu ini retry,
+  // itu berarti transfer SUDAH terjadi di percobaan sebelumnya, jadi
+  // hasilnya SUKSES, bukan kegagalan.
+  const alreadySent = Boolean(
+    root?.already_sent ?? inner?.already_sent ?? root?.alreadySent,
+  );
+  const referenceId =
+    (typeof root?.payout_reference_no === "string"
+      ? root.payout_reference_no
+      : undefined) ??
+    (typeof inner?.payout_reference_no === "string"
+      ? inner.payout_reference_no
+      : undefined) ??
+    null;
+
+  return { ok: true, referenceId, alreadySent };
+}
+
+/** Sama semangatnya dengan `friendlyAccountError`, untuk payout. */
+function friendlyPayoutError(
+  status: number,
+  data: unknown,
+  raw: string,
+): string {
+  const root = asRecord(data);
+  const inner = asRecord(root?.data);
+  const serviceMessage = [
+    root?.error_message,
+    inner?.error_message,
+    root?.message,
+  ].find((v): v is string => typeof v === "string");
+
+  const haystack = (serviceMessage ?? raw).toLowerCase();
+
+  if (status === 401 || status === 403) {
+    return "Pencairan ditolak karena kredensial layanan. Hubungi FurniTech.";
+  }
+  if (haystack.includes("insufficient") || haystack.includes("balance")) {
+    return "Saldo layanan pencairan tidak cukup. Dana dari pesanan yang sudah lunas mungkin belum tersedia — coba lagi nanti.";
+  }
+  if (haystack.includes("beneficiary") || haystack.includes("account number")) {
+    return "Rekening tujuan ditolak. Periksa rekening pencairan di pengaturan.";
+  }
+  if (haystack.includes("amount")) {
+    return "Nominal pencairan ditolak oleh layanan. Hubungi FurniTech.";
+  }
+  if (status >= 500) {
+    return "Layanan pencairan sedang gangguan. Tidak ada uang yang keluar — coba lagi nanti.";
+  }
+  return serviceMessage ?? "Pencairan gagal. Tidak ada uang yang keluar — coba lagi lagi.";
+}
+
+/**
  * `GET /beneficiary_banks` — daftar bank yang benar-benar didukung.
  *
  * Sengaja memakai fetch langsung dan bukan `callPayouts`, karena ini

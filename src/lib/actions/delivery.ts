@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { deliveryProofs, orders } from "@/db/schema";
 import { ActionError, guard, requireTenantWrite } from "@/lib/auth/guard";
 import { formatRupiah } from "@/lib/format";
+import { runPayout } from "@/lib/payouts";
 import { canTransition, type OrderStatus } from "@/lib/order-status";
 import { codAmountInputSchema, deliveryProofSchema } from "@/lib/schemas/delivery";
 import { parseForm } from "@/lib/schemas/primitives";
@@ -270,6 +271,30 @@ export async function submitDeliveryProof(
 
       revalidatePath("/kurir");
       revalidatePath(`/dashboard/pesanan/${orderId}`);
+      revalidatePath("/dashboard/pencairan");
+
+      /*
+       * PEMICU PENCIRAN.
+       *
+       * Bukti penerimaan inilah yang memicu pencairan — bukan jadwal cron
+       * 06.00/18.00 yang sudah dihapus, dan bukan tombol "cairkan" manual.
+       *
+       * Hasilnya TIDAK ikut dikembalikan ke kurir sebagai error kalau
+       * gagal. Kurir tidak bisa bertindak apa-apa atas kegagalan pencairan,
+       * dan membuatnya melihat "Gagal mencairkan" setelahSuccessfully
+       * mengirim bukti akan membuat ia mengira buktinya tidak diterima — lalu
+       * mengirim ulang, yang justru memicu pencairan kedua.
+       *
+       * Kegagalan dicatat di `payout_logs` dengan status `failed` atau
+       * `blocked`, dan owner melihatnya di halaman pencairan dengan
+       * alasannya. Itu tempat yang benar untuk informasinya.
+       */
+      const payout = await runPayout(actor.tenantId);
+      if (!payout.ok) {
+        console.warn(
+          `Pencairan tenant ${actor.tenantId} belum jalan: ${payout.reason}`,
+        );
+      }
 
       return {
         message: `Bukti diterima untuk ${order.orderCode}. Pencairan sudah dipicu.`,

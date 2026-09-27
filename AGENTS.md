@@ -61,6 +61,7 @@ npm run test:carpenter # 16 pemeriksaan antrean tukang di 375px (butuh server)
 npm run test:kurir    # 25 pemeriksaan RLS kurir & bukti, JWT sungguhan
 npm run test:kurir-ui # 24 pemeriksaan halaman kurir di 375px (butuh server)
 npm run test:rekening # 21 pemeriksaan rekening, idempotency key, & RLS
+npm run test:payout   # 22 pemeriksaan mesin payout: kelayakan, fee, keunikan
 npm run db:buckets    # pastikan bucket Storage ada & privat
 npm run test:alamat    # 25 pemeriksaan form alamat & peta (butuh server)
 npm run test:ongkir    # 13 pengujian tarif ongkir & lookup
@@ -326,6 +327,50 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   sudah lengkap lalu gagal di langkah terakhir. Kode yang salah akan DITOLAK,
   bukan menyebabkan transfer ke bank keliru, dan kode tidak pernah
   ditampilkan ke siapa pun.
+
+## Mesin payout (Sprint 6)
+
+- **UNIQUE pada `payout_items.order_id` adalah satu-satunya pengaman terhadap
+  uang dobel.** Tidak ada kode aplikasi yang bisa menggantinya: `if (!ada)`
+  tidak menutup dua request bersamaan. Dan item ditulis SEBELUM
+  `POST /payouts`, supaya proses yang mati di tengah tidak mengambil item
+  yang sama lagi di percobaan berikutnya.
+- **Empat syarat kelayakan, semuanya wajib:** `payment_method = 'va'`,
+  `payment_status = 'fully_paid'`, bukti ada (EXISTS — bukan status order,
+  karena status bisa diubah manual dan bukti tidak bisa diubah siapa pun),
+  dan belum masuk `payout_items` (NOT EXISTS).
+- **Pesanan COD TIDAK PERNAH jadi kandidat payout.** Uangnya sudah diterima
+  kurir atau ditransfer langsung ke rekening pengrajin; membayarnya lagi
+  berarti membayar dua kali, dan yang menanggung adalah pengrajin.
+- **`payout_items.amount` = KREDIT; `payout_logs.amount` = YANG DITRANSFER.**
+  Kalau per-item yang disimpan adalah nominal transfer, penjumlahannya tidak
+  akan sama dengan `payout_logs.amount` dan selisihnya tidak bisa ditelusuri.
+- **Satu fee per PENERIMA, jadi pesanan digabung.** Tiga pesanan dalam satu
+  payout memotong Rp 5.550 sekali, bukan tiga kali. Pengrajin yang menanggung
+  fee itu, jadi menggabungkan adalah keputusan yang menguntungkan dia.
+- **Baris log ditulis SEBELUM panggilan API.** Kalau urutannya dibalik dan
+  proses mati di tengah, tidak ada jejak bahwa pencairan pernah dicoba, dan
+  pesanan yang sama akan dicoba lagi besok tanpa ada yang menyadarinya.
+- **Snapshot rekening di `payout_logs`, bukan referensi.** Payout adalah
+  dokumen: kalau rekeningnya diganti besok, payout kemarin tetap harus
+  menunjukkan rekening mana yang waktu itu dipakai.
+- **`blocked` ≠ `failed`.** Penolakan kita sendiri (rekening belum
+  terverifikasi) dan penolakan bank adalah dua masalah dengan dua tindakan
+  berbeda. Menyamakan keduanya membuat owner tidak bisa menindaklanjuti.
+- **Cek "Payouts belum dikonfigurasi" SETELAH semua fakta tentang toko.**
+  Kalau dicek paling awal, empat alasan penolakan lain dilaporkan sebagai
+  "belum dikonfigurasi" selama kredensial kosong, dan
+  `balance_below_fee` hanya hidup sebagai kode yang tidak pernah dieksekusi.
+- **Kegagalan pencairan TIDAK dikembalikan ke kurir.** Dia tidak bisa
+  bertindak apa-apa, dan pesan "gagal mencairkan" setelah bukti berhasil
+  dikirim akan membuat ia mengirim ulang bukti — yang memicu pencairan kedua.
+- **`err.code` sering `undefined`.** Drizzle membungkus error postgres.js di
+  `cause`. Tes yang hanya membaca `err.code` melaporkan "tidak ditolak" untuk
+  pelanggaran yang benar-benar terjadi.
+- **`finally` itu wajib di `test:payout`.** Tanpa itu, satu pemeriksaan yang
+  gagal menyisakan fikstur yang membuat eksekusi berikutnya gagal dengan
+  pelanggaran `tenant_slug_idx` — jadi tes yang gagal dua kali akan terasa
+  seperti tes yang rusak, bukan seperti tes yang menemukan masalah.
 
 ## PWA & luring (Sprint 6)
 

@@ -927,20 +927,75 @@ DUA TEMUAN
      baru terlihat karena halaman rekening memakai dropdown pertama kali.
      Diperbaiki di `src/components/rhf-fields.tsx` — satu tempat, semua form.
 
+━━━ Sprint 6 — Mesin payout (selesai 2026-09-27) ━━━
+
+YANG DIKERJAKAN
+  - `payout_logs` kehilangan `slot` dan `scheduled_for` (migrasi 0021). Model
+    cron 06.00/18.00 WIB dihapus; pencairan dipicu bukti penerimaan. Enum
+    `payout_slot` sengaja TIDAK dihapus — nilai enum yang tidak dipakai boleh
+    membusuk, dan `DROP TYPE` gagal selama masih ada baris yang memakainya.
+  - **`orders.payment_method` (`va` | `cod`) dan `payout_status` `blocked`
+    ditambahkan sekarang, bukan nanti.** Keduanya dibutuhkan mesin payout:
+    pesanan COD uangnya sudah diterima di tempat, jadi kalau ikut payout
+    pengrajin dibayar dua kali; dan penolakan kita sendiri (rekening belum
+    terverifikasi) harus terpisah dari penolakan bank, karena dua masalah itu
+    punya tindakan yang sama sekali berbeda.
+  - **UNIQUE pada `payout_items.order_id`** — ini satu-satunya hal yang
+    benar-benar mencegah uang dibayar dua kali. Ditulis SEBELUM
+    `POST /payouts`, jadi proses yang mati di tengah tidak akan mengambil
+    item yang sama lagi di percobaan berikutnya.
+  - `payout_items.amount` = KREDIT per pesanan; `payout_logs.amount` =
+    YANG DITRANSFER (= jumlah kredit − fee). Kalau yang disimpan per item
+    adalah nominal transfer, penjumlahannya tidak akan sama dengan
+    `payout_logs.amount` dan tidak ada yang bisa menelusuri selisihnya.
+  - `fee_amount` & `order_count` disimpan, bukan dihitung ulang —
+    payout lama harus tetap menunjukkan berapa yang benar-benar dipotong.
+  - Snapshot rekening di `payout_logs` (bukan referensi), supaya payout
+    kemarin tetap menunjukkan rekening mana yang waktu itu dipakai.
+  - 4 syarat kelayakan, semuanya wajib: metode `va`, `fully_paid`, punya
+    bukti (EXISTS, bukan status — status bisa diubah manual, bukti tidak),
+    dan belum masuk `payout_items` (NOT EXISTS).
+  - `runPayout()` + halaman `/dashboard/pencairan` (khusus owner) +
+    `PayoutButton` yang menyebut nominalnya di label tombol.
+  - Pemicu otomatis: `submitDeliveryProof` memanggil `runPayout` setelah
+    bukti tersimpan. Kegagalan TIDAK dikembalikan ke kurir — dia tidak bisa
+    bertindak apa-apa, dan membuatnya melihat "gagal mencairkan" akan
+    membuat ia mengirim ulang bukti, yang memicu pencairan kedua.
+  - `test:payout` — 22 pemeriksaan (kelayakan, aritmetika fee, penolakan,
+    keunikan), semua tanpa kredensial.
+
+DUA TEMUAN
+  1. **Urutan pengecekan menentukan pesan yang sampai ke owner.** "Payouts
+    belum dikonfigurasi" dicek paling awal membuat EMPAT alasan penolakan
+    lain dilaporkan sebagai "belum dikonfigurasi" selama kredensial kosong —
+     termasuk "saldo belum cukup", yang membuat `balance_below_fee` hanya
+     hidup sebagai kode yang tidak pernah dieksekusi. Sekarang diperiksa
+     SETELAH semua fakta tentang toko dicek, karena itulah yang tidak berubah
+     karena kita menghidrasi kredensial.
+  2. **`err.code` sering `undefined`.** Drizzle membungkus error postgres.js
+     di dalam `cause`, jadi tes UNIQUE yang hanya membaca `err.code`
+     melaporkan "tidak ditolak" untuk pelanggaran yang benar-benar terjadi.
+     Persis jenis tes yang hijau sambil salah.
+
 YANG MASIH HARUS DIKERJAKAN
-  4. Mesin payout: `payout_logs`/`payout_items`, pemicu bukti, fee
-     Rp5.550 per penerima, `iris-idempotency-key` per permintaan.
-     PENTING: payout wajib memeriksa bahwa `cod_amount` pada bukti benar-benar
-     milik pesanan COD — kolomnya sudah ada dan sudah diisi lewat action, tapi
-     belum ada metode pembayaran COD untuk diverifikasi terhadapnya.
-  5. COD di checkout: metode bayar baru, tanpa Midtrans, dengan bukti yang
-     diunggah kurir. Field COD di form kurir sengaja belum dirender sampai
-     metodenya ada, supaya kurir tidak diminta nominal untuk pesanan yang
-     memang bukan COD. Halaman COD transfer bank yang menampilkan nomor +
-     atas nama rekening mengikuti di titik ini juga, karena baru ada meaning
-     setelah metode pembayarannya ada.
+  5. COD di checkout: metode bayar baru (`payment_method = 'cod'` sudah ada),
+     tanpa Midtrans, dengan bukti yang diunggah kurir — `cod_amount` dan
+     `cod_proof_path` di `delivery_proofs` sudah ada dan sudah diisi lewat
+     `submitDeliveryProof`, tapi field-nya belum dirender karena belum ada
+     metode COD untuk diverifikasi terhadapnya. Halaman COD transfer bank
+     yang menampilkan nomor + atas nama rekening mengikuti di sini, karena
+     baru ada artinya setelah metode pembayarannya ada. Payout sudah aman
+     terhadap COD: pesanan COD tidak pernah jadi kandidat payout.
   6. Pengaturan fee platform & harga paket di panel super admin, dengan
      aturan: invoice yang sudah terbit mengunci harga saat dibuat.
+
+CATATAN: `POST /payouts` belum pernah dipanggil sungguhan
+(`MIDTRANS_IRIS_API_KEY` kosong). Bentuk respons dibaca defensif, dan
+`already_sent` diperlakukan sebagai SUKSES — kalau layanan memberi tahu ini
+retry, berarti transfer sudah terjadi di percobaan sebelumnya. `payouts.ts`
+sengaja hanya mengirim satu tujuan rekening per panggilan meski endpoint-nya
+menerima banyak: satu permintaan gagal berarti satu pengrajin tidak
+tertunaikan, dan status recipient lain jadi tidak jelas.
 
 CATATAN: `MIDTRANS_IRIS_API_KEY` masih kosong, jadi `POST /account_validation`
 belum pernah dipanggil sungguhan. Bentuk respons dibaca defensif (tiga jalur

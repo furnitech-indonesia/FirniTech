@@ -107,13 +107,42 @@ export const bankAccountStatusEnum = pgEnum("bank_account_status", [
   "failed",
 ]);
 
-export const payoutSlotEnum = pgEnum("payout_slot", ["morning", "evening"]);
+/**
+ * Metode pembayaran sebuah pesanan (Sprint 6).
+ *
+ * PENTING untuk mesin payout: `cod` TIDAK PERNAH ikut dicairkan. Pada COD,
+ * uangnya sudah diterima langsung oleh kurir atau ditransfer langsung ke
+ * rekening pengrajin — jadi kalau pesanan COD ikut masuk payout, pengrajin
+ * akan menerima uang yang sama dua kali. `payout_items` bahkan tidak akan
+ * menyentuhnya karena `orders.payment_method` dipakai sebagai syarat
+ * kelayakan, tapi kolomnya tetap ada karena checkout dan halaman lacak
+ * membutuhkannya.
+ */
+export const paymentMethodEnum = pgEnum("payment_method", [
+  "va",
+  "cod",
+]);
 
+
+/**
+ * Status satu payout.
+ *
+ * `blocked` DITAMBAHKAN pada Sprint 6, dan itu bukan detail kecil. Tanpa
+ * itu, penolakan kita sendiri (rekening belum terverifikasi, saldo belum
+ * cukup) akan tercampur jadi satu dengan penolakan bank — dan itu dua
+ * masalah yang sepenuhnya berbeda, dengan dua tindakan yang sepenuhnya
+ * berbeda. Keduanya harus terlihat oleh owner tanpa perlu membaca log server.
+ *
+ * `processing` dipakai selama panggilan ke Payouts berjalan. Ada karena
+ * request HTTP bisa menggantung, dan tanpa status ini payout yang sedang
+ * berjalan terlihat sama dengan yang belum pernah mencoba.
+ */
 export const payoutStatusEnum = pgEnum("payout_status", [
   "queued",
   "processing",
   "success",
   "failed",
+  "blocked",
 ]);
 
 /** Siklus penagihan langganan SaaS (PRD §2.A ada opsi tahunan). */
