@@ -257,14 +257,25 @@ ISINYA: status pesanan, timeline 5 tahap beserta foto progres, nomor resi
   kargo, dan RINGKASAN items. Alamat ditampilkan sebagian (jalan + kota),
   koordinat GPS tidak pernah.
 
-CATATAN SOAL PETA. maplibre-gl berukuran 20,7 MB belum dikompres, jadi WAJIB
-  di-import dinamis (`await import(...)`) hanya saat form peta dibuka. Kalau
-  masuk bundle utama, ini menambah ~1 MB ke PWA yang harus tetap ringan.
-  Tile OSM dari `tile.openstreetmap.org` DILARANG untuk penggunaan komersial
-  atau berskala besar oleh kebijakan penggunaan OSM — jadi URL tile harus
-  lewat environment variable, OSM hanya untuk pengembangan, dan produksi
-  wajib menunjuk penyedia yang punya perjanjian. Atribut © OpenStreetMap
-  contributors wajib tampil.
+CATATAN SOAL PETA — SUDAH DIKERJAKAN dengan Leaflet + OpenStreetMap.
+  Keputusannya: LEAFLET, bukan MapLibre. Kebutuhan di sini cuma menandai satu
+  titik yang bisa diketuk; MapLibre harus 20,7 MB belum dikompres dan butuh
+  WebGL, sementara Leaflet 1.9.4 kecil, jalan tanpa WebGL, dan tidak membuat
+  layar kosong di HP kelas bawah yang GPU-nya terbatas.
+  Leaflet dimuat dengan `next/dynamic` sehingga HANYA diambil ketika pembeli
+  menekan tombol "Pilih titik di peta" — bukan oleh setiap pengunjung
+  storefront. Terbukti di `test:alamat`: 0 permintaan Leaflet sebelum peta
+  dibuka, dan kode Leaflet tidak muncul di chunk `app/` mana pun di build.
+  Penanda memakai `L.circleMarker`, bukan `L.marker` bawaan: yang bawaan
+  mencari PNG ikon lewat `L.Icon.Default.imageUrl` dan asset-nya tidak ikut
+  terbawa di bundler modern, hasilnya marker rusak. `circleMarker` digambar
+  sebagai SVG, tanpa file aset yang bisa 404.
+  TILE OSM: `tile.openstreetmap.org` DILARANG untuk penggunaan komersial atau
+  berskala besar oleh kebijakan penggunaan OSM. Karena itu URL tile lewat
+  `NEXT_PUBLIC_OSM_TILE_URL` — kosong memakai tile OSM (untuk pengembangan),
+  dan produksi wajib diisi penyedia yang punya perjanjian (MapTiler, Stadia,
+  atau tile sendiri). Atribut © OpenStreetMap contributors wajib tampil dan
+  diuji keberadaannya.
   Yang lebih penting: PETA HARUS OPSIONAL. `latitude`/`longitude` nullable,
   form alamat harus bisa diselesaikan tanpa peta, dan kondisi luring harus
   punya state yang jelas — bukan peta putih kosong yang membuat orang mengira

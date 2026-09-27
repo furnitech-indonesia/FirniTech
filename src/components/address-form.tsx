@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
-import { CrosshairIcon, MapPinIcon } from "@phosphor-icons/react";
+import dynamic from "next/dynamic";
+import { CrosshairIcon, MapPinIcon, MapTrifoldIcon } from "@phosphor-icons/react";
 
 import { ZodForm, type ZodFormContext } from "@/components/zod-form";
 import { TextField } from "@/components/rhf-fields";
@@ -44,6 +45,20 @@ import {
  *    ada tile-nya. Soal privasi: koordinat disimpan, tapi tidak pernah
  *    ditampilkan di halaman lacak publik.
  */
+
+/**
+ * Peta dimuat dengan `next/dynamic` supaya Leaflet HANYA diambil ketika
+ * pembeli benar-benar menekan tombolnya.
+ *
+ * Tanpa ini, `leaflet` (+ CSS-nya) masuk ke bundel yang dimuat setiap
+ * pengunjung storefront — termasuk yang tidak pernah menyentuh peta. Leaflet
+ * tinggal di chunk terpisah, dan `ssr: false` karena modulnya menyentuh
+ * `window` saat dimuat.
+ */
+const MapPicker = dynamic(
+  () => import("@/components/map-picker").then((m) => m.MapPicker),
+  { ssr: false, loading: () => <div className="h-64 rounded-xl border border-border bg-muted" aria-hidden /> },
+);
 
 export function AddressForm({
   tenantSlug,
@@ -422,6 +437,7 @@ function SelectField({
 function CoordinatesField({ ctx }: { ctx: ZodFormContext }) {
   const { setValue, control } = useFormContext();
   const [state, setState] = useState<"idle" | "asking" | "done" | "error">("idle");
+  const [mapOpen, setMapOpen] = useState(false);
 
   /*
    * `useWatch`, bukan `watch("latitude")` saat render. `watch` adalah fungsi
@@ -477,6 +493,46 @@ function CoordinatesField({ ctx }: { ctx: ZodFormContext }) {
           {state === "asking" ? "Meminta izin…" : "Pakai lokasi saya"}
         </Button>
       </div>
+
+      {/*
+        Peta di balik tombol, bukan selalu tampil. Alasannya dua: Leaflet +
+        CSS-nya adalah ukuran yang tidak perlu dibayar setiap pengunjung, dan
+        peta yang langsung tampil di form yang panjang hanya menambah gesekan
+        sebelum orang sampai ke tombol simpan.
+      */}
+      {/*
+        Tidak ada prop `center` terpisah. Kalau desa sudah dipilih, koordinat
+        desa SUDAH tersimpan di `latitude`/`longitude` (lihat
+        `RegionCascade`), jadi `value` sekaligus menjadi titik tengah peta.
+        Prop kedua hanya akan menduplikasi sumber kebenaran yang sama.
+      */}
+      {mapOpen ? (
+        <MapPicker
+          value={
+            latitude && longitude
+              ? { lat: Number(latitude), lng: Number(longitude) }
+              : null
+          }
+          onChange={(next) => {
+            setValue("latitude", next.lat.toFixed(7));
+            setValue("longitude", next.lng.toFixed(7));
+            setState("done");
+          }}
+        />
+      ) : null}
+
+      {!mapOpen ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="touch"
+          onClick={() => setMapOpen(true)}
+          className="justify-start px-0"
+        >
+          <MapTrifoldIcon size={18} weight="light" aria-hidden />
+          Pilih titik di peta
+        </Button>
+      ) : null}
 
       <p aria-live="polite" className="text-body-sm text-muted-foreground">
         {state === "done" ? (

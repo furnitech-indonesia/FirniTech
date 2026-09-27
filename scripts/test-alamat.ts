@@ -240,6 +240,79 @@ async function main() {
     `${mapButton} tombol`,
   );
 
+  /* ---- Peta: Leaflet + OSM, dimuat saat dibuka ---- */
+  const mapToggle = page.getByRole("button", { name: /pilih titik di peta/i });
+  check(
+    "ada tombol buka peta Leaflet",
+    (await mapToggle.count()) === 1,
+    "tombol ditemukan",
+  );
+
+  // LAZY LOADING. Leaflet + CSS-nya hanya boleh diambil setelah tombol ditekan.
+  // Kalau tidak, setiap pengunjung storefront memakai bandwidth untuk peta yang
+  // mungkin tidak pernah dia lihat.
+  const leafletRequests = () =>
+    page.evaluate(() =>
+      performance
+        .getEntriesByType("resource")
+        .filter((e) => /leaflet|tile\.openstreetmap/.test(e.name)).length,
+    );
+  const beforeOpen = await leafletRequests();
+  check(
+    "TIDAK ada permintaan Leaflet sebelum peta dibuka",
+    beforeOpen === 0,
+    `${beforeOpen} permintaan`,
+  );
+
+  await mapToggle.click();
+  await page.waitForTimeout(3000);
+
+  const afterOpen = await leafletRequests();
+  check(
+    "peta dimuat setelah tombol ditekan (lazy import bekerja)",
+    afterOpen > 0,
+    `${afterOpen} permintaan leaflet/tile`,
+  );
+  check(
+    "kontainer Leaflet terbentuk",
+    (await page.locator(".leaflet-container").count()) === 1,
+    ".leaflet-container ada",
+  );
+  const tileCount = await page.locator("img.leaflet-tile").count();
+  check("tile peta benar-benar termuat", tileCount > 0, `${tileCount} tile`);
+
+  // Atribusi OSM WAJIB tampil — syarat penggunaan tile mereka.
+  const attribution = await page.locator(".leaflet-control-attribution").innerText();
+  check(
+    "atribusi © OpenStreetMap contributors tampil",
+    /openstreetmap/i.test(attribution),
+    attribution.replace(/\s+/g, " ").slice(0, 60),
+  );
+
+  // Ketuk peta harus menandai titik dan mengisi koordinat.
+  const mapBox = await page.locator(".leaflet-container").boundingBox();
+  if (mapBox) {
+    await page.mouse.click(
+      mapBox.x + mapBox.width * 0.4,
+      mapBox.y + mapBox.height * 0.5,
+    );
+    await page.waitForTimeout(700);
+    const lat = await page.locator('input[name="latitude"]').inputValue();
+    const lng = await page.locator('input[name="longitude"]').inputValue();
+    check(
+      "mengetuk peta mengisi latitude & longitude",
+      Number.isFinite(Number(lat)) && Number.isFinite(Number(lng)) && lat !== "" && lng !== "",
+      `lat=${lat || "kosong"} lng=${lng || "kosong"}`,
+    );
+    check(
+      "penanda tergambar di peta",
+      (await page.locator("path.leaflet-interactive").count()) > 0,
+      "circle marker ada",
+    );
+  } else {
+    check("peta punya area yang bisa diketuk", false, "boundingBox tidak ditemukan");
+  }
+
   // ---- Layout 375px ----
   const overflow = await page.evaluate(
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

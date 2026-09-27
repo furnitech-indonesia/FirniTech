@@ -58,6 +58,7 @@ npm run test:responsive # 23 pemeriksaan struktural responsif & token
 npm run test:sprint3  # 16 uji halaman & pembatasan role Sprint 3
 npm run test:register  # 6 pemeriksaan wizard /daftar (Playwright, butuh server)
 npm run test:carpenter # 16 pemeriksaan antrean tukang di 375px (butuh server)
+npm run test:alamat    # 25 pemeriksaan form alamat & peta (butuh server)
 npm run test:webhook   # 46 uji: skema, signature, gerbang tenant, e2e webhook
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
@@ -185,6 +186,32 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 - **Harus `#konten-utama`** di `app/daftar/page.tsx` dan
   `app/menunggu-pembayaran/page.tsx` — `test:responsive` mewajibkannya
   untuk setiap halaman.
+
+## Peta (Leaflet + OSM)
+
+- **Leaflet, bukan MapLibre.** Kebutuhan di sini cuma menandai satu titik yang
+  bisa diketuk. MapLibre 20,7 MB + WebGL; Leaflet 1.9.4 kecil dan jalan tanpa
+  WebGL.
+- **`next/dynamic` itu wajib, bukan optimalisasi.** Impor statis — bahkan di
+  berkas `"use client"` — menarik Leaflet ke bundel yang dimuat SETIAP
+  pengunjung storefront, termasuk yang tidak pernah menyentuh peta.
+  `test:alamat` mengunci ini: 0 permintaan Leaflet sebelum peta dibuka.
+- **Jangan pakai `L.marker` bawaan.** Yang bawaan mencari PNG ikon lewat
+  `L.Icon.Default.imageUrl` dan asset-nya tidak ikut terbawa di bundler
+  modern, jadi marker-nya rusak. Pakai `L.circleMarker` — digambar SVG,
+  tanpa aset yang bisa 404.
+- **`L.map()` pada elemen yang sudah punya peta melempar** "Map container is
+  already initialized". Efek mount bisa berjalan dua kali di React Strict
+  Mode, jadi `map.remove()` dulu sebelum membuat peta baru.
+- **Tulis `ref.current` di dalam `useEffect`, bukan saat render.** Pola
+  "latest ref" yang assigning `ref.current = fn` di body komponen ditolak
+  aturan `react-hooks/refs`, dan memang berbahaya pada render yang dibatalkan.
+- **URL tile lewat `NEXT_PUBLIC_OSM_TILE_URL`.** Tile OSM publik dilarang untuk
+  penggunaan komersial/berskala besar; variabel ini supaya produksi bisa
+  menunjuk penyedia berizin tanpa menyentuh kode. Atribusi © OpenStreetMap
+  wajib tampil dan diuji.
+- **Peta tetap OPSIONAL.** `latitude`/`longitude` nullable, dan nilainya juga
+  bisa diisi lewat geolokasi browser. Tidak ada langkah yang memaksa peta.
 
 ## Kirim foto progres via WhatsApp (Sprint 4)
 
