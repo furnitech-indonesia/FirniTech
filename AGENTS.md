@@ -58,6 +58,7 @@ npm run test:responsive # 23 pemeriksaan struktural responsif & token
 npm run test:sprint3  # 16 uji halaman & pembatasan role Sprint 3
 npm run test:register  # 6 pemeriksaan wizard /daftar (Playwright, butuh server)
 npm run test:wa         # 31 uji mesin notifikasi WhatsApp & kuota atomik
+npm run test:carpenter # 12 pemeriksaan antrean tukang di 375px (butuh server)
 npm run test:webhook   # 46 uji: skema, signature, gerbang tenant, e2e webhook
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
@@ -185,6 +186,44 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 - **Harus `#konten-utama`** di `app/daftar/page.tsx` dan
   `app/menunggu-pembayaran/page.tsx` — `test:responsive` mewajibkannya
   untuk setiap halaman.
+
+## Notifikasi WhatsApp & antrean tukang (Sprint 4)
+
+- **Kegagalan WA tidak boleh membatalkan aksi bisnisnya.** `sendWhatsApp()`
+  tidak pernah melempar. Kalau tukang mengunggah foto progres lalu Fonnte
+  down, foto HARUS tetap tersimpan; kalau tidak, satu gangguan pihak ketiga
+  bisa menghentikan seluruh produksi di bengkel.
+- **Urutan: aksi bisnis menulis data → baru kirim WA.** Kalau WA dikirim
+  lebih dulu lalu insert-nya gagal, pembeli sudah diberi tahu foto progres
+  yang tidak pernah ada.
+- **Kuota WA harus atomik.** Baca counter lalu tulis raced: dua request
+  bersamaan sama-sama membaca angka yang sama, sama-sama lolos, dan tenant
+  Basic menembus jatah 100/bulan. Pakai conditional upsert dengan
+  `where used_count < quota` (`consumeQuota`). `test:wa` menjalankan 30
+  consumption berbareng dengan kuota 10 dan mengunci hasilnya di 10.
+- **Kuota TIDAK dipotong kalau kredensial kosong.** Tidak ada pesan yang
+  terkirim, jadi menghitungnya akan memotong jatah tanpa alasan.
+- **Nomor tujuan SELALU dari baris yang sudah difilter `tenantId`, bukan
+  dari FormData.** `customer_phone` diisi bebas; kalau bisa datang dari
+  klien, satu tenant bisa mengirim WA ke nomor pembeli tenant lain.
+- **`setTracking` hanya mengirim WA kalau status sudah `shipped`/
+  `completed`.** Action itu juga dipakai saat `ready_to_ship` — resi
+  dicatat lebih dulu sebelum barang diserahkan ke kurir. Tanpa pengecekan
+  itu pembeli diberi tahu "sudah dikirim" padahal barangnya masih di
+  bengkel.
+- **Jangan menautkan halaman yang belum ada.** Halaman lacak pesanan baru
+  ada di Sprint 5; pesan_progress saat ini menunjuk `/t/<slug>`.
+- **Layar tukang bukan halaman pesanan yang disamarkan.**
+  `src/components/carpenter-queue.tsx` menampilkan hanya pesanan yang
+  ditugaskan ke tukang itu, dimensi dalam cm, tahap terakhir dari lima, dan
+  tidak ada satu pun nominal rupiah. Finanzial tidak relevan di bengkel, dan
+  `test:carpenter` mengunci "tidak ada nominal" itu — mustahil dibuktikan
+  dari source code.
+- **Uji yang membersihkan fikstur harus menghapus audit-nya juga.**
+  `integration_audit_logs.tenant_id` memakai `onDelete: "set null"`, jadi
+  baris audit tidak ikut terhapus bersama tenant. Kalau tidak dihapus
+  eksplisit, setiap menjalankan skrip mencampur sampah test ke tabel yang
+  dibaca super admin.
 
 ## Back-office Sprint 3
 
