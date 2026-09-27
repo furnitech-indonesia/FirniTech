@@ -8,7 +8,7 @@
  */
 import "dotenv/config";
 
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 /*
  * Import dari `../src/db/client`, BUKAN `@/db`.
@@ -371,6 +371,178 @@ async function main() {
 
   // Bersihkan tenant uji.
   await db.delete(tenants).where(eq(tenants.slug, SLUG));
+
+
+  /* ---------- 6. END-TO-END terhadap handler webhook sungguhan ---------- */
+  // Di atas, `verifyWebhookSignature` diuji sebagai fungsi. Bagian ini memanggil
+  // POST() dari route handler-nya langsung dengan Request sungguhan dan kunci
+  // uji, lalu memeriksa efeknya di database. Ini yang membuktikan tenant
+  // benar-benar diaktifkan lewat uang, bukan lewat klaim.
+  const { POST } = await import("../app/api/webhooks/midtrans/route");
+  const { createHash } = await import("node:crypto");
+
+  const e2eKey = "SB-Mid-server-uji-e2e";
+  const e2ePrevKey = process.env.MIDTRANS_SERVER_KEY;
+  process.env.MIDTRANS_SERVER_KEY = e2eKey;
+
+  const ORDER = "saas-e2e-uji";
+  const AMOUNT = PLANS.pro.priceMonthly;
+  const GROSS = `${AMOUNT}.00`;
+
+  // Dibersihkan dulu supaya uji ini bisa diulang walau tadi gagal di tengah jalan.
+  await db.delete(tenants).where(eq(tenants.slug, "uji-webhook-e2e"));
+
+  const [e2eTenant] = await db
+    .insert(tenants)
+    .values({
+      name: "Uji Webhook E2E",
+      slug: "uji-webhook-e2e",
+      plan: "pro",
+      subscriptionStatus: "pending",
+      subscriptionExpiresAt: new Date("2020-01-01T00:00:00.000Z"),
+      isActive: false,
+    })
+    .returning({ id: tenants.id });
+
+  await db.insert(saasInvoices).values({
+    tenantId: e2eTenant.id,
+    plan: "pro",
+    period: "monthly",
+    amount: AMOUNT,
+    status: "pending",
+    midtransOrderId: ORDER,
+    periodStart: "2026-10-01",
+    periodEnd: "2026-11-01",
+  });
+
+  const sign = (orderId: string, statusCode: string, gross: string) =>
+    createHash("sha512")
+      .update(`${orderId}${statusCode}${gross}${e2eKey}`)
+      .digest("hex");
+
+  const notify = (body: Record<string, unknown>, signature: string | null) =>
+    POST(
+      new Request("http://localhost/api/webhooks/midtrans", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(signature ? { "x-midtrans-signature": signature } : {}),
+        },
+        body: JSON.stringify(body),
+      }),
+    ).then((r: { status: number }) => r.status);
+
+  const settlement = {
+    order_id: ORDER,
+    transaction_status: "settlement",
+    status_code: "200",
+    gross_amount: GROSS,
+    transaction_id: "trx-e2e-1",
+  };
+
+  const tenantState = async () => {
+    const [row] = await db
+      .select({
+        active: tenants.isActive,
+        status: tenants.subscriptionStatus,
+        expires: tenants.subscriptionExpiresAt,
+      })
+      .from(tenants)
+      .where(eq(tenants.id, e2eTenant.id))
+      .limit(1);
+    return row;
+  };
+
+  check(
+    "tanpa signature ditolak 403",
+    (await notify(settlement, null)) === 403,
+    "tanpa header signature",
+  );
+  check(
+    "signature palsu ditolak 403",
+    (await notify(settlement, "b".repeat(128))) === 403,
+    "128 karakter b",
+  );
+
+  let state = await tenantState();
+  check(
+    "notifikasi yang ditolak tidak mengubah apa pun",
+    state.active === false && state.status === "pending",
+    `isActive=${state.active}, status=${state.status}`,
+  );
+
+  check(
+    "nominal tidak cocok ditolak 400",
+    (await notify({ ...settlement, gross_amount: "1.00" }, sign(ORDER, "200", "1.00"))) ===
+      400,
+    "tagihan 500.000, dinotifikasi 1",
+  );
+
+  // `pending` berarti VA sudah dibuat, uang belum masuk.
+  await notify(
+    { ...settlement, transaction_status: "pending" },
+    sign(ORDER, "200", GROSS),
+  );
+  state = await tenantState();
+  check(
+    "status pending TIDAK mengaktifkan tenant",
+    state.active === false && state.status === "pending",
+    "masih nonaktif — inilah gunanya aturan tanpa free trial",
+  );
+
+  const settled = await notify(settlement, sign(ORDER, "200", GROSS));
+  check("settlement sah diterima", settled === 200, `status ${settled}`);
+
+  state = await tenantState();
+  check(
+    "settlement menyalakan tenant dan menandai langganan aktif",
+    state.active === true && state.status === "active",
+    `isActive=${state.active}, status=${state.status}`,
+  );
+  check(
+    "periode langganan diisi dari akhir periode tagihan",
+    state.expires.toISOString().slice(0, 10) === "2026-11-01",
+    state.expires.toISOString().slice(0, 10),
+  );
+
+  const [paidInvoice] = await db
+    .select()
+    .from(saasInvoices)
+    .where(eq(saasInvoices.midtransOrderId, ORDER))
+    .limit(1);
+  check(
+    "tagihan ditandai lunas dan mencatat transaction id",
+    paidInvoice.status === "paid" && paidInvoice.transactionId === "trx-e2e-1",
+    `status=${paidInvoice.status}, trx=${paidInvoice.transactionId}`,
+  );
+
+  // Idempoten: Midtrans mengirim notifikasi yang sama berulang kali.
+  const again = await notify(settlement, sign(ORDER, "200", GROSS));
+  check("notifikasi berulang tidak merusak", again === 200, `status ${again}`);
+
+  const [unknown] = await db.execute(
+    sql`select count(*)::int as n from integration_audit_logs where tenant_id = ${e2eTenant.id}`,
+  );
+  check(
+    "jejak audit tertulis",
+    Number((unknown as unknown as { n: number }).n) > 0,
+    "ada baris di integration_audit_logs",
+  );
+
+  const unknownOrder = await notify(
+    { ...settlement, order_id: "saas-tidak-dikenal" },
+    sign("saas-tidak-dikenal", "200", GROSS),
+  );
+  check(
+    "order_id tak dikenal dibalas 200, bukan 404",
+    unknownOrder === 200,
+    `status ${unknownOrder} — 404 akan membuat Midtrans mengulang terus`,
+  );
+
+  if (e2ePrevKey === undefined) delete process.env.MIDTRANS_SERVER_KEY;
+  else process.env.MIDTRANS_SERVER_KEY = e2ePrevKey;
+
+  await db.delete(tenants).where(eq(tenants.slug, "uji-webhook-e2e"));
 
   console.log(
     failures === 0

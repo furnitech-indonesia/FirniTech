@@ -52,7 +52,6 @@ export const TERMINAL_ORDER_STATUSES: ReadonlySet<string> = new Set([
 ]);
 
 /**
-/**
  * Transisi yang diizinkan. `cancelled` boleh terjadi sebelum shipped;
  * setelah shipped barang sudah jalan, sehingga pembatalan jadi refund.
  */
