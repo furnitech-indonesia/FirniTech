@@ -38,6 +38,29 @@ export const shippingRates = pgTable(
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
+    /**
+     * Id kabupaten/kota dari pohon wilayah (emsifa v2), BUKAN id kategori
+     * bahan seperti di tabel `materials`.
+     *
+     * NULL berarti tarif ini berlaku untuk wilayah mana pun yang tidak punya
+     * tarif sendiri. Ini dipakai oleh baris lama yang namaWilayah-nya ambigu —
+     * lihat catatan "jebakan integrasi ongkir" di ROADMAP.md Sprint 5 bagian 3.
+     */
+    regencyId: text("regency_id"),
+
+    /**
+     * Tarif cadangan untuk seluruh wilayah.
+     *
+     * Tanpa ini, pengrajin yang hanya mengisi 3 kota akan membuat pembeli di
+     * seluruh Indonesia terkunci di checkout. Satu tenant hanya boleh punya SATU
+     * tarif cadangan, dijamin `shipping_one_default_uniq` di bawah.
+     */
+    isDefault: boolean("is_default").default(false).notNull(),
+
+    /**
+     * Nama kota/kabupaten, dipertahankan untuk TAMPILAN dan backwards
+     * compatibility. PENCOCOKAN tarif memakai `regencyId`, bukan kolom ini.
+     */
     cityName: text("city_name").notNull(),
     provinceName: text("province_name").notNull(),
     /** Tarif kargo rupiah penuh (flat, tidak per kg/m3). */
@@ -46,10 +69,18 @@ export const shippingRates = pgTable(
   },
   (table) => [
     index("shipping_tenant_city_idx").on(table.tenantId, table.cityName),
-    uniqueIndex("shipping_tenant_city_uniq").on(
-      table.tenantId,
-      sql`lower(${table.cityName})`,
-    ),
+    /**
+     * Satu tarif per regency per tenant. Partial karena `regencyId` boleh NULL
+     * (tarif umum), dan beberapa tarif umum dengan NULL akan melanggar unique
+     * biasa.
+     */
+    uniqueIndex("shipping_tenant_regency_uniq")
+      .on(table.tenantId, table.regencyId)
+      .where(sql`${table.regencyId} is not null`),
+    /** Hanya satu tarif cadangan per tenant. */
+    uniqueIndex("shipping_one_default_uniq")
+      .on(table.tenantId)
+      .where(sql`${table.isDefault} = true`),
   ],
 );
 

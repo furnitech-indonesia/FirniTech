@@ -33,7 +33,17 @@ export function ActionForm({
   action: (state: FormState, formData: FormData) => Promise<FormState>;
   children?: ReactNode;
   hidden?: Record<string, string | number | undefined>;
-  submitLabel: string;
+  /**
+   * Label tombol yang dirender ActionForm sendiri.
+   *
+   * OPSIONAL. Kalau dibiarkan kosong, ActionForm tidak merender tombol
+   * apa pun dan `children`-lah yang jadi pemicu submit. Ini diperlukan di
+   * daftar yang tombolnya ikon (hapus satu tarif), karena `ActionForm`
+   * hanya punya ukuran `default` dan `touch` — tidak ada varian ikon, dan
+   * menyarangkan `Button` di dalamnya menghasilkan DUA tombol: yang milik
+   * ActionForm (dengan label kosong) dan yang milik pemanggil.
+   */
+  submitLabel?: string;
   tone?: "primary" | "ghost" | "danger";
   encType?: "multipart/form-data";
   className?: string;
@@ -67,14 +77,18 @@ export function ActionForm({
       ) : null}
       {state?.message ? <Alert>{state.message}</Alert> : null}
 
-      <Button
-        type="submit"
-        size={size}
-        disabled={pending}
-        variant={tone === "danger" ? "destructive" : tone === "ghost" ? "outline" : "default"}
-      >
-        {pending ? "Memproses…" : submitLabel}
-      </Button>
+      {submitLabel ? (
+        <Button
+          type="submit"
+          size={size}
+          disabled={pending}
+          variant={
+            tone === "danger" ? "destructive" : tone === "ghost" ? "outline" : "default"
+          }
+        >
+          {pending ? "Memproses…" : submitLabel}
+        </Button>
+      ) : null}
     </form>
   );
 }

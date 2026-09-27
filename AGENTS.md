@@ -59,6 +59,7 @@ npm run test:sprint3  # 16 uji halaman & pembatasan role Sprint 3
 npm run test:register  # 6 pemeriksaan wizard /daftar (Playwright, butuh server)
 npm run test:carpenter # 16 pemeriksaan antrean tukang di 375px (butuh server)
 npm run test:alamat    # 25 pemeriksaan form alamat & peta (butuh server)
+npm run test:ongkir    # 13 pengujian tarif ongkir & lookup
 npm run test:webhook   # 46 uji: skema, signature, gerbang tenant, e2e webhook
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
@@ -186,6 +187,40 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 - **Harus `#konten-utama`** di `app/daftar/page.tsx` dan
   `app/menunggu-pembayaran/page.tsx` — `test:responsive` mewajibkannya
   untuk setiap halaman.
+
+## Tarif ongkir (Sprint 5 bagian 3)
+
+- **Pencocokan tarif WAJIB pakai `regencyId`, TIDAK PERNAH nama kota.**
+  "Bandung" bisa Kabupaten Bandung (32.04) ATAU Kota Bandung (32.73), dan
+  "Jakarta" tidak ada sebagai satu kabupaten sama sekali — dia dipecah jadi
+  lima "Kota Administrasi Jakarta *". Pencocokan teks memilih kota yang salah
+  tanpa error, dan tidak ada yang mengetahuinya sampai pembeli protes.
+  Fungsinya: `findShippingRate()` di `src/lib/shipping.ts`.
+- **Urutan lookup tidak boleh diubah:** (1) tarif khusus `regencyId` persis
+  sama → (2) tarif cadangan `isDefault` → (3) `null`.
+- **JANGAN pernah `?? 0` atau tarif terkecil sebagai jaring pengaman.**
+  Pembeli yang melihat total murah lalu membayar, sementara ongkir sebenarnya
+  tidak ditagih, adalah kegagalan diam-diam yang paling merusak di checkout.
+  `null` wajib membuat pemanggil memblokir.
+- **Query ongkir TIDAK boleh diekspor ulang dari berkas `"use server"`.**
+  Berkas itu hanya boleh mengekspor async function; `export { x } from
+  "@/lib/shipping"` menarik seluruh graf modul (drizzle, next/cache) ke bundel
+  klien dan build gagal dengan "Ecmascript file had an error" — sementara
+  `typecheck` tetap lolos. Impor langsung dari `@/lib/shipping`.
+- **Unggahan tarif memakai dropdown, bukan teks bebas.** Provinsi + kabupaten
+  ada di snapshot bundel, jadi formnya tidak pernah memanggil jaringan.
+- **`isDefault` + `regencyId` tidak boleh dipakai bersamaan** (ditegakkan
+  skema). Cadangan berlaku untuk semua wilayah; yang ada `regencyId`-nya
+  berlaku untuk satu kabupaten. Hanya satu cadangan per tenant, dijamin
+  `shipping_one_default_uniq`.
+- **`setValue()` pada field yang tidak terdaftar tidak masuk FormData.**
+  `cityName` dan `provinceName` tidak punya input terlihat, jadi keduanya butuh
+  `<input type="hidden">` yang nilainya dibaca dari `watch`. Tanpa itu, form
+  submit tanpa `cityName` dan skema menolaknya padahal dropdown sudah terisi.
+- **Baris hasil backfill yang ambigu ditampilkan, bukan disembunyikan.**
+  `NeedsReviewNotice` memperingatkan tarif yang belum punya `regencyId` dan
+  bukan cadangan — diam-diamnya tarif generik itu jenis kesalahan yang baru
+  ketahuan setelah ada yang protes.
 
 ## Peta (Leaflet + OSM)
 

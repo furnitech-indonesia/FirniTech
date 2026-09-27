@@ -24,7 +24,8 @@
     "db:seed:sprint3": "tsx scripts/seed-sprint3.ts",
     "test:visual": "tsx scripts/test-visual.ts",
     "wilayah:snapshot": "tsx scripts/snapshot-wilayah.ts",
-    "test:alamat": "tsx scripts/test-alamat.ts"
+    "test:alamat": "tsx scripts/test-alamat.ts",
+    "test:ongkir": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-ongkir.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

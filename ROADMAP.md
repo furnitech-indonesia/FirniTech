@@ -218,9 +218,18 @@ ONGKIR DIHITUNG DARI KABUPATEN/KOTA, BUKAN KOTA BEBIAS. Ini jebakan
   - Lookup yang membandingkan teks apa adanya tidak akan pernah cocok, dan
     kalau sampai cocok untuk kasus kebetulan, tarif yang terpakai bisa milik
     kota yang salah.
-  Perbaikan: tambah kolom `regencyId` ke `shipping_rates`, isi dari pohon
-  wilayah (backfill dari nama yang sudah ada dengan normalisasi awalan), lalu
-    lookup memakai id. Nama tetap disimpan dan tetap ditampilkan.
+  Perbaikan (SELESAI): kolom `regency_id` dan `is_default` sudah ditambahkan
+  ke `shipping_rates` lewat migrasi 0008, plus `shipping_tenant_regency_uniq`
+  (satu tarif per kabupaten) dan `shipping_one_default_uniq` (satu cadangan
+  per tenant). Backfill dijalankan sadar-ambigu: "Surabaya" terpetakan ke
+  35.78 karena kandidatnya tunggal; "Bandung" (2 kandidat) dan "Jakarta"
+  (0 kandidat) TIDAK ditebak dan tetap sebagai tarif umum, ditandai di UI lewat
+  NeedsReviewNotice. `findShippingRate()` di src/lib/shipping.ts
+  mengimplementasikan urutan lookup: spesifik → cadangan → null.
+  Pengaturan tarif ongkir ada di /dashboard/pengaturan/ongkir dengan CRUD
+  penuh (tambah, ubah, hapus, jadikan cadangan), memakai dropdown
+  provinsi/kabupaten dari modul wilayah yang sama dengan storefront. Role
+  owner dan admin_penjualan; tukang tidak boleh.
 
 KOTA YANG BELUM PUNYA TARIF TIDAK BOLEH BERHASIL DENGAN ONGKIR 0. Ini adalah
 kegagalan diam-diam yang paling berbahaya di checkout: pembeli melihat total
