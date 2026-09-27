@@ -319,6 +319,16 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
     diambil dari nilai fee — kecuali QRIS, GoPay, dan ShopeePay.
   - Tarif di halaman publik adalah **batas bawah**, bukan angka final untuk
     akun merchant kita; diskon tidak pernah dipublikasikan.
+  - **Fee ditanggung pengrajin, bukan platform** (PRD v1.5). Jadi
+    `platformServiceFee` = 1,5% × `totalAmount` (produk + ongkir) UTUH, dan
+    `midtransMdrFee` dipotong ke pengrajin. Rinciannya harus tampil di tiga
+    tempat (wizard pendaftaran, ringkasan saldo, detail pesanan) dan TIDAK
+    boleh tampil di halaman lacak publik.
+  - **`feePayout` Rp 5.000 itu per EKSEKUSI pencairan, bukan per order.**
+    Satu pengrajin dengan lima order lunas dalam satu slot membayar Rp 5.000
+    sekali. Kalau dibayar per order, partner kehilangan Rp 20.000 lebih dari
+    yang seharusnya.
+  - Fee dicatat sebagai **beban**, bukan pengurangan pendapatan.
 
 ## Tarif ongkir (Sprint 5 bagian 3)
 

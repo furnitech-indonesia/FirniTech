@@ -746,74 +746,63 @@ YANG MASIH KOSONG DARI SPRINT 6
 
 ━━━ Model Biaya & Payout (keputusan pemilik produk, 2026-09-27) ━━━
 
-STATUS: model bisnis ditetapkan dan ditulis ke PRD.md §2.C + v1.4, dan angka
-sumbernya di docs/midtrans-fee.md. Mesin payout BELUM dibangun, dan sengaja
-ditahan sampai pertanyaan“MIDTRANS_IRIS_API_KEY” dan tarif per-batch terjawab.
+STATUS: model final ditetapkan dan ditulis ke PRD.md §2.C (v1.5) dan
+docs/midtrans-fee.md. Mesin payout BELUM dibangun, dan sengaja ditahan
+sampai pertanyaan per-penerima/per-batch terjawab — alasannya di bawah.
 
-TIGA ALUR UANG, DUA KONSTANTA FEE
+PERUBAHAN MODEL (penting)
+  Fee Midtrans TIDAK lagi dipotong dari platform fee. Seluruh fee ditanggung
+  pengrajin, dan platform fee 1,5% sekarang menutup nol biaya. Damanya
+  pendapatan platform jadi persis 1,5% GMV dan tarifnya sepenuhnya alat
+  harga.
 
-  Alur 1 — Langganan. Pengrajin bayar harga paket apa adanya.
-           `diterima = harga − Rp4.440`
-           Basic Rp300.000 → Rp295.560. Tidak ada pencairan; ini pendapatan
-           platform langsung.
+  Rumus final:
+    platformFee = 1,5% × totalAmount (produk + ongkir)
+    feeMasuk    = Rp4.440 per transaksi (VA + PPN 11%)
+    feePayout   = Rp5.000 per EKSEKUSI pencairan (bukan per order)
 
-  Alur 2 — Pembelian produk. Pembeli bayar `harga + ongkir` tanpa biaya
-           layanan tambahan.
-           `platform fee = 1,5% × total pesanan`
-           `pendapatan platform = 1,5% × total pesanan − Rp4.440`
-           `dibayar ke pengrajin = total pesanan − 1,5% × total pesanan`
-           Rp10.000.000 → pengrajin Rp9.850.000, platform Rp145.560.
-           Cek buku: 9.850.000 + 145.560 = 9.995.560 = saldo escrow setelah
-           fee. Balance.
+    saldo pengrajin += totalAmount − platformFee − feeMasuk
+    saat payout     : saldo ditransfer = saldo − feePayout
 
-  Alur 3 — Pencairan. Nilai ke pengrajin TIDAK dipotong.
-           `dikirim = saldo bersih pengrajin`
-           `beban FurniTech = Rp5.000 per pencairan`
+  Rp 10.000.000 → FurniTech Rp150.000, pengrajin Rp9.840.560.
+  Cek buku: 150.000 + 9.840.560 + 5.000 = 9.995.560 = escrow.
 
-KENAPA HANYA BANK TRANSFER/VA
-  Fee VA Rp4.000 itu FLAT per transaksi, sedangkan semua kanal lain memakai MDR
-  persen. MDR adalah lapisan biaya tambahan (kolom "Total MDR" terpisah dari
-  "Total Transaction Fee" di halaman Billings) yang tidak ada kebutuhan
-  bisnisnya di sini. Konsekuensi yang bagus: fee menjadi KONSTANTA, bukan
-  tabel per channel — jadi tidak ada channel yang bisa salah pilih dan tidak
-  ada tarif MDR yang perlu dikelola. Seluruh tarif kanal lain didokumentasikan
-  di docs/midtrans-fee.md §1 supaya tidak perlu dicek ulang.
+  Catatan akuntansi: fee dicatat sebagai BEBAN, bukan pengurangan pendapatan.
 
-  PERUBAHAN KODE YANG WAJIB MENYUSUL
+KENAPA "FEE DITANGGUNG PENGRAJIN" PERLU DIWASPADAI
+  Beban pengrajin itu FLAT (Rp9.440 per pesanan), sementara fee platform
+  persen. Akibatnya bebannya berbeda jauh tergantung nilai pesanan:
+
+  | Harga pesanan   | Platform fee | Beban/total pengrajin |
+  |-----------------|--------------|----------------------|
+  | Rp10.000.000    | Rp150.000    | 0,09%                |
+  | Rp1.000.000     | Rp15.000     | 0,94%                |
+  | Rp500.000       | Rp7.500      | 1,89%                |
+  | Rp300.000       | Rp4.500      | 3,15%                |
+  | Rp100.000       | Rp1.500      | 9,44%                |
+
+  Pengrajin yang memasang harga Rp100.000 kehilangan hampir sepersembilan dari
+  transaksinya. Keputusan "tidak perlu minimum pesanan" diterima, TAPI biaya
+  ini WAJIB tertulis dan terlihat SEBELUM pengrajin memasang harga — di wizard
+  pendaftaran, di ringkasan saldo siap cair, dan di rincian detail pesanan.
+  Kalau tidak, platform bisa dituduh memungut biaya tersembunyi dari mitra.
+  Sebaliknya, rincian yang sama HARUS TIDAK muncul di halaman lacak publik;
+  `test:lacak` terus mengunci itu.
+
+KENAPA FEE PER-PENERIMA / PER-BATCH SEKARANG LEBIH PENTING
+  Karena fee ditanggung pengrajin, kalau Rp5.000 itu per-penerima dan kita
+  pencairan 2× sehari, satu pengrajin dengan satu order sehari kehilangan
+  Rp10.000 per hari. Itu tidak bisa dipakai. Kalau per-batch, penjadwalan
+  bebas. Karena itu satu hal ini menentukan desain `payout_items`, dan mesin
+  payout ditahan sampai terjawab.
+
+  Contoh yang perlu ditanyakan ke Midtrans: satu panggilan API Payouts, 10 pengrajin
+  di dalamnya. Per-batch = Rp5.000 total. Per-penerima = Rp50.000. Panggilan
+  yang sama, biaya berbeda 10 kali lipat.
+
+KODE YANG WAJIB MENYUSUL SEBELUM MESIN PAYOUT
   `enabled_payments` di src/lib/midtrans/snap.ts masih mendaftarkan `qris`,
-  `gopay`, `shopeepay`, dan `credit_card`. Semua itu harus dihapus, dan
-  `test:checkout` harus mengunci daftar kanal itu — kalau kanal yang
-  tidak dimaksud masih bisa dipakai, seluruh hitungan fee di atas jadi tidak
-  berlaku karena angkanya berbeda per kanal.
-
-BIAYA YANG BELUM TERHITUNG — DAN INI YANG PALING BERBAHAYA
-  Beban riil FurniTech per pesanan adalah Rp9.440 (Rp4.440 masuk + Rp5.000
-  keluar), bukan Rp4.440 seperti pada contoh di atas:
-
-  | Harga pesanan | Fee 1,5% | Bersih |            |
-  |----------------|----------|--------|------------|
-  | Rp10.000.000   | Rp150.000| Rp140.560| sehat     |
-  | Rp1.000.000    | Rp15.000 | Rp 5.560 | tipis     |
-  | Rp630.000      | Rp 9.450 | Rp10     | impas     |
-  | Rp296.000      | Rp 4.440 | −Rp5.000 | RUGI      |
-  | Rp100.000      | Rp 1.500 | −Rp7.940 | RUGI      |
-
-  Titik impas Rp629.333. Di bawah itu FurniTech kehilangan uang pada setiap
-  transaksi, dan kerugian itu tidak terlihat di laporan penjualan karena yang
-  salah bukan omzetnya melainkan fee-nya. Mebel custom jarang sekecil itu,
-  tapi pesanan aksesori/Perbaikan bisa. Keputusan minimum pesanan masih
-  terbuka — lihat docs/midtrans-fee.md §8.
-
-  VARIABEL TERBESAR YANG BELUM DIKETAHUI: Rp5.000 itu per-penerima atau
-  per-batch?
-
-  | Pengrajin aktif | Disbursement/hari | Fee/hari | Fee/bulan   |
-  |-----------------|-------------------|----------|-------------|
-  | 1               | 2                 | Rp10.000 | Rp 300.000  |
-  | 10              | 20                | Rp100.000| Rp3.000.000 |
-  | 50              | 100               | Rp500.000| Rp15.000.000|
-  | 100             | 200               | Rp1.000.000 | Rp30.000.000 |
-
-  Kalau per batch, biayanya Rp10.000–Rp300.000/bulan tanpa tergantung jumlah
-  pengrajin. Selisihnya pada 100 pengrajin: Rp29,7 juta per bulan. Itu satu
-  pertanyaan, dan menentukan apakah model ini layak atau tidak.
+  `gopay`, `shopeepay`, dan `credit_card`. Semuanya harus dihapus, dan
+  hanya BNI, Danamon, BSI, BCA, BRI yang dipakai produksi — CIMB (maks Rp250
+  juta) dan Permata (maks Rp9,999 miliar) dikecualikan karena batas
+  maksimumnya. Alasannya di docs/midtrans-fee.md §9.

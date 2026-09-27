@@ -1,9 +1,16 @@
 Product Requirement Document (PRD) — FurniTech
 Nama Produk: FurniTech
 Tipe Platform: SaaS Multi-Tenant (B2B2C E-Commerce & Internal Operations for Furniture Makers)
-Versi PRD: 1.4
+Versi PRD: 1.5
 Status: Approved for Development
 Catatan Revisi:
+ * v1.5 — Model biaya final: seluruh fee Midtrans dipotong ke pengrajin
+   (bukan dari platform fee), platform fee 1,5% dihitung dari totalAmount
+   termasuk ongkir, biaya pencairan Rp 5.000 per eksekusi ditanggung
+   pengrajin, dan fee dicatat sebagai beban. Ini menggantikan v1.4 yang
+   memakai platform fee untuk menutup fee Midtrans. v1.4 sendiri
+   menggantikan v1.3, yang menyatakan fee Midtrans dipotong dari total
+   pembayaran. Detail dan rekomendasi channel ada di `docs/midtrans-fee.md`.
  * v1.4 — Menetapkan model biaya yang sebenarnya: kanal pembayaran hanya Bank
    Transfer/VA, fee masuk Rp 4.440 dipotong dari platform fee 1,5% (bukan dari
    bagian pengrajin), dan fee pencairan Rp 5.000 ditanggung FurniTech. Model
@@ -44,56 +51,68 @@ B. Matriks Fitur & Batasan Paket (Feature Differentiation)
 | Laporan Keuangan & Kas | Transaksi Dasar | Rekap Laba/Rugi Bulanan | Laporan Eksekutif & Analytics |
 | Jadwal Pencairan (Payouts) | Included (2x/hari) | Included (2x/hari) | Included (2x/hari) |
 C. Kebijakan Transaksi & Potongan Biaya (Fees)
-   Model ini ditetapkan pemilik produk pada 2026-09-27 dan ME-REPLACE model
-   lama yang menyatakan fee Midtrans dipotong "dari total nilai pembayaran".
-   Angka, sumber, dan risikonya: `docs/midtrans-fee.md`.
+   Model ini ditetapkan pemilik produk pada 2026-09-27 (PRD v1.5) dan
+   ME-REPLACE dua model sebelumnya. Angka, sumber, dan risikonya:
+   `docs/midtrans-fee.md`.
    * **Kanal pembayaran: HANYA Bank Transfer dan Virtual Account.** Tidak ada
-     QRIS, e-wallet, maupun kartu kredit. Alasannya ekonomi, bukan teknis: fee
-     VA Rp 4.000 itu flat per transaksi, sedangkan kanal lain memakai MDR
-     persen — lapisan biaya tambahan yang tidak ada kebutuhan bisnisnya di
-     sini. Tarif semua kanal ada di `docs/midtrans-fee.md` §1.
-   * **Fee masuk (VA):** Rp 4.000 + PPN 11% = **Rp 4.440 per transaksi
-     berhasil**. Midtrans memotongnya dari saldo saat pencairan dana, bukan
-     langsung per transaksi.
-   * **Fee keluar (payout):** **Rp 5.000 per pencairan**, ditanggung FurniTech.
-     Nilai yang dikirim ke pengrajin tidak dikurangi.
-   * **Platform Service Fee: 1,5%** dari nilai transaksi produk, dan fee
-     Midtrans dipotong dari fee tersebut — bukan dari bagian pengrajin.
+     QRIS, e-wallet, maupun kartu kredit. Alasannya ekonomi: fee VA Rp 4.000
+     flat per transaksi, sedangkan kanal lain memakai MDR persen — lapisan
+     biaya tambahan yang tidak ada kebutuhan bisnisnya di sini. Rekomendasi
+     channel produksi: BNI, Danamon, BSI, BCA, BRI. CIMB (maks Rp 250 juta)
+     dan Permata (maks Rp 9,999 miliar) dikecualikan karena batas
+     maksimumnya, bukan karena reputasi banknya.
+   * **Seluruh fee Midtrans ditanggung pengrajin.** Bukan dipotong dari
+     platform fee, dan bukan disamarkan lewat markup ke harga produk.
+   * **Platform Service Fee 1,5% dihitung dari `totalAmount`** (subtotal
+     produk + ongkir).
+   * **Fee Midtrans dicatat sebagai BEBAN**, bukan pengurangan pendapatan.
+   * **Biaya pencairan Rp 5.000 per eksekusi**, bukan per order, dan
+     dipotong dari saldo pengrajin.
 
-   RUMUS PER ALUR
-   1. Pembayaran langganan (pembayar = pengrajin):
-      Pengrajin membayar harga paket apa adanya, tanpa biaya layanan tambahan.
-      `diterima FurniTech = harga paket − Rp 4.440`
-      Contoh: Basic Rp 300.000 → FurniTech menerima **Rp 295.560**.
-   2. Pembelian produk (pembayar = pembeli storefront):
-      Pembeli membayar `harga produk + ongkir` tanpa biaya layanan tambahan.
-      `platform fee = 1,5% × total pesanan`
-      `pendapatan platform = 1,5% × total pesanan − Rp 4.440`
-      `dibayar ke pengrajin = total pesanan − 1,5% × total pesanan`
-      Contoh: Rp 10.000.000 → pengrajin **Rp 9.850.000**, FurniTech
-      **Rp 145.560**. Cek buku: 9.850.000 + 145.560 = 9.995.560, sama
-      dengan saldo escrow setelah fee Midtrans.
-   3. Pencairan (FurniTech → rekening pengrajin):
-      `dikirim = saldo bersih pengrajin` (penuh, tidak dipotong)
-      `beban FurniTech = Rp 5.000 per pencairan`
+   RUMUS
+   ```
+   platformFee  = 1,5% × totalAmount
+   feeMasuk     = Rp4.440   (VA + PPN 11%)
+   feePayout    = Rp5.000   (per eksekusi pencairan)
+
+   saldo pengrajin += totalAmount − platformFee − feeMasuk
+   saat payout     : saldo ditransfer = saldo − feePayout
+   pendapatan platform = platformFee
+   ```
+
+   CONTOH — pesanan Rp 10.000.000
+   ```
+   yang dibayar pembeli              Rp10.000.000
+   escrow dikreditkan Midtrans       Rp 9.995.560
+   platform fee 1,5% → FurniTech     Rp  150.000
+   fee masuk         → pengrajin      Rp    4.440
+   fee payout        → pengrajin      Rp    5.000
+   diterima pengrajin                Rp 9.840.560
+   Cek buku: 150.000 + 9.840.560 + 5.000 = 9.995.560 ✓
+   ```
 
    CATATAN YANG WAJIB DIPERHATIKAN
-   * Fee payout Rp 5.000 TIDAK termasuk dalam hitungan 1,5%. Beban riil
-     FurniTech per pesanan adalah **Rp 9.440** (Rp 4.440 masuk + Rp 5.000
-     keluar), sehingga **titik impas platform ada di Rp 629.333 per pesanan**.
-     Di bawah angka itu FurniTech rugi pada setiap transaksi, dan ruginya
-     tidak terlihat dari laporan penjualan karena yang error adalah fee-nya.
-     Keputusan minimum pesanan masih terbuka — `docs/midtrans-fee.md` §8.
-   * Skema DP + pelunasan di back-office akan **mengalikan fee masuk dua
-     kali** (Rp 8.880 per pesanan). Checkout storefront menagih sekali penuh
-     secara sengaja; itu tidak boleh diubah tanpa menghitung ulang dampaknya.
+   * Platform fee 1,5% sekarang menutup **nol** biaya — jadi tarifnya
+     sepenuhnya menjadi alat harga, dan bisa diturunkan kapan saja tanpa
+     perubahan struktural.
+   * Beban pengrajin **flat** (Rp 9.440 per pesanan) sementara fee platform
+     **persen**. Untuk pesanan Rp 10 juta bebannya 0,09%, tapi untuk
+     pesanan Rp 300.000 menjadi 3,15%, dan Rp 100.000 menjadi 9,44%.
+     Karena itu biaya WAJIB ditulis dan terlihat sebelum pengrajin memasang
+     harga — di wizard pendaftaran, di ringkasan saldo siap cair, dan di
+     rincian detail pesanan.
+   * Halaman lacak publik TIDAK BOLEH menampilkan rincian biaya ini.
+     `test:lacak` tetap mengunci: margin, fee platform, dan fee gateway tidak
+     boleh muncul di halaman yang dilihat pembeli.
+   * Satu pencairan per pengrajin per slot, bukan per order. Kalau satu
+     pengrajin punya lima order lunas dalam satu slot, dia membayar Rp 5.000
+     sekali, bukan Rp 25.000.
    * Pengrajin menunggu 1–2 hari: uang masuk ke saldo setelah settlement,
-     baru cair pada slot 06.00/18.00 WIB. Ini wajib ditulis di halaman
-     "saldo siap cair", kalau tidak pertanyaan pertama ke customer support
-     akan tentang hal ini.
-   * Biaya pencairan per-batch atau per-penerima belum dikonfirmasi ke
-     Midtrans, dan selisihnya pada 100 pengrajin bisa mencapai Rp 29,7 juta
-     per bulan. **Mesin payout tidak boleh dibangun sebelum ini terjawab.**
+     baru cair pada slot 06.00/18.00 WIB.
+   * Apakah Rp 5.000 berlaku per-penerima atau per-batch belum dikonfirmasi
+     ke Midtrans, dan karena fee-nya ditanggung pengrajin, selisih ini
+     langsung memotong pengrajin. **Mesin payout ditahan sampai terjawab.**
+
 3. Tech Stack & Arsitektur Sistem
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        CLIENT / USER INTERFACE                         │
@@ -204,15 +223,18 @@ Modul 3: Otomatisasi Payout (Midtrans Payouts) & Cron
  * Jadwal Pencairan Dana:
    * Dieksekusi otomatis via cron-job.org ke webhook FurniTech setiap pukul 06.00 WIB dan 18.00 WIB.
  * Alur Pencairan:
-   * Sistem membaca saldo bersih pengrajin:
-     `total pesanan − 1,5% × total pesanan` untuk setiap pesanan lunas.
-     Bagian pengrajin TIDAK dipotong fee Midtrans (§2.C) — biayanya ditanggung
-     dari fee platform.
+   * Sistem menambah saldo pengrajin sebesar
+     `total pesanan − 1,5% × total pesanan − Rp 4.440` untuk setiap pesanan
+     yang lunas (§2.C).
    * Mengirim instruksi batch payout via API Midtrans Payouts (produk ini
-     sebelumnya bernama IRIS) ke rekening bank pengrajin, dengan biaya
-     Rp 5.000 per pencairan yang ditanggung FurniTech.
-   * Nominal yang dikirim ke pengrajin TIDAK dikurangi fee pencairan; yang
-     dipotong hanya catatan bebannya.
+     sebelumnya bernama IRIS) ke rekening bank pengrajin. Satu eksekusi
+     pencairan per pengrajin per slot, bukan per order.
+   * Nominal yang ditransfer = saldo pengrajin pada saat itu, dikurangi
+     Rp 5.000 sebagai biaya pencairan yang ditanggung pengrajin.
+   * Pengrajin dengan saldo di bawah ambang minimum tidak ditransfer pada
+     slot itu; saldonya tetap tersedia untuk slot berikutnya.
+   * Kalau tidak ada saldo yang memenuhi ambang pada sebuah slot, tidak ada
+     payout yang dibuat sama sekali — bukan membuat batch kosong.
    * Fee dihitung ulang di server dari `orders`, tidak pernah dari nilai yang
      dikirim klien.
    * Kalau konstanta fee belum diisi, pencairan DIBLOKIR dengan pesan yang bisa
