@@ -27,6 +27,7 @@ const EXPECTED_TABLES = [
   "saas_invoices",
   "integration_audit_logs",
   "notification_usage",
+  "delivery_proofs",
 ];
 
 async function main() {
@@ -40,7 +41,10 @@ async function main() {
   const existing = new Set(tables.map((t) => t.tablename));
   const missing = EXPECTED_TABLES.filter((t) => !existing.has(t));
   checks.push({
-    name: "Tabel dibuat (14)",
+    // Labelnya dihitung, bukan diketik. Angka yang ditulis manual di dalam
+    // string akan basi begitu ada tabel baru, dan tidak ada yang menangkapnya
+    // karena pemeriksaan ini tetap hijau.
+    name: `Tabel dibuat (${EXPECTED_TABLES.length})`,
     ok: missing.length === 0,
     detail: missing.length ? `hilang: ${missing.join(", ")}` : "semua ada",
   });

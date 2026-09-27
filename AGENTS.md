@@ -58,6 +58,9 @@ npm run test:responsive # 23 pemeriksaan struktural responsif & token
 npm run test:sprint3  # 16 uji halaman & pembatasan role Sprint 3
 npm run test:register  # 6 pemeriksaan wizard /daftar (Playwright, butuh server)
 npm run test:carpenter # 16 pemeriksaan antrean tukang di 375px (butuh server)
+npm run test:kurir    # 25 pemeriksaan RLS kurir & bukti, JWT sungguhan
+npm run test:kurir-ui # 24 pemeriksaan halaman kurir di 375px (butuh server)
+npm run db:buckets    # pastikan bucket Storage ada & privat
 npm run test:alamat    # 25 pemeriksaan form alamat & peta (butuh server)
 npm run test:ongkir    # 13 pengujian tarif ongkir & lookup
 npm run test:lacak     # 17 pengujian privasi halaman lacak
@@ -220,6 +223,62 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 - **`/lacak` tidak punya `<main>` sendiri** — `app/layout.tsx` yang
   menyediakan, supaya tidak ada dua landmark. Pembungkus `px-4` ada di halamannya
   sendiri, bukan di layout, supaya halaman full-bleed tetap bisa.
+
+## Peran Kurir & bukti penerimaan (Sprint 6)
+
+- **Kurir adalah satu-satunya peran yang butuh policy RLS sendiri.**
+  `is_tenant_staff()` mengembalikan TRUE untuk SEMUA peran tenant. Kalau kurir
+  ikut memakainya, satu akun kurir melihat seluruh pesanan workshop-nya —
+  termasuk alamat dan nominal pembeli orang lain. `orders_courier_read` hanya
+  meloloskan `assigned_courier_id = auth.uid()`, dan `orders_staff_read` harus
+  dikecualikan untuk kurir atau policy itu meloloskan semua.
+- **RLS menyaring BARIS, bukan KOLOM.** `select=net_tenant_amount` tetap
+  berhasil untuk kurir pada barisnya sendiri. Klaim "kurir tidak melihat
+  nominal" di kode aplikasi itu permissions-to-be-polite, bukan jaminan —
+  anon key ikut terkirim ke browser.
+- **`revoke select (kolom)` DITOLAK DIAM-DIAM.** Postgres memenuhi hak akses
+  kolom dari grant level TABEL, jadi selama Supabase memberi `grant select`
+  untuk seluruh tabel, revoke per kolom tidak berpengaruh dan tidak ada error.
+  Harus `revoke` di level tabel dulu, lalu `grant select (kolom aman)`.
+- **Jangan mencabut seluruh tabel lalu mengira tes RLS masih berguna.**
+  PostgREST mengembalikan nol baris untuk semua orang, jadi "kurir A tidak
+  melihat pesanan kurir B" tetap lulus tanpa menguji apa pun. Tes hijau yang
+  tidak menguji lebih buruk dari kebocoran yang ditutup.
+- **Kurir TIDAK boleh menulis apa pun ke `orders`.** Itu menutup jalan samping
+  mengubah `payment_status` sendiri lalu memicu pencairan.
+- **`delivery_proofs` append-only.** Trigger menolak UPDATE dan DELETE.
+  Bukti yang bisa diedit bukan bukti, dan baris ini yang memicu pencairan.
+- **UNIQUE pada `delivery_proofs.order_id`, bukan dicek di action.**
+  `if (!existing)` tidak menutup dua request bersamaan, dan kurir menekan
+  tombol dua kali karena internet lambat itu kejadian nyata. Dua bukti =
+  pencairan ganda.
+- **Trigger juga menyalakan `ON DELETE CASCADE`.** Trigger yang menolak semua
+  delete membuat penghapusan tenant mustahil — gejalanya di produksi
+  "owner tidak bisa berhenti jadi pelanggan". Pakai
+  `pg_trigger_depth() = 1` untuk membedakan delete langsung (tolak) dari
+  cascade (izinkan), plus `revoke update, delete` sebagai lapisan kedua.
+- **Uji trigger lewat koneksi yang sama dengan aplikasi, bukan lewat PostgREST.**
+  GRANT memblokir lebih dulu dan mengembalikan 403, jadi tes lewat PostgREST
+  hijau tanpa pernah menyalakan trigger-nya.
+- **`signer_name` ≠ `orders.customer_name`.** Yang menandatangani belum tentu
+  pembeli. Sama juga `courier_id` ≠ `assigned_courier_id`: penugasan bisa
+  berubah atau dilepas setelah pengiriman.
+- **`formData.get()` mengembalikan `null`, bukan `undefined`,** kalau field-nya
+  tidak ada di form. `z.string().optional()` menolak `null` dengan pesan
+  "expected string, received null". Field kondisional harus menerima `null`
+  sebagai kasus normal.
+- **`/kurir` satu-satunya halaman role kurir.** `ROLE_HOME["kurir"]` bukan
+  `/dashboard` — halaman itu memuat ringkasan keuangan tenant, dan kurir tidak
+  punya alasan melihatnya. Bukan "menu ringkas", memang satu halaman.
+- **Nominal tidak diambil sama sekali di `loadCourierQueue`,** bukan
+  disembunyikan. Nomor HP hanya empat digit terakhir. `test:kurir-ui` mencari
+  POLA `Rp\d`, bukan angka tertentu, karena angka margin bisa kebetulan sama
+  dengan total yang memang boleh tampil.
+- **Tanda tangan digambar di HP kurir, bukan pelanggan.** Lemah secara
+  pembuktian dan diterima karena kanal hanya VA (transfer bank tidak bisa
+  di-chargeback) serta tidak ada refund. Begitu kartu kredit atau QRIS
+  ditambahkan, keputusan "tidak ada refund" berubah jadi tanggung jawab
+  platform.
 
 ## PWA & luring (Sprint 6)
 

@@ -22,7 +22,12 @@ import "dotenv/config";
 import { eq, inArray, sql } from "drizzle-orm";
 
 import { db, sqlClient } from "../src/db/client";
-import { orders, tenants, users } from "../src/db/schema";
+import {
+  deliveryProofs,
+  orders,
+  tenants,
+  users,
+} from "../src/db/schema";
 import { createSupabaseAdmin } from "../src/lib/supabase/admin";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -99,6 +104,63 @@ async function patch(token: string, path: string, body: unknown) {
     /* biarkan teks mentah */
   }
   return { status: res.status, text, data };
+}
+
+/** POST dengan `return=representation` supaya 0 baris vs 1 baris terlihat. */
+async function insert(
+  token: string,
+  table: string,
+  body: unknown,
+): Promise<{ status: number; data: unknown; text: string }> {
+  const res = await fetch(`${url}/rest/v1/${table}`, {
+    method: "POST",
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify(body),
+  });
+  const text = await res.text();
+  let data: unknown = text;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    /* biarkan teks mentah */
+  }
+  return { status: res.status, data, text };
+}
+
+async function del(token: string, path: string) {
+  const res = await fetch(`${url}/rest/v1/${path}`, {
+    method: "DELETE",
+    headers: {
+      apikey: anonKey,
+      Authorization: `Bearer ${token}`,
+      Prefer: "return=minimal",
+    },
+  });
+  return { status: res.status, text: await res.text() };
+}
+
+/**
+ * Jalankan SQL mentah lewat koneksi yang sama dengan kode aplikasi, dan
+ * laporkan hasilnya tanpa melempar error.
+ *
+ * Kegagalan di sini justru hasil yang diharapkan pada beberapa pengujian,
+ * jadi `try/catch` yang mengembalikan nilai lebih berguna daripada lempar.
+ */
+async function trySql(statement: string): Promise<{ ok: boolean; message: string }> {
+  try {
+    await sqlClient.unsafe(statement);
+    return { ok: true, message: "" };
+  } catch (err) {
+    return {
+      ok: false,
+      message: err instanceof Error ? err.message : String(err),
+    };
+  }
 }
 
 function rows(data: unknown): Record<string, unknown>[] {
@@ -325,12 +387,192 @@ async function main() {
     `status ${materials.status}, ${rows(materials.data).length} baris`,
   );
 
-  /*
-   * 11. Bukti penerimaan milik orang lain tidak boleh terlihat oleh kurir
-   *     yang tidak ditugaskan. Tabel ini belum ada di Point 1 — pemeriksaan
-   *     ini sengaja menunggu tabelnya dan akan ditambah di Point 2, karena
-   *     policies-nya belum ditulis saat skrip ini dibuat.
-   */
+  /* ==================================================================
+   * DELIVERY PROOFS — RLS, append-only, dan penugasan wajib ikut dicek
+   * ================================================================== */
+
+  const proofFor = (orderId: string, courierId: string) => ({
+    order_id: orderId,
+    tenant_id: tenant.id,
+    courier_id: courierId,
+    photo_path: `${tenant.id}/${orderId}/barang-uji.jpg`,
+    signature_path: `${tenant.id}/${orderId}/tanda-uji.png`,
+    signer_name: "Penerima Uji",
+    received_at: new Date().toISOString(),
+  });
+
+  // 11. Kurir A BOLEH menulis bukti untuk pesanan yang ditugaskan padanya.
+  const own = await insert(tokenA, "delivery_proofs", proofFor(mineA.id, a.userId));
+  check(
+    "kurir A: boleh menulis bukti untuk pesanannya sendiri",
+    own.status === 201 && rows(own.data).length === 1,
+    `status ${own.status} ${own.text.slice(0, 100)}`,
+  );
+
+  // 12. Bukti kedua untuk pesanan yang sama DITOLAK. Ini bukan soal kerapian data: dua
+  //     bukti berarti pemicu pencairan berjalan dua kali untuk satu pengiriman.
+  const dup = await insert(tokenA, "delivery_proofs", proofFor(mineA.id, a.userId));
+  check(
+    "kurir A: bukti kedua untuk pesanan yang sama DITOLAK",
+    dup.status >= 400,
+    `status ${dup.status} ${dup.text.slice(0, 100)}`,
+  );
+
+  // 13. Menulis bukti dengan `courier_id` sendiri untuk pesanan ORANG LAIN.
+  //     Ini bypass yang paling mudah dilakukan karena kelihatan sah: semua
+  //     kolom yang diperiksa policy terpenuhi, kecuali penugasannya.
+  const forge = await insert(tokenA, "delivery_proofs", proofFor(mineB.id, a.userId));
+  check(
+    "kurir A: bukti untuk pesanan kurir lain DITOLAK",
+    forge.status >= 400,
+    `status ${forge.status} ${forge.text.slice(0, 100)}`,
+  );
+
+  // 14. `courier_id` orang lain untuk pesanan sendiri. Pemeriksaan
+//     `courier_id = auth.uid()` harus menolak, kalau tidak siapa pun bisa
+//     menulis bukti yang terlihat seolah-olah kurir lain yang mengantar.
+  const wrongCourier = await insert(
+    tokenA,
+    "delivery_proofs",
+    proofFor(mineA.id, b.userId),
+  );
+  check(
+    "kurir A: tidak boleh menulis atas nama kurir lain",
+    wrongCourier.status >= 400,
+    `status ${wrongCourier.status} ${wrongCourier.text.slice(0, 100)}`,
+  );
+
+  // 15. `tenant_id` palsu. Kolomnya boleh diisi apa saja oleh pemanggil, dan
+  //     kalau nilainya bohong buktinya tersimpan di tenant yang tidak akan
+  //     pernah melihatnya — termasuk tidak terlihat saat rekonsiliasi.
+  const wrongTenant = await insert(tokenA, "delivery_proofs", {
+    ...proofFor(mineA.id, a.userId),
+    tenant_id: otherTenant[0].id,
+  });
+  check(
+    "kurir A: tenant_id palsu DITOLAK",
+    wrongTenant.status >= 400,
+    `status ${wrongTenant.status} ${wrongTenant.text.slice(0, 100)}`,
+  );
+
+  // 16. Bukti bersifat APPEND-ONLY, dan itu ditegakkan trigger, bukan policy:
+  //     policy RLS bisa hilang diam-diam saat di-refactor, trigger tidak.
+  const [proofId] = own.status === 201
+    ? [String(rows(own.data)[0]?.id)]
+    : [""];
+  const edited = await patch(tokenA, `delivery_proofs?id=eq.${proofId}`, {
+    signer_name: "Nama Direkayasa",
+  });
+  const stillOriginal = await db
+    .select({ signerName: deliveryProofs.signerName })
+    .from(deliveryProofs)
+    .where(eq(deliveryProofs.id, proofId));
+  check(
+    "kurir A: bukti yang sudah terkirim TIDAK bisa diubah",
+    stillOriginal[0]?.signerName === "Penerima Uji",
+    `status ${edited.status}, signer_name=${stillOriginal[0]?.signerName}`,
+  );
+
+  // 17. Yang sama untuk hapus. Menhapusnya bukan hanya menghilangkan bukti —
+  //     ia menghilangkan pemicu pencairan, jadi pesanan itu kembali "tidak punya
+  //     bukti" tanpa jejak bahwa pernah ada.
+  const removed = await del(tokenA, `delivery_proofs?id=eq.${proofId}`);
+  const stillThere = await db
+    .select({ id: deliveryProofs.id })
+    .from(deliveryProofs)
+    .where(eq(deliveryProofs.id, proofId));
+  check(
+    "kurir A: bukti yang sudah terkirim TIDAK bisa dihapus",
+    stillThere.length === 1,
+    `status ${removed.status}, ${stillThere.length} baris tersisa`,
+  );
+
+  // 18. Kurir hanya melihat buktinya sendiri. Bukti milik kurir lain di toko
+  //     yang sama memuat nama dan tanda tangan orang — lebih sensitif dari
+  //     alamat kiriman yang sudah dibatasi empat digit.
+  const seenProofsA = await get(tokenA, "delivery_proofs?select=order_id");
+  const proofOrderIdsA = rows(seenProofsA.data).map((r) => r.order_id as string);
+  check(
+    "kurir A: hanya melihat buktinya sendiri",
+    proofOrderIdsA.length === 1 && proofOrderIdsA[0] === mineA.id,
+    `terlihat: ${proofOrderIdsA.length} baris`,
+  );
+
+  // 19. Staff boleh MEMBACA bukti (untuk verifikasi manual) tapi tidak boleh
+  //     MENULIS. Pencairan tidak boleh bisa dipicu manual dari back-office:
+  //     pemicunya kurir, supaya ada satu jalur yang bisa diaudit.
+  const anonWrite = await insert(
+    anonKey,
+    "delivery_proofs",
+    proofFor(mineB.id, b.userId),
+  );
+  check(
+    "anon: TIDAK boleh menulis bukti",
+    anonWrite.status >= 400,
+    `status ${anonWrite.status}`,
+  );
+
+  // 20. Anon juga tidak boleh membaca bukti apa pun, di tenant mana pun.
+  const anonRead = await get(anonKey, "delivery_proofs?select=order_id");
+  check(
+    "anon: TIDAK boleh membaca bukti",
+    anonRead.status >= 400 || rows(anonRead.data).length === 0,
+    `status ${anonRead.status}, ${rows(anonRead.data).length} baris`,
+  );
+
+  // 21. Yang BENAR-BENAR diuji trigger, bukan GRANT.
+  //
+  //     Tes 16 dan 17 di atas diblokir GRANT lebih dulu (403), jadi keduanya
+  //     membuktikan hak akses PostgREST, BUKAN bahwa trigger menyala. Dan itu
+  //     yang tidak cukup: aplikasi memakai user postgres yang superuser dan
+  //     BYPASS seluruh GRANT. Kalau trigger-nya hilang, tidak ada yang akan
+  //     memberi tahu — GRANT masih berlaku dengan rapi.
+  //
+  //     Jadi di sini dikoneksikan langsung ke database, seperti kode aplikasi
+  //     lakukan, lalu dicoba mengubah dan menghapus buktinya.
+  const viaAppUpdate = await trySql(
+    `update public.delivery_proofs set signer_name = 'Direkayasa' where id = '${proofId}'`,
+  );
+  check(
+    "trigger: UPDATE dari jalur aplikasi DITOLAK",
+    !viaAppUpdate.ok,
+    viaAppUpdate.ok ? "UPDATE berhasil" : viaAppUpdate.message.slice(0, 70),
+  );
+
+  const viaAppDelete = await trySql(
+    `delete from public.delivery_proofs where id = '${proofId}'`,
+  );
+  check(
+    "trigger: DELETE dari jalur aplikasi DITOLAK",
+    !viaAppDelete.ok,
+    viaAppDelete.ok ? "DELETE berhasil" : viaAppDelete.message.slice(0, 70),
+  );
+
+  // 22. Cascade HARUS tetap bisa jalan, kalau tidak penghapusan tenant terkunci.
+  //     Ini regresi yang nyata: versi pertama trigger menolak semua delete,
+  //     termasuk yang datang dari ON DELETE CASCADE, sehingga owner tidak
+  //     bisa berhenti jadi pelanggan.
+  const cascade = await trySql(
+    `delete from public.tenants where id = '${tenant.id}'`,
+  );
+  check(
+    "trigger: cascade delete tenant TETAP bisa jalan",
+    cascade.ok,
+    cascade.ok ? "tenant terhapus" : cascade.message.slice(0, 70),
+  );
+
+  // Kalau cascade tadi gagal, fikstur tenant lain masih ada dan sisanya
+  // cleaned up oleh blok catch di bawah. Kalau berhasil, blok cleanup
+  // hanya perlu membersihkan tenant kedua.
+  const tenantGone = await db
+    .select({ id: tenants.id })
+    .from(tenants)
+    .where(eq(tenants.id, tenant.id));
+  check(
+    "cascade: bukti ikut terhapus bersama tenant",
+    tenantGone.length === 0,
+    `${tenantGone.length} tenant tersisa`,
+  );
 
   const failed = results.filter((r) => !r.ok).length;
   console.log(

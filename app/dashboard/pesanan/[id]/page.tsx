@@ -4,6 +4,7 @@ import { and, asc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import {
+  deliveryProofs,
   orderItems,
   orders,
   productionProgress,
@@ -13,13 +14,17 @@ import { requireTenantWrite } from "@/lib/auth/guard";
 import { recordPayment, transitionOrderStatus } from "@/lib/actions/orders";
 import { ProgressForm } from "@/components/progress-form";
 import {
+  DeliveryProofCard,
+  DeliveryProofMissing,
+} from "@/components/delivery-proof-card";
+import {
   AssignCarpenterForm,
   AssignCourierForm,
   RecordPaymentForm,
   TrackingForm,
 } from "@/components/order-forms";
 import { formatDateID, formatRupiah } from "@/lib/format";
-import { createSignedUrls } from "@/lib/storage";
+import { createDeliveryProofUrls, createSignedUrls } from "@/lib/storage";
 import { ALLOWED_TRANSITIONS, PROGRESS_STAGE_ORDER } from "@/lib/order-status";
 import {
   ORDER_STATUS_LABELS,
@@ -100,6 +105,49 @@ export default async function OrderDetailPage({
   const progressImageMap = await createSignedUrls(
     progress.map((p) => p.photoUrl),
   );
+
+  /*
+   * Bukti penerimaan diambil terpisah dari `order` karena yang perlu bukan
+   * barisnya saja, tapi signed URL untuk foto dan tanda tangannya. Signed URL
+   * berumur satu jam, jadi tidak boleh ikut di-cache bersama halaman: kalau
+   * halaman disimpan di cache lebih lama dari satu jam, setiap bukti yang
+   * tampil adalah gambar yang gagal dimuat.
+   */
+  const [proof] = await db
+    .select({
+      id: deliveryProofs.id,
+      signerName: deliveryProofs.signerName,
+      courierId: deliveryProofs.courierId,
+      notes: deliveryProofs.notes,
+      codAmount: deliveryProofs.codAmount,
+      photoPath: deliveryProofs.photoPath,
+      signaturePath: deliveryProofs.signaturePath,
+      codProofPath: deliveryProofs.codProofPath,
+      receivedAt: deliveryProofs.receivedAt,
+    })
+    .from(deliveryProofs)
+    .where(
+      and(
+        eq(deliveryProofs.orderId, id),
+        eq(deliveryProofs.tenantId, actor.tenantId),
+      ),
+    )
+    .limit(1);
+
+  const proofUrlMap = await createDeliveryProofUrls([
+    ...(proof ? [proof.photoPath, proof.signaturePath] : []),
+    ...(proof?.codProofPath ? [proof.codProofPath] : []),
+  ]);
+
+  const courierName = proof
+    ? (
+        await db
+          .select({ fullName: users.fullName })
+          .from(users)
+          .where(eq(users.id, proof.courierId))
+          .limit(1)
+      )[0]?.fullName ?? "Kurir"
+    : "Kurir";
 
   const current = order.orderStatus as OrderStatus;
   const nextStatuses = ALLOWED_TRANSITIONS[current] ?? [];
@@ -260,6 +308,28 @@ export default async function OrderDetailPage({
 
           {isOwnerOrAdmin ? (
             <>
+              {proof ? (
+                <DeliveryProofCard
+                  proof={{
+                    id: proof.id,
+                    photoUrl: proofUrlMap[proof.photoPath] ?? null,
+                    signatureUrl: proofUrlMap[proof.signaturePath] ?? null,
+                    codProofUrl: proof.codProofPath
+                      ? (proofUrlMap[proof.codProofPath] ?? null)
+                      : null,
+                    signerName: proof.signerName,
+                    courierName,
+                    notes: proof.notes,
+                    codAmount: proof.codAmount,
+                    receivedAt: proof.receivedAt,
+                  }}
+                />
+              ) : (
+                <DeliveryProofMissing
+                  hasCourier={order.assignedCourierId !== null}
+                />
+              )}
+
               <SectionCard title="Tugaskan tukang">
                 <AssignCarpenterForm
                   orderId={order.id}

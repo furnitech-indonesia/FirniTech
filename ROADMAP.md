@@ -836,16 +836,67 @@ TEMUAN YANG PERLU DIPERHATIKAN (tiga, dan semuanya ketahuan karena tes)
   tidak ada yang menyimpulkan "sudah kita revoke" sambil nilainya masih bisa
   dibaca.
 
+━━━ Sprint 6 — Bukti Penerimaan (selesai 2026-09-27) ━━━
+
+YANG DIKERJAKAN
+  - Tabel `delivery_proofs` (migrasi 0014, 0015). **Append-only di database**:
+    trigger menolak UPDATE dan DELETE. Bukti yang bisa diedit bukan bukti,
+    dan karena baris ini yang memicu pencairan, "bisa diedit" berarti uang
+    bergerak berdasarkan angka yang bisa direkayasa.
+  - UNIQUE pada `order_id`, ditegakkan di database. `if (!existing)` di
+    aplikasi tidak menutup dua request bersamaan — dan dua bukti untuk satu
+    pesanan berarti pencairan dua kali.
+  - `courier_id` disimpan terpisah dari `orders.assigned_courier_id`, dan
+    `signer_name` terpisah dari `orders.customer_name`. Penugasan bisa berubah
+    setelah pengiriman, dan yang menandatangani belum tentu pembeli.
+  - Bucket privat `delivery-proofs` + `npm run db:buckets`. Bucket tidak
+    dibuat lewat migrasi SQL (Storage tinggal di luar skema `public`), jadi
+    kegagalan "bucket tidak ada" harus terasa jelas, bukan 404 yang ditelan.
+  - Kolom tanda tangan di layar HP kurir (`src/components/signature-pad.tsx`).
+    Canvas di-backing store `devicePixelRatio`, pointer events + `touch-action:
+    none`, dan `setPointerCapture` supaya garis tidak terpotong saat jari keluar
+    dari kanvas.
+  - `submitDeliveryProof` — memverifikasi penugasan ULANG di server, menolak COD
+    yang melebihi sisa tagihan, dan menghapus objek yang sudah terunggah kalau
+    langkah berikutnya gagal (kalau tidak, setiap percobaan yang gagal
+    menyisakan berkas yatim).
+  - `ready_to_ship -> completed` jadi transisi langsung di `order-status.ts`.
+    `shipped` adalah langkah yang tidak perlu: kurir yang mengunggah bukti lalu
+    koneksinya putus akan meninggalkan pesanan `shipped` padahal barangnya
+    sudah sampai, dan pencairan memicu dari bukti — bukan dari status.
+  - Bukti tampil di detail pesanan pengrajin lewat signed URL, dengan tombol
+    hapus/ubah yang TIDAK ada (cuma akan menampilkan error).
+
+DUA TEMUAN DARI TES
+  1. **Trigger ikut menyalakan ON DELETE CASCADE.** Versi pertama menolak
+     semua delete — termasuk yang datang dari cascade FK `tenants -> orders ->
+     delivery_proofs`. Akibatnya penghapusan tenant mustahil, dan di produksi
+     gejalanya "owner tidak bisa berhenti jadi pelanggan". Diperbaiki dengan
+     `pg_trigger_depth() = 1` (delete langsung ditolak, cascade diizinkan)
+     plus `revoke update, delete` untuk menutup jalur kedua. Ketiganya
+     diverifikasi empiris, bukan diasumsikan: delete langsung ditolak, cascade
+     lolos, dan `test:kurir` mengulang keduanya lewat koneksi yang sama dengan
+     kode aplikasi — karena GRANT PostgREST akan memblokir lebih dulu dan
+     membuat tesnya hijau tanpa menguji trigger sama sekali.
+  2. **`formData.get()` mengembalikan `null`, bukan `undefined`.** Skema COD
+     memakai `z.string().optional()` yang menolak `null` dengan pesan
+     "expected string, received null". Field COD memang belum selalu ada di
+     form kurir, jadi `null` adalah kasus normal. Ketahuan hanya oleh
+     `test:kurir-ui`, yang benar-benar menekan tombol kirim dan membaca pesan
+     errornya.
+
 YANG MASIH HARUS DIKERJAKAN
-  2. Bukti penerimaan: foto barang + tanda tangan pelanggan di layar HP
-     kurir. Bucket privat + signed URL, seperti foto progres. Policy RLS-nya
-     harus INSERT-only dan hanya untuk kurir yang ditugaskan.
   3. Rekening pengrajin: kolom di `tenants`, verifikasi lewat
      `POST /account_validation` Payouts, dan halaman COD transfer bank yang
      menampilkan nomor + atas nama rekening.
   4. Mesin payout: `payout_logs`/`payout_items`, pemicu bukti, fee
      Rp5.550 per penerima, `iris-idempotency-key` per permintaan.
+     PENTING: payout wajib memeriksa bahwa `cod_amount` pada bukti benar-benar
+     milik pesanan COD — kolomnya sudah ada dan sudah diisi lewat action, tapi
+     belum ada metode pembayaran COD untuk diverifikasi terhadapnya.
   5. COD di checkout: metode bayar baru, tanpa Midtrans, dengan bukti yang
-     diunggah kurir.
+     diunggah kurir. Field COD di form kurir sengaja belum dirender sampai
+     metodenya ada, supaya kurir tidak diminta nominal untuk pesanan yang
+     memang bukan COD.
   6. Pengaturan fee platform & harga paket di panel super admin, dengan
      aturan: invoice yang sudah terbit mengunci harga saat dibuat.

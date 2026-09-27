@@ -3,7 +3,7 @@ import "server-only";
 import { and, asc, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
-import { orders, productionProgress } from "@/db/schema";
+import { deliveryProofs, orders, productionProgress } from "@/db/schema";
 import type { ProgressStage } from "@/lib/labels";
 
 /**
@@ -27,8 +27,14 @@ import type { ProgressStage } from "@/lib/labels";
  *     untuk mengenali kiriman, sementara nomor penuh adalah data pribadi orang.
  */
 
-/** Status pesanan yang berarti barangnya siap untuk ditarik. */
-const READY_STATUSES = ["ready_to_ship", "shipped", "completed"] as const;
+/**
+ * Status pesanan yang masuk daftar kurir.
+ *
+ * `completed` ikut, bukan karena masih perlu diantar, tapi karena inilah
+ * status yang berubah begitu bukti terkirim — dan pesanan yang barunya
+ * selesai masih punya tempat di layar kurir sebagai "sudah dikirim".
+ */
+const SHIPPABLE_STATUSES = ["ready_to_ship", "shipped", "completed"] as const;
 
 export type CourierDelivery = {
   id: string;
@@ -40,14 +46,19 @@ export type CourierDelivery = {
   cargoName: string | null;
   trackingNumber: string | null;
   /**
-   * Tahap produksi terakhir, untuk konteks saja — bukan wajib, dan yang
-   * penting bukan angkanya melainkan kenapa barang itu belum bisa dikirim.
-   * Di-cast karena diambil dari query yang mengembalikan `text`: enum-nya
-   * dijaga di `production_progress`, dan memaksa setiap pemanggil
-   * memvalidasi ulang di tempat yang salah adalah pekerjaan yang lebih besar
-   * daripada satu cast di loader.
-   */
+  /** Tahap produksi terakhir, untuk konteks saja. */
   lastStage: ProgressStage | null;
+  /**
+   * Apakah bukti penerimaan sudah pernah dikirim.
+   *
+   * Ada karena daftar ini TIDAK boleh menyembunyikan kiriman yang selesai.
+   * Begitu bukti terkirim, status pesanan menjadi `completed` — dan status itu
+   * termasuk yang ditampilkan, jadi tanpa kolom ini kartunya tetap ada tanpa
+   * penjelasan apakah tombolnya masih bisa dipakai. Yang tidak boleh terjadi:
+   * bukti kedua ditolak unique index di database. Jadi tugas server hanya
+   * menahan agar form yang pasti gagal tidak ikut tampil.
+   */
+  hasProof: boolean;
   createdAt: Date;
 };
 
@@ -55,6 +66,16 @@ export async function loadCourierQueue(
   tenantId: string,
   courierId: string,
 ): Promise<CourierDelivery[]> {
+  /*
+   * LEFT JOIN ke `delivery_proofs`, bukan subquery terpisah.
+   *
+   * `delivery_proofs` punya UNIQUE pada `order_id`, jadi join ini tidak
+   * menggandakan baris pesanan — dan itu syaratnya, bukan kebetulan: kalau
+   * Unique-nya dihapus someday, daftar ini akan menampilkan "kiriman" yang
+   * sama beberapa kali dan kurir akan mengunggah bukti berulang. Subquery
+   * `exists` lebih aman terhadap itu, tapi biayanya satu query lagi per
+   * render; join dipakai karena unique-nya sudah dipastikan di database.
+   */
   const rows = await db
     .select({
       id: orders.id,
@@ -66,15 +87,17 @@ export async function loadCourierQueue(
       cargoName: orders.cargoName,
       trackingNumber: orders.trackingNumber,
       createdAt: orders.createdAt,
+      proofId: deliveryProofs.id,
     })
     .from(orders)
+    .leftJoin(deliveryProofs, eq(deliveryProofs.orderId, orders.id))
     .where(
       and(
         eq(orders.tenantId, tenantId),
         // PARAMETER YANG MEMBATASI SELURUH DAFTAR. Tanpa baris ini, kurir
         // melihat seluruh pengiriman tenant-nya.
         eq(orders.assignedCourierId, courierId),
-        inArray(orders.orderStatus, [...READY_STATUSES]),
+        inArray(orders.orderStatus, [...SHIPPABLE_STATUSES]),
       ),
     )
     .orderBy(asc(orders.createdAt));
@@ -115,6 +138,7 @@ export async function loadCourierQueue(
     cargoName: row.cargoName,
     trackingNumber: row.trackingNumber,
     lastStage: lastStage.get(row.id) ?? null,
+    hasProof: row.proofId !== null,
     createdAt: row.createdAt,
   }));
 }

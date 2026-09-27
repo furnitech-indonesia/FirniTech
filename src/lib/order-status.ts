@@ -59,7 +59,21 @@ export const ALLOWED_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = 
   pending_dp: ["in_production", "cancelled"],
   in_production: ["quality_control", "cancelled"],
   quality_control: ["ready_to_ship", "cancelled"],
-  ready_to_ship: ["shipped", "cancelled"],
+  // `ready_to_ship -> completed` ditambahkan pada Sprint 6, bukan
+  // `ready_to_ship -> shipped -> completed` dua langkah.
+  //
+  // Alasannya bukan mempercantik alur, tapi ada TIGA HAL yang harus
+  // terjadi bersamaan setelah barang sampai: paket
+  // diterima, bukti penerimaan diunggah, dan status berpindah. Kalau
+  // `shipped` jadi langkah wajib di antaranya, kurir yang mengunggah bukti lalu
+  // koneksinya putus sebelum menekan tombol kedua akan meninggalkan pesanan
+  // yang statusnya `shipped` padahal barangnya sudah sampai — dan pencairan
+  // memicu dari bukti, bukan dari status, jadi status yang tertinggal itu
+  // hanya membingungkan, bukan berbahaya.
+  //
+  // `shipped` tetap ada untuk kasus yang memang butuh: barang dikirim lewat
+  // ekspedisi pihak ketiga, kurir kami tidak ikut mengantar.
+  ready_to_ship: ["shipped", "completed", "cancelled"],
   shipped: ["completed"],
   completed: [],
   cancelled: [],

@@ -60,7 +60,7 @@ export default async function CourierHome() {
           <p className="mt-1 text-body-md text-muted-foreground">
             {items.length === 0
               ? "Belum ada kiriman yang ditugaskan kepada Anda."
-              : `${items.length} kiriman menunggu Anda.`}
+              : `${items.length} kiriman dalam daftar Anda.`}
           </p>
         </header>
         <CourierQueue items={items} />

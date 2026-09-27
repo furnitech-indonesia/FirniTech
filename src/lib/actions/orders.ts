@@ -57,6 +57,17 @@ const ROLE_ALLOWED_TARGETS: Record<string, readonly OrderStatus[]> = {
     "cancelled",
   ],
   tukang: ["in_production", "quality_control"],
+  /**
+   * Kurir HANYA boleh `completed`, dan hanya lewat bukti penerimaan.
+   *
+   * Tidak diberi `shipped` karena status itu menandai "barang sudah
+   * dalam perjalanan tanpa pengantar kita" — itu kasus ekspedisi pihak
+   * ketiga, dan kurir kami tidak boleh menandainya karena tidak tahu.
+   *
+   * Tidak diberi `cancelled` atau status lain: pembatalan itu keputusan
+   * ruang lingkup owner, bukan keputusan orang yang sedang bawa paket.
+   */
+  kurir: ["completed"],
 };
 
 export type OrderFormState = {
