@@ -47,7 +47,35 @@ function check(label: string, ok: boolean, detail: string) {
   console.log(`${ok ? "PASS " : "FAIL "} ${label} — ${detail}`);
 }
 
+
+/**
+ * Cek server hidup sebelum menjalankan apa pun.
+ *
+ * Tanpa ini, server yang mati membuat `page.goto` melempar atau — lebih buruk —
+ * halaman fallback ter-render dan pemeriksaan melaporkan "0 langkah terlihat",
+ * yang terbaca sebagai bug wizard padahal wizard-nya tidak pernah diuji sama
+ * sekali. Sudah terjadi: `.next` terhapus, `npm run start` gagal diam-diam,
+ * dan hasilnya dilaporkan sebagai kegagalan wizard.
+ */
+async function requireServer(): Promise<void> {
+  try {
+    const res = await fetch(BASE, { signal: AbortSignal.timeout(5000) });
+    if (!res.ok) throw new Error(`status ${res.status}`);
+  } catch (error) {
+    console.error(
+      `\nServer tidak berjalan di ${BASE} — ${(error as Error).message}.\n` +
+        "Jalankan `npm run build && npm run start` lebih dulu.\n",
+    );
+    process.exit(2);
+  }
+}
+
 async function main() {
+  // Preflight dulu. Tanpa ini, server yang mati membuat `page.goto` melempar
+  // dan pemeriksaan melaporkan "0 langkah terlihat" — yang terbaca sebagai bug
+  // halaman padahal halamannya tidak pernah diuji sama sekali. Fungsi ini
+  // sudah ada tapi belum pernah dipanggil; itu-cause why hasilnya menyesatkan.
+  await requireServer();
   await mkdir(OUT, { recursive: true });
   const browser = await chromium.launch();
 

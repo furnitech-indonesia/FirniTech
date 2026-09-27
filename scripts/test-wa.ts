@@ -30,7 +30,7 @@ import {
   quotaRemaining,
 } from "../src/lib/fonnte";
 import { notifyOrderEvent } from "../src/lib/wa-messages";
-import { orders, orderItems } from "../src/db/schema";
+import { orders, orderItems, integrationAuditLogs } from "../src/db/schema";
 import { PLANS } from "../src/lib/plans";
 
 type Result = { label: string; ok: boolean; detail: string };
@@ -412,6 +412,17 @@ async function main() {
     globalThis.fetch = realFetch;
     await db.delete(orders).where(eq(orders.id, notifyOrder.id));
     await db.delete(tenants).where(eq(tenants.slug, notifySlug));
+    /*
+     * `integration_audit_logs.tenant_id` memakai `onDelete: "set null"`, jadi
+     * baris audit TIDAK ikut terhapus bersama tenant-nya. Tanpa pembersihan
+     * di sini, setiap menjalankan skrip ini meninggalkan baris audit fonnte
+     **yatim* — dan `integration_audit_logs` adalah tabel yang dibaca super
+     * admin untuk memantau kesehatan integrasi. Sampah dari test akan
+     * tercampur dengan data produksi tanpa bisa dibedakan.
+     */
+    await db
+      .delete(integrationAuditLogs)
+      .where(eq(integrationAuditLogs.service, "fonnte"));
   }
 
   const [leftover] = await db

@@ -54,10 +54,11 @@ npm run db:studio
 npm run db:seed       # idempoten
 npm run test:auth     # 11 uji auth & RBAC via HTTP (butuh server jalan)
 npm run test:schemas  # 14 uji skema validasi (guard uang, pesan, id)
-npm run test:responsive # 20 pemeriksaan struktural responsif & token
+npm run test:responsive # 23 pemeriksaan struktural responsif & token
 npm run test:sprint3  # 16 uji halaman & pembatasan role Sprint 3
-npm run test:register # 6 pemeriksaan wizard /daftar (Playwright, butuh server)
-npm run test:webhook  # 23 uji keamanan: skema, signature, gerbang tenant
+npm run test:register  # 6 pemeriksaan wizard /daftar (Playwright, butuh server)
+npm run test:wa         # 31 uji mesin notifikasi WhatsApp & kuota atomik
+npm run test:webhook   # 46 uji: skema, signature, gerbang tenant, e2e webhook
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
 ```
@@ -81,6 +82,13 @@ Dua jebakan yang sudah ditemukan sekali:
   setelah `keyboard.press("Tab")` menangkap posisi SEBELUM transisi selesai, dan
   akan melaporkan elemen yang sebenarnya benar sebagai tersembunyi. Butuh
   `waitForTimeout`.
+
+- **Server harus hidup sebelum menjalankan `test:visual` / `test:register`.**
+  Kedua skrip itu memanggil `requireServer()` lebih dulu. Tanpa pemeriksaan
+  itu, server yang mati membuat halaman fallback ter-render dan hasilnya
+  dilaporkan sebagai "0 langkah terlihat" — terbaca sebagai bug wizard
+  padahal wizard-nya tidak pernah diuji. Ini sudah terjadi setelah `.next`
+  terhapus dan `npm run start` gagal diam-diam (kode keluar 2, pesan jelas).
 
 Screenshot ditulis ke `screenshots/` yang sudah di-gitignore. Kalau ada bug
 visual, lihat screenshot-nya dulu sebelum menebak penyebabnya.
