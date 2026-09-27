@@ -319,16 +319,25 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
     diambil dari nilai fee — kecuali QRIS, GoPay, dan ShopeePay.
   - Tarif di halaman publik adalah **batas bawah**, bukan angka final untuk
     akun merchant kita; diskon tidak pernah dipublikasikan.
-  - **Fee ditanggung pengrajin, bukan platform** (PRD v1.5). Jadi
+  - **Fee ditanggung pengrajin, bukan platform** (PRD v1.6). Jadi
     `platformServiceFee` = 1,5% × `totalAmount` (produk + ongkir) UTUH, dan
     `midtransMdrFee` dipotong ke pengrajin. Rinciannya harus tampil di tiga
     tempat (wizard pendaftaran, ringkasan saldo, detail pesanan) dan TIDAK
     boleh tampil di halaman lacak publik.
-  - **`feePayout` Rp 5.000 itu per EKSEKUSI pencairan, bukan per order.**
-    Satu pengrajin dengan lima order lunas dalam satu slot membayar Rp 5.000
-    sekali. Kalau dibayar per order, partner kehilangan Rp 20.000 lebih dari
-    yang seharusnya.
+  - **`feePayout` Rp 5.000 itu per BATCH pencairan, ditanggung platform.**
+    Satu panggilan Payouts = Rp 5.000 berapa pun pengrajin di dalamnya, jadi
+    dua slot/hari = Rp 10.000/hari. Nilai yang ditransfer ke pengrajin
+    TIDAK dipotong — sama persis dengan saldonya. Asumsi "per batch" belum
+    dikonfirmasi Midtrans; kalau per-penerima, biayanya tumbuh 10× pada 100
+    pengrajin.
   - Fee dicatat sebagai **beban**, bukan pengurangan pendapatan.
+  - **Semua konstanta fee hanya di `src/lib/fees.ts`.** Berkas itu sengaja
+    TIDAK memakai `server-only` supaya modal kalkulator di modul produk dan
+    server membaca angka yang sama. Kalau ditambah `server-only`, modal akan
+    menarik graf modul server ke bundel klien.
+  - **`test:checkout` mengunci daftar kanal.** Begitu QRIS atau kartu kredit
+    aktif lagi, seluruh hitungan fee di `docs/midtrans-fee.md` tidak berlaku
+    karena tarifnya persen — dan tidak ada pemeriksaan lain yang menangkapnya.
 
 ## Tarif ongkir (Sprint 5 bagian 3)
 

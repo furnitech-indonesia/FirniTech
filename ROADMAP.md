@@ -746,63 +746,59 @@ YANG MASIH KOSONG DARI SPRINT 6
 
 ━━━ Model Biaya & Payout (keputusan pemilik produk, 2026-09-27) ━━━
 
-STATUS: model final ditetapkan dan ditulis ke PRD.md §2.C (v1.5) dan
-docs/midtrans-fee.md. Mesin payout BELUM dibangun, dan sengaja ditahan
-sampai pertanyaan per-penerima/per-batch terjawab — alasannya di bawah.
+STATUS: model final (PRD v1.6) + rumus di `src/lib/fees.ts` + modal kalkulator
+biaya di modul produk. Mesin payout BELUM dibangun dan sengaja ditahan sampai
+konfirmasi Midtrans soal fee per-batch terjawab.
 
-PERUBAHAN MODEL (penting)
-  Fee Midtrans TIDAK lagi dipotong dari platform fee. Seluruh fee ditanggung
-  pengrajin, dan platform fee 1,5% sekarang menutup nol biaya. Damanya
-  pendapatan platform jadi persis 1,5% GMV dan tarifnya sepenuhnya alat
-  harga.
+PEMBAGIAN BEBAN (final)
+  fee masuk  Rp4.440  →  pengrajin
+  fee payout Rp5.000  →  platform, dari merchant balance, PER BATCH
+  platform fee 1,5% × totalAmount (produk + ongkir)  →  utuh, tanpa dipotong
+  fee dicatat sebagai BEBAN
 
-  Rumus final:
-    platformFee = 1,5% × totalAmount (produk + ongkir)
-    feeMasuk    = Rp4.440 per transaksi (VA + PPN 11%)
-    feePayout   = Rp5.000 per EKSEKUSI pencairan (bukan per order)
+  escrow masuk     = totalAmount − 4.440
+  saldo pengrajin += totalAmount − platformFee − 4.440
+  saat payout     : saldo ditransfer = saldo UTUH
 
-    saldo pengrajin += totalAmount − platformFee − feeMasuk
-    saat payout     : saldo ditransfer = saldo − feePayout
+  Rp10.000.000 → platform Rp150.000, pengrajin Rp9.845.560.
+  Cek buku: 150.000 + 9.845.560 = 9.995.560 = escrow.
+  Terpisah: platform bayar Rp5.000 × 2 batch/hari = Rp10.000/hari.
 
-  Rp 10.000.000 → FurniTech Rp150.000, pengrajin Rp9.840.560.
-  Cek buku: 150.000 + 9.840.560 + 5.000 = 9.995.560 = escrow.
+EFEK PENTING: TITIK IMPAS HILANG
+  Beban platform tidak lagi bergantung pada nilai pesanan. Dengan fee
+  pencairan per batch, titik impas platform ada di Rp333.333 per pesanan pada
+  satu order per batch — jauh di bawah nilai mebel custom. Dan beban
+  pengrajin turun dari Rp9.440 ke Rp4.440, jadi persentasenya ikut turun:
+  0,04% untuk pesanan Rp10 juta, 1,48% untuk Rp300.000. Keputusan "tidak
+  perlu minimum pesanan" jadi aman.
 
-  Catatan akuntansi: fee dicatat sebagai BEBAN, bukan pengurangan pendapatan.
+  TAPI: kalau ternyata fee itu PER-PENERIMA, 100 pengrajin dengan 1 order per
+  batch = 200 disbursement/hari = Rp30 juta/bulan. Asumsi per-batch wajib
+  dikonfirmasi tertulis sebelum produksi.
 
-KENAPA "FEE DITANGGUNG PENGRAJIN" PERLU DIWASPADAI
-  Beban pengrajin itu FLAT (Rp9.440 per pesanan), sementara fee platform
-  persen. Akibatnya bebannya berbeda jauh tergantung nilai pesanan:
+YANG SUDAH DIKERJAKAN
+  - `src/lib/fees.ts` — konstanta dan rumus fee. Tanpa `server-only`, supaya
+    modal kalkulator dan server membaca angka yang sama. Mengimpor
+    `server-only` di sini akan membuat modal menarik graf modul server ke
+    bundel klien.
+  - `src/components/fee-calculator-dialog.tsx` — modal kalkulator biaya di
+    form produk, dengan hitung mundur dari target pendapatan. Semua angka
+    diimpor, tidak ada yang diketik ulang.
+  - `ALLOWED_PAYMENT_CHANNELS` + `REJECTED_PAYMENT_CHANNELS` di `fees.ts`,
+    dipakai `snap.ts`. Dipasang di sini, bukan ditulis inline, karena daftar
+    kanal adalah keputusan bisnis dan tarif fee berbeda per kanal — daftar
+    yang tersebar di dua berkas akan menyimpang.
+  - `test:checkout` dikunci: 19 pemeriksaan baru. Yang paling penting adalah
+    "pembagian escrow menutup" (fee platform + saldo pengrajin = escrow) dan
+    "harga minimum untuk target = kebalikan rumus saldo" — kalau keduanya
+    tidak saling cocok, modal akan menyuruh pengrajin menetapkan harga yang
+    tidak benar-benar memenuhi targetnya.
 
-  | Harga pesanan   | Platform fee | Beban/total pengrajin |
-  |-----------------|--------------|----------------------|
-  | Rp10.000.000    | Rp150.000    | 0,09%                |
-  | Rp1.000.000     | Rp15.000     | 0,94%                |
-  | Rp500.000       | Rp7.500      | 1,89%                |
-  | Rp300.000       | Rp4.500      | 3,15%                |
-  | Rp100.000       | Rp1.500      | 9,44%                |
-
-  Pengrajin yang memasang harga Rp100.000 kehilangan hampir sepersembilan dari
-  transaksinya. Keputusan "tidak perlu minimum pesanan" diterima, TAPI biaya
-  ini WAJIB tertulis dan terlihat SEBELUM pengrajin memasang harga — di wizard
-  pendaftaran, di ringkasan saldo siap cair, dan di rincian detail pesanan.
-  Kalau tidak, platform bisa dituduh memungut biaya tersembunyi dari mitra.
-  Sebaliknya, rincian yang sama HARUS TIDAK muncul di halaman lacak publik;
-  `test:lacak` terus mengunci itu.
-
-KENAPA FEE PER-PENERIMA / PER-BATCH SEKARANG LEBIH PENTING
-  Karena fee ditanggung pengrajin, kalau Rp5.000 itu per-penerima dan kita
-  pencairan 2× sehari, satu pengrajin dengan satu order sehari kehilangan
-  Rp10.000 per hari. Itu tidak bisa dipakai. Kalau per-batch, penjadwalan
-  bebas. Karena itu satu hal ini menentukan desain `payout_items`, dan mesin
-  payout ditahan sampai terjawab.
-
-  Contoh yang perlu ditanyakan ke Midtrans: satu panggilan API Payouts, 10 pengrajin
-  di dalamnya. Per-batch = Rp5.000 total. Per-penerima = Rp50.000. Panggilan
-  yang sama, biaya berbeda 10 kali lipat.
-
-KODE YANG WAJIB MENYUSUL SEBELUM MESIN PAYOUT
-  `enabled_payments` di src/lib/midtrans/snap.ts masih mendaftarkan `qris`,
-  `gopay`, `shopeepay`, dan `credit_card`. Semuanya harus dihapus, dan
-  hanya BNI, Danamon, BSI, BCA, BRI yang dipakai produksi — CIMB (maks Rp250
-  juta) dan Permata (maks Rp9,999 miliar) dikecualikan karena batas
-  maksimumnya. Alasannya di docs/midtrans-fee.md §9.
+BELUM SELESAI
+  - Mesin payout itu sendiri: `payout_logs`/`payout_items`, route cron
+    06.00/18.00 WIB dengan secret yang diverifikasi, ambang minimum saldo.
+  - Detail biaya di tiga tempat: wizard pendaftaran, ringkasan saldo siap
+    cair, dan rincian detail pesanan. `test:lacak` harus terus mengunci agar
+    rincian itu tidak bocor ke halaman pembeli.
+  - Kredensial Payouts (`MIDTRANS_IRIS_API_KEY`) dan angka batas minimum saldo
+    per pencairan dari Midtrans.

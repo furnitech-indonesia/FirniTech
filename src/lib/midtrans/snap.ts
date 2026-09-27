@@ -2,6 +2,8 @@ import "server-only";
 
 import { createHash, timingSafeEqual } from "crypto";
 
+import { ALLOWED_PAYMENT_CHANNELS } from "@/lib/fees";
+
 /**
  * Transport Midtrans Snap: membuat tagihan dan memverifikasi tanda tangan
  * webhook.
@@ -117,18 +119,9 @@ export async function createSnapCharge(input: SnapChargeInput): Promise<SnapChar
       countryCode: "62",
       delay: "0",
       device: DEFAULT_DEVICE,
-      enabled_payments: [
-        "bank_transfer",
-        "qris",
-        "gopay",
-        "shopeepay",
-        "credit_card",
-        "bca_va",
-        "bni_va",
-        "bri_va",
-        "permata_va",
-        "cimb_va",
-      ],
+      // Daftar kanal TIDAK boleh diperluas tanpa mengubah model biaya lebih
+      // dulu — lihat ALLOWED_PAYMENT_CHANNELS.
+      enabled_payments: [...ALLOWED_PAYMENT_CHANNELS],
     }),
     cache: "no-store",
   });

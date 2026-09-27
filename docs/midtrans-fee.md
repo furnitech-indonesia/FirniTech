@@ -223,20 +223,19 @@ Aturan yang mengikat:
 ### Rumus
 
 ```
-platformFee  = 1,5% × totalAmount        (produk + ongkir, dibulatkan ke rupiah penuh)
-feeMasuk     = Rp4.440                   (VA + PPN, per transaksi berhasil)
-feePayout    = Rp5.000                   (per eksekusi pencairan, bukan per order)
+platformFee  = 1,5% × totalAmount        (produk + ongkir, rupiah penuh)
+feeMasuk     = Rp4.440                   (VA + PPN 11%, per transaksi) → pengrajin
+feePayout    = Rp5.000                   (per BATCH, 2 batch/hari)     → platform
 
 escrow masuk  = totalAmount − feeMasuk
 saldo pengrajin += totalAmount − platformFee − feeMasuk
-saat payout   : saldo ditransfer = saldo − feePayout
+saat payout   : saldo ditransfer = saldo UTUH (tanpa potongan)
 pendapatan platform = platformFee
+beban platform per hari = Rp10.000
 ```
 
-`feePayout` dipotong **sekali per eksekusi pencairan**, bukan per order di
-dalam batch itu. Kalau satu pengrajin punya lima order lunas dalam satu slot,
-dia membayar Rp 5.000 sekali, bukan Rp 25.000. Ini yang membuat peng batching
-per pengrajin jadi wajib, bukan opsional.
+Nilai yang ditransfer ke pengrajin **sama persis dengan saldonya** — tidak ada
+pemotongan di langkah pencairan sama sekali.
 
 ### Contoh — pesanan Rp 10.000.000
 
@@ -248,167 +247,223 @@ Platform Service Fee 1,5%         Rp  150.000   → FurniTech
 fee Midtrans masuk                Rp    4.440   → pengrajin
                                  ─────────────
 saldo pengrajin masuk             Rp 9.845.560
+ditransfer ke pengrajin           Rp 9.845.560   (penuh, tanpa potongan)
 
-saat pencairan, fee payout        Rp    5.000   → pengrajin
-ditransfer ke pengrajin           Rp 9.840.560
+Cek buku: 150.000 + 9.845.560 = 9.995.560 ✓ sama dengan escrow
 
-Cek buku: 150.000 + 9.840.560 + 5.000 = 9.995.560 ✓ sama dengan escrow
+Terpisah, dari saldo merchant balance FurniTech:
+  fee payout 2 batch/hari         Rp 5.000 × 2 = Rp10.000/hari
 ```
 
-Beban total pengrajin per pesanan: **Rp 9.440**. Pendapatan platform: **persis
-1,5% GMV**, tanpa ada yang dipotong dari sana.
+**Beban pengrajin hanya Rp 4.440 per pesanan.** Fee pencairan sepenuhnya di
+punggung platform, dan karena per batch, biayanya tetap Rp 300.000 per bulan
+se berapa pun pengrajin yang aktif.
+
+### Apakah platform aman secara finansial?
+
+Ya — tapi bergantung pada asumsi "per batch" yang belum dikonfirmasi.
+
+```
+per order:  1,5% × order − (Rp5.000 ÷ order per batch)
+```
+
+| Order per batch | Harga pesanan minimum agar platform tidak rugi |
+|---|---|
+| 1 | Rp 333.333 |
+| 5 | Rp 66.667 |
+| 10 | Rp 33.333 |
+| 50 | Rp 6.667 |
+
+Mebel custom jauh di atas semua angka itu, jadi platform aman pada volume
+normal. **Kalau ternyata fee-nya per-penerima**, tabel ini berubah drastis:
+100 pengrajin dengan 1 order per batch = 200 disbursement per hari =
+**Rp 30 juta per bulan**, dan platform butuh GMV Rp 2 miliar per bulan untuk
+menutupnya. Karena itu asumsi ini **wajib dikonfirmasi tertulis ke Midtrans**
+sebelum produksi.
 
 ### Contoh — langganan Basic Rp 300.000
 
 Fee Midtrans ditanggung pengrajin, jadi yang dia bayar benar-benar Rp 300.000
 dan FurniTech menerima **Rp 295.560**. Tidak ada pencairan di alur ini.
 
-## 7. Konsekuensi dari keputusan "fee ditanggung pengrajin"
+## 7. Konsekuensi dari pembagian beban ini
 
-Bagian ini bukan bantahan atas keputusan itu — konsekuensi yang harus
-dis studsial, dan sebagian besar soal tampilan.
-
-**1. Platform aman, pengrajin menanggung biaya tetap.** Fee-nya flat
-(Rp 4.440 + Rp 5.000) sementara platform fee-nya persen. Untuk pesanan
-besar, orang hampir tidak merasakannya: Rp 9.440 dari Rp 10.000.000 adalah
-0,09%. Untuk pesanan kecil, itu terasa:
+**1. Beban pengrajin jadi kecil dan rata.** Yang dipotong dari saldonya
+hanya `feeMasuk` Rp 4.440, per transaksi:
 
 | Harga pesanan | Platform fee | Beban pengrajin | Pengrajin terima | Beban/total |
 |---|---|---|---|---|
-| Rp 10.000.000 | Rp 150.000 | Rp 9.440 | Rp 9.840.560 | 0,09% |
-| Rp 1.000.000 | Rp 15.000 | Rp 9.440 | Rp  975.560 | 0,94% |
-| Rp 500.000 | Rp 7.500 | Rp 9.440 | Rp  483.060 | 1,89% |
-| Rp 300.000 | Rp 4.500 | Rp 9.440 | Rp  286.060 | 3,15% |
-| Rp 100.000 | Rp 1.500 | Rp 9.440 | Rp   89.060 | 9,44% |
-| Rp 50.000 | Rp 750 | Rp 9.440 | Rp   39.810 | 18,88% |
+| Rp 10.000.000 | Rp 150.000 | Rp 4.440 | Rp 9.845.560 | 0,04% |
+| Rp 1.000.000 | Rp 15.000 | Rp 4.440 | Rp  980.560 | 0,44% |
+| Rp 500.000 | Rp 7.500 | Rp 4.440 | Rp  488.060 | 0,89% |
+| Rp 300.000 | Rp 4.500 | Rp 4.440 | Rp 291.060 | 1,48% |
+| Rp 100.000 | Rp 1.500 | Rp 4.440 | Rp  94.060 | 4,44% |
+| Rp 50.000 | Rp 750 | Rp 4.440 | Rp  44.810 | 8,88% |
 
-**Kepatuhan yang harus dipenuhi tanpa syarat:** pengrajin yang memasang harga
-Rp 100.000 akan kehilangan 9,4% dari transaksi itu. Itu harus **tertulis dan
-terlihat sebelum** dia memasang harga, bukan ditemukan setelah uang
-kurang. Kalau tidak, platform bisa dituduh memungut biaya tersembunyi dari
-mitra dagangnya. Tiga tempat yang wajib menyebutkannya:
-   - halaman pengaturan toko / ridiculously wizard pendaftaran: "Biaya
-     layanan 1,5% dan biaya payment gateway dipotong dari pembayaran."
-   - ringkasan saldo siap cair di dashboard pengrajin: pemisahan jelas
-     antara "nilai pesanan", "biaya layanan", dan "biaya gateway".
-   - halaman detail pesanan: rincian lengkap, bukan satu angka.
+Fee pencairan yang dipindahkan ke platform membuat profil ini jauh lebih baik
+daripada model sebelumnya yang membebani Rp 9.440 per pesanan. Sisa masalahnya
+hanya pesanan di bawah Rp 150.000, dan mebel custom jarang di sana.
 
-**2. Halaman lacak publik TIDAK BOLEH menampilkan ini.**— aturan `test:lacak`
-tetap berlaku: margin, fee platform, dan fee gateway tidak boleh muncul di
-halaman yang dilihat pembeli. Yang ditampilkan ke pembeli tetap "Total
-Rp 10.000.000" — dan itu benar, karena itulah yang dia bayar.
+**2. Yang WAJIB ditulis dan terlihat tetap sama.** Biaya pengrajin
+kecil, ia tetap biaya yang memotong uangnya, jadi harus disebut sebelum dia
+memasang harga — di wizard pendaftaran, di ringkasan saldo siap cair, dan di
+rincian detail pesanan. Plus satu hal baru: fee pencairan Rp 5.000, walaupun
+ditanggung platform, tetap perlu disebut, karena itu alasan FurniTech
+menetapkan ambang minimum pencairan. Kalau pengrajin tidak tahu, dia akan
+menanyakan "kenapa saldo saya Rp 900.000 tidak ditransfer?" dan jawabannya
+akan terdengar seperti aturan yang dibuat sepihak.
 
-**3. Platform fee 1,5% sekarang menutup nol biaya.** Tidak ada lagi biaya
-yang dipotong dari fee platform, jadi tarif 1,5% bisa diturunkan kapan saja
-tanpa perubahan struktural. Ini keputusan harga yang sepenuhnya
-milik FurniTech sekarang.
+**3. Modal kalkulator harga di modul produk.** Keputusan pemilik produk:
+biaya ini harus muncul di modal saat pengrajin membuat produk, supaya dia bisa
+menghitung harga jual yang dia inginkan. Rinciannya di bagian 10.
 
-**4. Satu pencairan per pengrajin, bukan per order.** Kalau pengrajin punya
-tiga order lunas di slot yang sama, dia harus dapat **satu** pencairan
-(Rp 5.000 sekali). Kalau dibayar per order, dia kehilangan Rp 10.000 extra
-dari yang seharusnya hanya Rp 5.000. Ini yang mengikat langsung ke desain
-`payout_items`.
+**4. Platform fee 1,5% menutup nol biaya.** Tidak ada lagi yang dipotong dari
+fee platform, jadi tarifnya sepenuhnya alat harga dan bisa diturunkan kapan
+saja tanpa perubahan struktural.
 
-**5. Pengrajin menunggu 1–2 hari.** Pembeli membayar hari ini, uang masuk ke
-saldo setelah settlement, baru cair pada slot terdekat. Itu harus tertulis
-di halaman saldo, kalau tidak pertanyaan pertama ke customer support akan
+**5. Tidak perlu minimum nilai pesanan.** Beban platform tidak bergantung
+pada nilai pesanan, dan burden pengrajin sudah turun ke 0,04% untuk mebel
+besar. Yang tetap perlu minimum adalah **ambang saldo pencairan** — itu soal
+Rp 5.000 per batch, bukan soal harga produk.
+
+**6. Halaman lacak publik TIDAK BOLEH menampilkan rincian ini.** aturan
+`test:lacak` tetap berlaku: margin, fee platform, dan fee gateway tidak boleh
+muncul di halaman yang dilihat pembeli. Yang ditampilkan ke pembeli tetap
+"Total Rp 10.000.000" — dan itu benar, karena itulah yang dia bayar.
+
+**7. Pengrajin menunggu 1–2 hari.** Pembeli membayar hari ini, uang masuk ke
+saldo setelah settlement, baru cair pada slot terdekat. Itu harus tertulis di
+halaman saldo, kalau tidak pertanyaan pertama ke customer support akan
 tentang itu.
 
 ## 8. Yang harus dikonfirmasi ke Midtrans
 
-**1. [PENTING] Apakah Rp 5.000 itu per-penerima atau per-batch?**
+Dokumen ini dipakai sebagai daftar pertanyaan. Semua sudah diputuskan dari
+sisi FurniTech; yang ditunggu adalah konfirmasi tertulis Midtrans.
 
-Ini satu jawaban yang menentukan desain seluruh sistem. Contoh konkrit:
+**1. [PALING PENTING] Apakah Rp 5.000 itu per-batch atau per-penerima?**
 
-> Kita memanggil API Payouts **sekali**, dan di dalam panggilan itu ada
-> 10 pengrajin yang dibayarkan.
->
-> * Kalau **per-batch** → total biaya Rp 5.000 untuk 10 orang.
-> * Kalau **per-penerima** → total biaya Rp 5.000 × 10 = **Rp 50.000**.
->
-> Panggilan API-nya sama persis, 10 pengrajinnya sama persis, biayanya
-> berbeda 10 kali lipat.
+Sudah diputuskan: FurniTech akan menghitungnya sebagai **per batch**
+(Rp 10.000 per hari untuk dua slot). Yang ditanyakan hanya apakah asumsi itu
+benar. Contoh yang bisa langsung ditunjukkan ke mereka:
 
-Kenapa ini penting sekali sekarang: karena fee ditanggung pengrajin, kalau
-biaya per-penerima dan kita pencairan 2× sehari, satu pengrajin dengan satu
-order sehari kehilangan **Rp 10.000 per hari**. Itu tidak bisa dipakai.
-Solusinya kalau per-penerima: hanya pencairan saat saldo sudah melewati ambang
-( misalnya Rp 1.000.000), sehingga fee itu menyatu dalam satu transfer besar.
-Kalau per-batch, kita bebas menjadwalkan.
+> Satu panggilan API Payouts, 10 pengrajin di dalamnya.
+> Per-batch = Rp 5.000 total. Per-penerima = Rp 50.000.
+> Panggilan yang sama, biaya berbeda 10 kali lipat.
 
-**2. Konfirmasi ulang: saldo merchant balance bisa jadi sumber dana
-Payouts?** Ini dijawab "bisa", tapi sumber jawabannya belum jelas — apakah
-dari dokumentasi Midtrans atau dari pengamatan. Kalau benar, maka uang tidak
-perlu ditarik ke rekening bank lalu di-*top-up* ulang, dan tidak ada biaya
-maupun hari tambahan. Kalau ternyata harus lewat bank, seluruh perhitungan
-waktu pencairan berubah. **Jangan diasumsikan** — ini yang membuat atau
-meruntuhkan model alur dana.
+Kalau jawabannya per-penerima, model ini masih layak untuk Rp 10 juta per
+pesanan tapi tidak untuk growth ke hundreds of pengrajin — jadi kita perlu
+tahu sekarang, bukan setelah 100 pengrajin aktif.
 
-**3. Angka VA: Rp 4.000 atau Rp 5.000?** Halaman resmi menampilkan keduanya
-di tempat berbeda (bagian 5). Kemungkinan besar Rp 4.000 + "Bank Transfer
-Fee" Rp 1.000 yang hanya berlaku kalau rekening bukan bank Midtrans — tapi
-itu hipotesis, dan angkanya masuk ke pengrajin, jadi salah berarti salah
-bayar orang.
+**2. Apakah saldo merchant balance bisa jadi sumber dana Payouts?**
 
-**4. Skema Payouts: aggregator atau facilitator, dan bagaimana keduanya
-terhubung dengan saldo escrow merchant?**
+Sudah dijawab "bisa", tapi belum jelas sumber jawabannya. Ini menentukan
+apakah uang perlu ditarik ke rekening bank lalu di-*top-up* ke Payouts — yang
+berarti ada 1–2 hari tambahan dan fee pencairan kedua. Kalau benar bisa
+langsung, arbitrage-nya nol dan seluruh model alur dana benar.
 
-**5. Berapa slot pencairan yang boleh aktif bersamaan?** PRD menyebut 06.00
-& 18.00 WIB. Perlu dipastikan keduanya bisa, dan apakah ada batas minimum
-saldo per pencairan.
+**3. Angka VA: Rp 4.000 atau Rp 5.000?**
 
-**6. Channel VA mana yang perlu aktivasi produksi?** Semua aktif di sandbox,
-tetapi tidak semuanya layak dipakai produksi — lihat bagian 9.
+Halaman resmi menampilkan keduanya di bagian berbeda (bagian 5). Kemungkinan
+besar Rp 4.000 + "Bank Transfer Fee" Rp 1.000 yang hanya berlaku kalau
+rekening bukan bank Midtrans — tapi ini hipotesis, dan angkanya masuk ke
+saldo pengrajin, jadi salah berarti salah bayar orang.
 
-## 9. Rekomendasi channel pembayaran
+**4. Skema Payouts: aggregator atau facilitator?**
 
-Semua VA sekarang aktif di sandbox, tapi **sandbox tidak bliss punya
-batas nilai transaksi yang sama** dengan produksi. Yang onerous: Midtrans
-menetapkan batas maksimal per acquiring bank, dan batas itu berlaku di
-produksi.
+Sudah diputuskan: **aggregator**, karena uangnya sudah ada di Midtrans dan
+rekonsiliasi bisa di satu tempat. Perlu dipastikan bahwa skema aggregator
+benar-benar bisa memakai saldo escrow merchant sebagai sumber dana — itu
+bergantung pada jawaban nomor 2.
 
-| Channel | Maksimum produksi | Rekomendasi |
+**5. Berapa slot pencairan yang boleh aktif bersamaan?**
+
+PRD menyebut 06.00 & 18.00 WIB. Perlu dipastikan keduanya bisa dipakai, dan
+apakah ada batas minimum saldo per pencairan (kalau ada, angka itu yang jadi
+ambang minimum kita, bukan angka karangan).
+
+**6. Berapa lama saldo escrow tersedia untuk payout?**
+
+Pembeli membayar hari ini; kapan uangnya bisa ditransfer keluar? Kalau
+settlement VA misalnya H+1, maka slot pencairan di hari yang sama tidak
+mungkin — dan jadwal slot harus digeser. Ini menentukan apakah slot
+pencairan pertama yang dipakai benar-benar bekerja.
+
+**7. Apa nomor API key Payouts-nya, dan apakah sandbox punya endpoint
+terpisah dari produksi?** (`MIDTRANS_IRIS_API_KEY` masih kosong.)
+
+**8. Channel VA mana yang perlu diaktifkan di produksi?**
+
+Semua aktif di sandbox. Keputusan: SeaBank dan CIMB **dinonaktifkan**;
+BNI, Danamon, BSI, BCA, BRI, Permata tetap aktif. Perlu dipastikan batas
+maksimum yang berlaku di produksi sama dengan tabel di bagian 9, dan apakah
+Midtrans imposing batas tambahan di level merchant.
+
+## 9. Channel pembayaran produksi
+
+Semua VA aktif di sandbox, tapi **sandbox tidak punya batas nilai transaksi
+yang sama dengan produksi.** Midtrans menetapkan batas maksimal per acquiring
+bank, dan batas itu berlaku di produksi.
+
+| Channel | Maksimum produksi | Keputusan |
 |---|---|---|
 | **BNI VA** | tanpa batas | ✅ aktifkan |
 | **Danamon VA** | tanpa batas | ✅ aktifkan |
 | **BSI VA** | tanpa batas | ✅ aktifkan |
 | **BCA VA** | Rp 20 miliar | ✅ aktifkan |
 | **BRI VA** | Rp 20 miliar | ✅ aktifkan |
-| Mandiri Bill | Rp 50 miliar | △ opsional, UX-nya echannel (bukan VA) |
-| Permata VA | Rp 9,999 miliar | ❌ tidak untuk mebel besar |
-| Seabank VA | Rp 100 juta | ❌ terlalu kecil |
-| **CIMB VA** | **Rp 250 juta** | ❌ terlalu kecil |
+| Permata VA | Rp 9,999 miliar | ✅ aktifkan |
+| Mandiri Bill | Rp 50 miliar | △ opsional (echannel, bukan VA) |
+| **Seabank VA** | Rp 100 juta | ❌ **dinonaktifkan** |
+| **CIMB VA** | **Rp 250 juta** | ❌ **dinonaktifkan** |
 
-Rekomendasi: aktifkan **BNI, Danamon, BSI, BCA, BRI**. Kelima-nya
-menutup Rp 20 miliar per transaksi, jauh di atas nilai pesanan mebel yang
-yang wajar, dan kesemuanya bank besar yang sudah umum dipakai orang.
+Alasan menonaktifkan dua channel itu adalah **batas maksimum nominal**, bukan
+reputasi banknya: SeaBank Rp 100 juta dan CIMB Rp 250 juta akan menolak pesanan
+mebel yang wajar. Menampilkan channel yang pasti menolak pembayaran besar
+menghasilkan checkout gagal, dan pembeli tidak mengulang dua kali.
 
-Alasan menolak CIMB dan Permata keduanya soal **batas maksimum**, bukan soal
-reputasi banknya. CIMB Rp 250 juta akan menolak satu pesanan kitchen set yang
-sendirian, dan Permata Rp 9,999 miliar akan menolak pesananTimeout di atas itu.
-Menampilkan channel yang pasti menolak pembayaran besar menghasilkan
-checkout gagal — dan pembeli tidak akan mengulang dua kali.
-
-Catatan: batas itu milik *acquirer*, dan bank penerbit bisa imposing batas
-sendiri. Midtrans juga bisa imposing batas tambahan di level merchant.
-Batas produksi per channel harus diuji ulang setelah akun produksi aktif.
+Permata tetap aktif karena batas Rp 9,999 miliar praktis tidak akan tersentuh
+—by furniture order. Kalau nanti ada pesanan di atas angka itu (misalnya satu
+proyek apartemen), channelnya perlu dikecualikan secara berkala.
 
 ## 10. Rekomendasi implementasi
 
-1. **Fee adalah dua konstan, bukan tabel.** `FEE_MASUK = 4.440` dan
-   `FEE_PENCAIRAN = 5.000`, dengan nilai awal **kosong** di environment.
-   Kalau kosong, pencairan DIBLOKIR dengan pesan yang terbaca — bukan `?? 0`.
-   Sama seperti aturan `findShippingRate()`.
+1. **Fee adalah dua konstan, bukan tabel.** `FEE_MASUK = 4.440` (dibebankan ke
+   pengrajin) dan `FEE_PENCAIRAN = 5.000` per batch (dibebankan ke platform),
+   dengan nilai awal **kosong** di environment. Kalau kosong, pencairan
+   DIBLOKIR dengan pesan yang terbaca — bukan `?? 0`. Sama seperti aturan
+   `findShippingRate()`.
 2. **Fee masuk dicatat per tagihan, bukan per pesanan.** Karena Midtrans
-   memotong saat pencairan,fee itu mengikat ke satu invoice. Ini membuat
-   rekonsiliasi per-bulan jadi sederhana.
-3. **Satu baris `payout_items` per order, dan satu order tidak boleh masuk
-   dua batch.** Itu penjaga idempotensi yang sesungguhnya — bukan sekadar
+   memotong saat pencairan, fee itu mengikat ke satu invoice. Ini membuat
+   rekonsiliasi per bulan jadi sederhana.
+3. **Satu baris `payout_items` per order, dan satu order tidak boleh masuk dua
+   batch.** Itu penjaga idempotensi yang sesungguhnya — bukan sekadar
    "batch-nya tidak dobel".
 4. **Rekonsiliasi bulanan:** bandingkan `Total Fee` di Billings dengan
    `(jumlah invoice + jumlah pesanan) × Rp4.440` plus
    `(jumlah eksekusi pencairan) × Rp5.000`. Selisih apa pun berarti salah
    satu konstanta di atas salah, dan itu akan ketahuan di sini.
-5. **Rincian biaya harus tampil di tiga tempat** (bagian 7 butir 1), dan
+5. **Rincian biaya harus tampil di tiga tempat** (bagian 7 butir 2), dan
    `test:lacak` harus terus mengunci agar rincian itu tidak bocor ke halaman
    pembeli.
+6. **Modal kalkulator biaya di modul produk** (keputusan pemilik produk,
+   bagian 7 butir 3). Isinya:
+   - Pecahan biaya yang sebenarnya memotong uang pengrajin: hanya
+     `feeMasuk` Rp 4.440 per transaksi. Angka Rp 5.000 ditampilkan sebagai
+     "ditanggung platform", karena menyembunyikannya akan membuat
+     pengrajin salah menghitung.
+   - Hitung mundur dari margin yang diinginkan: "saya ingin dapat
+     Rp X → harga jual minimum Y", memakai rumus yang sama dengan yang dipakai
+     server.
+   - Angka dihitung dari `FEE_MASUK` yang diimpor, bukan diketik ulang di
+     komponen — kalau berbeda, modal akan menampilkan angka yang tidak
+     sama dengan yang benar-benar dipotong.
+   - Angka yang sama harus dipakai di server saat menulis pesanan. Modal
+     hanya untuk membantu pengrajin memilih harga, bukan sumber kebenaran.
+7. **`enabled_payments` hanya VA yang disetujui.** Diimplementasikan di
+   `src/lib/midtrans/snap.ts`: `bca_va`, `bni_va`, `bri_va`, `bsi_va`,
+   `danamon_va`, `permata_va`. Tanpa `bank_transfer` catch-all, tanpa
+   `cimb_va`, tanpa `seabank`, dan tanpa kanal persen apa pun. Daftar ini
+   dikunci `test:checkout` — kalau kanal yang tidak dimaksud bisa dipakai
+   lagi, seluruh hitungan fee di dokumen ini tidak berlaku karena tarifnya
+   berbeda per kanal.

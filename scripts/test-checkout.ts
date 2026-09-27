@@ -16,6 +16,15 @@ import {
   tenants,
 } from "@/db/schema";
 import { buildShippingIndex, lookupShippingRate, shippingFeeFor } from "@/lib/shipping-lookup";
+import {
+  ALLOWED_PAYMENT_CHANNELS,
+  FEE_MASUK,
+  FEE_PENCAIRAN_PER_BATCH,
+  PLATFORM_FEE_RATE,
+  craftsmanCreditFor,
+  minimumPriceFor,
+  platformFeeFor,
+} from "@/lib/fees";
 
 /**
  * Uji checkout & pembayaran Midtrans (Sprint 5 bagian 4).
@@ -153,6 +162,136 @@ function testLookupRule() {
     "regencyId null tetap boleh memakai tarif cadangan",
     lookupShippingRate(index, null)?.rateAmount === DEFAULT_FEE,
     "cadangan berlaku juga tanpa regencyId",
+  );
+}
+
+/**
+ * Model fee harus cocok dengan `docs/midtrans-fee.md`, dan tidak boleh ada
+ * satu pun nilai turunan yang dihitung ulang di tempat lain.
+ *
+ * Yang diperiksa di sini bukan angkanya saja (semua bisa berubah saat
+ * dikonfirmasi ke Midtrans), tapi HUBUNGAN antar angkanya: kalau
+ * `craftsmanCreditFor` dan `minimumPriceFor` tidak saling membalik, modal
+ * kalkulator akan menyuruh pengrajin menetapkan harga yang tidak benar-benar
+ * memenuhi targetnya — dan kesalahan itu baru ketahuan setelah uang diterima.
+ */
+function testFeeModel(): void {
+  check(
+    "fee masuk = Rp4.000 + PPN 11%",
+    FEE_MASUK === 4440,
+    `FEE_MASUK=${FEE_MASUK} (harus 4440)`,
+  );
+  check(
+    "fee pencairan = Rp5.000 per batch",
+    FEE_PENCAIRAN_PER_BATCH === 5000,
+    `FEE_PENCAIRAN_PER_BATCH=${FEE_PENCAIRAN_PER_BATCH}`,
+  );
+
+  const total = 10_000_000;
+  const fee = platformFeeFor(total);
+  const credit = craftsmanCreditFor(total);
+
+  check(
+    "platform fee 1,5% dari totalAmount",
+    fee === 150_000,
+    `platformFeeFor(10.000.000)=${fee} (harus 150.000)`,
+  );
+  check(
+    "saldo pengrajin = total − fee platform − fee masuk",
+    credit === total - fee - FEE_MASUK,
+    `craftsmanCreditFor(10.000.000)=${credit}`,
+  );
+  check(
+    "pembagian escrow menutup: fee platform + saldo pengrajin = escrow",
+    fee + credit === total - FEE_MASUK,
+    `${fee} + ${credit} = ${fee + credit} (escrow ${total - FEE_MASUK})`,
+  );
+  check(
+    "harga minimum untuk target tertentu = kebalikan dari rumus saldo",
+    craftsmanCreditFor(minimumPriceFor(5_000_000)) >= 5_000_000,
+    `minimumPriceFor(5jt)=${minimumPriceFor(5_000_000)} → credit=${craftsmanCreditFor(minimumPriceFor(5_000_000))}`,
+  );
+  check(
+    "platform fee dibulatkan ke BAWAH, tidak pernah ke atas",
+    platformFeeFor(101) === 1 && platformFeeFor(1_667) === 25,
+    `floor: 101→${platformFeeFor(101)}, 1667→${platformFeeFor(1_667)}`,
+  );
+  check(
+    "platform fee tidak pernah melebihi fee masuk untuk pesanan sangat kecil",
+    platformFeeFor(1_000) < FEE_MASUK,
+    `platformFeeFor(1.000)=${platformFeeFor(1_000)} < ${FEE_MASUK}`,
+  );
+  check(
+    "platform fee 1,5% menutup nol biaya — tidak ada fee yang dipotong dari fee",
+    PLATFORM_FEE_RATE === 0.015,
+    "fee platform utuh; fee masuk ke pengrajin, fee pencairan ke platform",
+  );
+
+  // Modal kalkulator dan server harus membaca konstanta yang sama. Kalau ada
+  // salinan angka di komponen, keduanya akan menyimpang tanpa ada yang
+  // memberitahu.
+  /*
+   * Yang diperiksa hanya BARIS KODE, bukan komentar. Pengecekan sengaja
+   * menyaring baris komentar supaya `Rp 4.440` di dalam penjelasan tidak
+   * ikut terhitung sebagai angka yang ditulis ulang.
+   */
+  const dialog = readSource("src/components/fee-calculator-dialog.tsx");
+  const codeOnly = dialog
+    .split("\n")
+    .filter((line) => !line.trim().startsWith("*") && !line.trim().startsWith("//"))
+    .join("\n");
+  check(
+    "modal kalkulator mengimpor angka dari src/lib/fees.ts, bukan mengetiknya",
+    codeOnly.includes('from "@/lib/fees"') && !/[=(:,]\s*4[._]?440\b/.test(codeOnly),
+    "tidak ada konstanta fee yang ditulis ulang di komponen",
+  );
+  check(
+    "modal kalkulator memakai fungsi fee, bukan perhitungan sendiri",
+    codeOnly.includes("craftsmanCreditFor(") && codeOnly.includes("minimumPriceFor("),
+    "perhitungan modal memakai fungsi yang sama dengan server",
+  );
+}
+
+/**
+ * Kanal pembayaran yang aktif harus persis daftar yang disetujui.
+ *
+ * Ini terlihat seperti pemeriksaan daftar sederhana, tapi ia mengunci keputusan bisnis
+ * yang mahal: fee FurniTech dihitung dari tarif VA datar (Rp 4.440). Begitu
+ * kanal persen seperti QRIS atau kartu kredit aktif lagi, seluruh hitungan
+ * fee di `docs/midtrans-fee.md` tidak berlaku karena tarifnya berbeda — dan
+ * tidak ada satu pun pemeriksaan lain yang akan menangkapnya.
+ */
+function testPaymentChannels(): void {
+  const expected = [
+    "bca_va",
+    "bni_va",
+    "bri_va",
+    "bsi_va",
+    "danamon_va",
+    "permata_va",
+  ];
+
+  check(
+    "kanal pembayaran = hanya VA yang disetujui",
+    JSON.stringify([...ALLOWED_PAYMENT_CHANNELS].sort()) === JSON.stringify(expected),
+    ALLOWED_PAYMENT_CHANNELS.join(", "),
+  );
+
+  for (const banned of ["qris", "gopay", "shopeepay", "credit_card", "cimb_va", "seabank"]) {
+    check(
+      `kanal ${banned} tidak aktif`,
+      !ALLOWED_PAYMENT_CHANNELS.includes(banned as never),
+      banned === "cimb_va" || banned === "seabank"
+        ? "dinonaktifkan karena batas maksimum nominalnya"
+        : "dinonaktifkan karena MDR persen",
+    );
+  }
+
+  const snap = readSource("src/lib/midtrans/snap.ts");
+  check(
+    "snap.ts memakai ALLOWED_PAYMENT_CHANNELS, bukan daftar sendiri",
+    snap.includes("[...ALLOWED_PAYMENT_CHANNELS]"),
+    "satu sumber kebenaran untuk daftar kanal",
   );
 }
 
@@ -383,7 +522,7 @@ async function runBrowserFlow(browser: Browser): Promise<string> {
   } catch {
     /*
      * Diagnostik, bukan sekadar pesan error. Server Action yang gagal
-     * menampilkan pesannya di dalam halaman — tanpa捕捉, timeout-nya cuma
+     * menampilkan pesannya di dalam halaman — tanpa itu, timeout-nya cuma
      * bilang "tidak sampai ke Midtrans", yang tidak_identify penyebabnya.
      */
     // Selector-nya `[data-slot="alert"]`, bukan `[role="alert"]`. Next
@@ -581,7 +720,7 @@ async function checkSettlement(midtransOrderId: string, total: number): Promise<
  * Alamat milik tenant lain harus ditolak.
  *
  * Dijalankan lewat server action yang sama supaya yang diuji adalah jalur
- * produksi, bukan 쿼eri yang ditiru ulang di skrip.
+ * produksi, bukan kueri yang ditiru ulang di skrip.
  */
 async function checkCrossTenantAddress(browser: Browser, fixture: Fixture): Promise<void> {
   const context = await browser.newContext();
@@ -730,6 +869,8 @@ async function main() {
   await requireServer();
   testLookupRule();
   testSourceGuards();
+  testFeeModel();
+  testPaymentChannels();
 
   if (!process.env.MIDTRANS_SERVER_KEY) {
     console.error("MIDTRANS_SERVER_KEY kosong — isi .env lebih dulu.");

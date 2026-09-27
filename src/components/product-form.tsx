@@ -10,6 +10,7 @@ import {
 } from "@/components/rhf-fields";
 import { productFormSchema, productSchema } from "@/lib/schemas/product";
 import { createProduct, updateProduct } from "@/lib/actions/products";
+import { FeeCalculatorDialog } from "@/components/fee-calculator-dialog";
 
 /**
  * Form produk (buat & ubah) dengan validasi per field.
@@ -131,14 +132,25 @@ export function ProductForm({
             </div>
           </FormSection>
 
-          <TextField
-            ctx={ctx}
-            label="Harga dasar (Rp)"
-            name="basePrice"
-            required
-            placeholder="12500000"
-            hint="Rupiah penuh, tanpa tanda baca ribuan."
-          />
+          <div className="grid gap-2">
+            <TextField
+              ctx={ctx}
+              label="Harga dasar (Rp)"
+              name="basePrice"
+              required
+              placeholder="12500000"
+              hint="Rupiah penuh, tanpa tanda baca ribuan."
+            />
+            {/*
+              Kalkulator biaya ada di sini, bukan di halaman pengaturannya,
+              karena tempat pengrajin benar-benar membutuhkan angkanya adalah
+              sedang menetapkan harga. Dan "harga harus berapa supaya saya
+              dapat Rp X" jauh lebih sulit dihitung sendiri daripada
+              "dari harga ini saya dapat berapa" — itu yang dipakai setiap
+              kali pemilik toko menetapkan harga.
+            */}
+            <FeeCalculatorDialog />
+          </div>
 
           <TextAreaField ctx={ctx} label="Deskripsi" name="description" />
 
