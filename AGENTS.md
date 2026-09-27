@@ -216,9 +216,9 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 - **Layar tukang bukan halaman pesanan yang disamarkan.**
   `src/components/carpenter-queue.tsx` menampilkan hanya pesanan yang
   ditugaskan ke tukang itu, dimensi dalam cm, tahap terakhir dari lima, dan
-  tidak ada satu pun nominal rupiah. Finanzial tidak relevan di bengkel, dan
-  `test:carpenter` mengunci "tidak ada nominal" itu — mustahil dibuktikan
-  dari source code.
+  tidak ada satu pun nominal rupiah. Data keuangan tidak relevan di bengkel,
+  dan `test:carpenter` mengunci "tidak ada nominal" itu — yang
+  mustahil dibuktikan dari source code.
 - **Uji yang membersihkan fikstur harus menghapus audit-nya juga.**
   `integration_audit_logs.tenant_id` memakai `onDelete: "set null"`, jadi
   baris audit tidak ikut terhapus bersama tenant. Kalau tidak dihapus
