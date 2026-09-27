@@ -137,6 +137,156 @@ Fokus Utama: Halaman toko online publik pembeli berbasis multi-tenant.
      * Integration Midtrans Payment Gateway (Escrow Account FurniTech) dengan potongan MDR resmi.
      * Halaman publik Order Tracking (menampilkan timeline foto progres produksi & resi kargo).
      * Widget Live Chat Floating di toko online.
+ * STATUS: 1 dari 4 bagian selesai.
+   * Bagian 1 (SELESAI) — storefront: beranda, katalog, filter kategori, detail
+     produk. Detail di commit `2245e72`.
+   * Bagian 2, 3, 4 — rencana rinci di bawah. Semua fakta di bagian tersebut
+     sudah diverifikasi terhadap layanan sungguhan, bukan diasumsikan.
+
+━━━ Sprint 5, Rencana Lanjutan ━━━
+
+Bagian 2 — Form Alamat Bertingkat (desa → kecamatan → kab/kota → provinsi)
+
+ALUR PEMBELI. Pembeli storefront tidak punya akun, jadi "alamat saya" tidak
+bisa memakai sesi. Alamat di-key per (tenant, nomor HP) di `customer_addresses`
+— jadi identitas pembelinya adalah nomor HP yang dia ketik sendiri:
+  1. Pembeli mengetik nomor HP.
+  2. Kalau ada alamat tersimpan untuk (tenant, nomor itu), alamatnya
+     ditampilkan sebagai pilihan. Alamat yang pernah dipakai ditandai
+     "terakhir dipakai" supaya tidak perlu mengetik ulang.
+  3. Kalau tidak ada, pembeli diarahkan ke form alamat lengkap.
+Nomor HP adalah kunci, bukan autentikasi. Konsekuensinya pembeli bisa melihat
+dan memakai alamat milik orang lain yang tahu nomornya. Ini diterima karena
+alamat bukan data rahasia dan sudah jadi perilaku umum di marketplace, TAPI
+artinya form alamat TIDAK BOLEH menampilkan data apa pun selain alamat itu
+sendiri (tidak ada total pesanan, tidak ada riwayat).
+
+STRUKTUR FORM (cascading, bukan empat dropdown bebas):
+  Provinsi → Kabupaten/Kota → Kecamatan → Desa/Kelurahan
+  Diisi manual: nama jalan, nomor rumah, RT, RW
+  Otomatis: kode pos, titik peta
+  Mengubah level mana pun mengosongkan semua level di bawahnya. Kalau
+  provinsi diganti, kabupaten yang sebelumnya terpilih pasti tidak lagi benar —
+  dan membiarkannya terpilih menghasilkan alamat yang tidak pernah ada.
+
+SUMBER DATA WILAYAH — SUDAH DIVERIFIKASI, BUKAN ASUMSI.
+  `https://www.emsifa.com/api-wilayah-indonesia/v2`
+  Diuji pada 2026-09-27, semua level 200 OK:
+    /v2/provinces.json                 6,9 KB   34 provinsi (ada lat/lng)
+    /v2/regencies/32.json              5,1 KB   kabupaten/kota (ada lat/lng)
+    /v2/districts/32.73.json            3,2 KB   kecamatan
+    /v2/villages/32.73.01.json          ±1-8 KB  desa + `postal_code` + lat/lng
+    /v2/villages/32.73.01.1001.json     0,4 KB  satu desa, lengkap dengan
+                                               rantai induknya
+  Gratis, tanpa API key, tanpa pendaftaran. Sumber data: Kepmendagri/BIG untuk
+  wilayah, `cahyadsn/wilayah_kodepos` untuk kode pos (83.762 desa/kelurahan,
+  10.632 kode pos).
+  JEBakan format id yang sudah teridentifikasi: v2 memakai id BERTITIK
+  ("32.73", "32.73.01", "32.73.01.1001"), sedangkan v1 memakai id rapat
+  ("3273", "3273010"). Memakai id v1 ke endpoint v2 membalas 404. Semua
+  pemanggilan harus memakai id yang dikembalikan level sebelumnya apa adanya.
+
+  KODE POS OTOMATIS — BISA. `postal_code` tersedia di level desa, jadi
+  tidak perlu lookup tambahan. Tapi dua pengecualian yang harus ditangani di UI:
+   - Beberapa desa tidak punya kode pos. Field dibiarkan kosong dan tetap bisa
+     diisi manual; tidak boleh memblokir checkout.
+   - Satu kode pos bisa dipakai banyak desa, jadi isi field di dalam <datalist>
+     (bukan select) supaya pembeli bisa mengoreksi kalau kode pos desanya ternyata berbeda
+     dari kode pos yang terisi otomatis. Memaksa angka dari API saat
+     kenyataannya berbeda adalah kesalahan yang menyebalkan, bukan membantu.
+
+  KECIL BUNDLE. Level desa ada ~83.000, jadi MEMASUKKAN SEMUA KE BUNDLE akan
+  beberapa MB dan tidak mungkin untuk PWA yang harus tetap ramping di 375px.
+  Strateginya: provinsi + kabupaten di-cache ke repo sebagai snapshot (~13 KB
+  bersama, muat di bundle utama), sedangkan kecamatan dan desa diambil sesuai
+  permintaan dan di-cache di `localStorage`. Satu kabupaten = 3,2 KB, satu
+  kecamatan = 1-8 KB; cukup kecil untuk diambil on-demand.
+  Fallback WAJIB: kalau API mati, form harus tetap bisa diisi manual (pembeli
+    mengetik nama desa sendiri). Bergantung pada pihak ketiga di tengah
+    checkout adalah cara memastikan orang tidak bisa memesan.
+
+  PRIVAASI. Koordinat GPS adalah lokasi rumah orang. Disimpan, tapi TIDAK PERNAH
+  dirender di halaman lacak publik. `customer_addresses` sudah punya RLS.
+
+Bagian 3 — Kalkulator Ongkir Instan & Pembuatan Order
+
+ONGKIR DIHITUNG DARI KABUPATEN/KOTA, BUKAN KOTA BEBIAS. Ini jebakan
+  integrasi yang sudah teridentifikasi sekarang, sebelum koding:
+  - Pohon wilayah memberi nama resmi: "Kota Bandung", "Kabupaten Bogor".
+  - `shipping_rates.cityName` diisi bebas oleh pengrajin, dan data seed sekarang
+    berisi "Bandung" dan "Jakarta" — TANPA awalan.
+  - Lookup yang membandingkan teks apa adanya tidak akan pernah cocok, dan
+    kalau sampai cocok untuk kasus kebetulan, tarif yang terpakai bisa milik
+    kota yang salah.
+  Perbaikan: tambah kolom `regencyId` ke `shipping_rates`, isi dari pohon
+  wilayah (backfill dari nama yang sudah ada dengan normalisasi awalan), lalu
+    lookup memakai id. Nama tetap disimpan dan tetap ditampilkan.
+
+KOTA YANG BELUM PUNYA TARIF TIDAK BOLEH BERHASIL DENGAN ONGKIR 0. Ini adalah
+kegagalan diam-diam yang paling berbahaya di checkout: pembeli melihat total
+murah, menekan bayar, dan uang yang baru terkumpul adalah ongkir yang
+seharusnya ditagih. Kalau tidak ada tarif, checkout DIBLOKIR dengan pesan
+"Belum ada tarif ongkir untuk kota ini" plus saran menghubungi toko. Form
+kota tujuan menampilkan daftar kota yang memang ditserve pengrajin ini, jadi
+seharusnya jarang terjadi — tapi kalau terjadi, harus kelihatan.
+
+PERHITUNGAN TOTAL (semua dihitung ulang di server, tidak pernah percaya
+  angka dari klien):
+  itemsSubtotal = Σ(harga produk × jumlah)
+  shippingFee  = tarif dari `shipping_rates` untuk regency tujuan
+  totalAmount  = itemsSubtotal + shippingFee
+  Nominal dikirim klien hanya `productId` + `qty`; harga dan ongkir selalu
+  diambil ulang dari database. Kalau tidak, orang bisa mengirim
+  `qty: 1, price: 1` dan membeli meja 12 juta seharga satu rupiah.
+
+Bagian 4 — Halaman Lacak Pesanan Publik
+
+KODE PESANAN SAJA TIDAK CUKUP. Halaman ini publik dan tanpa login, dan isinya
+  berisi nama pembeli, alamat lengkap, foto progres, dan nomor resi.
+  `generateOrderCode()` menghasilkan `ORD-` + 9 karakter base36, jadi ruang
+  tebaknya ~10^14 dan TIDAK bisa ditebak dengan enumerate. Yang realistis
+  adalah kode yang BERBAGIAN: difoto dari struk, dikirim lewat chat, atau
+  diberikan kepada orang yang seharusnya tidak tahu. Enumerasi bukan
+  ancamannya — kebocoran yang tidak disengaja adalah ancamannya.
+  Karena itu verifikasi ditambahkan: kode pesanan + nomor HP harus cocok.
+  Verifikasi ini murah dan menutup jalur yang paling mungkin terjadi.
+  Halaman yang gagal tidak boleh memberi tahu apakah kode pesanan itu ada —
+  itu mengubah halaman lacak menjadi alat untuk menebak keberadaan pesanan.
+
+ISINYA: status pesanan, timeline 5 tahap beserta foto progres, nomor resi
+  kargo, dan RINGKASAN items. Alamat ditampilkan sebagian (jalan + kota),
+  koordinat GPS tidak pernah.
+
+CATATAN SOAL PETA. maplibre-gl berukuran 20,7 MB belum dikompres, jadi WAJIB
+  di-import dinamis (`await import(...)`) hanya saat form peta dibuka. Kalau
+  masuk bundle utama, ini menambah ~1 MB ke PWA yang harus tetap ringan.
+  Tile OSM dari `tile.openstreetmap.org` DILARANG untuk penggunaan komersial
+  atau berskala besar oleh kebijakan penggunaan OSM — jadi URL tile harus
+  lewat environment variable, OSM hanya untuk pengembangan, dan produksi
+  wajib menunjuk penyedia yang punya perjanjian. Atribut © OpenStreetMap
+  contributors wajib tampil.
+  Yang lebih penting: PETA HARUS OPSIONAL. `latitude`/`longitude` nullable,
+  form alamat harus bisa diselesaikan tanpa peta, dan kondisi luring harus
+  punya state yang jelas — bukan peta putih kosong yang membuat orang mengira
+  aplikasinya rusak. Untuk kurir kargo yang perlu bernavigasi, yang paling
+  berguna tetap alamat lengkap + RT/RW, bukan peta. Peta adalah pelengkap,
+  bukan syarat. Geolokasi browser dipakai untuk mengisi titik awal, dan itu
+  perlu izin eksplisit dari pengguna — jangan diminta diam-diam.
+
+KESULITAN YANG TERBUKA (perlu keputusan, bukan hanya pengerjaan):
+  - Kredensial Midtrans masih kosong, jadi pembuatan order tidak bisa diuji
+    end-to-end. Sama seperti Fase D, kodenya bisa ditulis dan diuji sampai
+    pembuatan order-nya, tetapi tidak sampai pembayarannya benar-benar masuk.
+  - Peta tidak bisa dipakai di produksi tanpa memilih penyedia tile berbayar.
+  - Data wilayah berasal dari layanan gratis pihak ketiga. Kalau nanti dipindah
+    ke database (83.000 baris), dependensi eksternal ini hilang — tapi itu
+    pekerjaan tersendiri dengan biaya migrasi sendiri.
+  - Tagihan ongkir untuk alamat di luar jangkauan tenant tidak ada konsepnya
+    sama sekali. Kalau pengrajin hanya punya tarif untuk 3 kota, pembeli di
+    kota ke-4 akan terkunci. Perilaku yang masuk akal: pengrajin bisa menandai
+    satu tarif default, ATAU pembeli diberi tahu kargo ke kotanya belum
+    dilayani. Ini perlu keputusan produk, bukan default teknis.
+
  * Definition of Done (DoD):
    * Pembeli dapat memilih produk, memasukkan kota tujuan, melihat total harga include ongkir kargo, dan membayar via Midtrans.
    * Storefront dapat dipakai di mobile, tablet, dan desktop; checkout di HP
