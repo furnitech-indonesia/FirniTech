@@ -680,11 +680,12 @@ tapi kemampuan menjaga pertumbuhan menuju 1.000 pada 2030.
 8. **Dana yang dibutuhkan hanya sekitar Rp 2,7 juta**, di bulan pertama, dan
    itu hampir seluruhnya biaya infrastruktur. Tidak perlu modal ventura. Tidak ada modal yang memaksa tumbuh cepat, jadi
    pertumbuhan harus datang dari prioritas, bukan tekanan pendanaan.
-9. **Add-on domain hanya layak kalau ada mekanisme refresh otomatis.**
-   Harga Rp 250.000 hampir pas di batas impas —Rp 4,2 juta laba dalam 4,2
-   tahun pada take-up 60%. Kalau churn riil di atas 4%, naikkan ke Rp 300.000.
-   Kalau harus Anda ingat 1.000 domain setiap tahun, jangan tawarkan sama
-   sekali. Rinciannya di [Bagian 10](#10-add-on-domain-com).
+9. **Tawarkan add-on domain Rp 250.000/tahun, dengan suspend otomatis.**
+   Marjin Rp 61.333 per invoice (24,5%) aman dari churn karena Cloudflare
+   ditagih lunas di awal — laba Rp 51 juta dalam 4,2 tahun pada take-up 60%.
+   Yang menentukan bukan keuntungannya tapi kewajiban suspend: tanpa itu,
+   Rp 188 juta per tahun bisa hilang dari domain yang tidak ditagih.
+   Rinciannya di [Bagian 10](#10-add-on-domain-com).
 10. **Hitung ulang dokumen ini setiap kali asumsi berubah.** Seluruh asumsi
    terkumpul di [Bagian 11](#11-asumsi-yang-dapat-diubah).
 
@@ -887,90 +888,112 @@ biaya Cloudflare  Rp 188.667/tahun
 marjin            Rp  61.333/tahun  (32% di atas biaya)
 ```
 
+### Biaya Cloudflare dibayar lunas di awal
+
+Cloudflare Registrar menagih **sekali di awal**, lalu berlaku 12 bulan.
+Tidak ada prorata, tidak ada pengembalian kalau dibatalkan di tengah jalan.
+
+```
+biaya per invoice = Rp 188.667  (SEKALI, di bulan 0)
+                    bukan Rp 15.722 x jumlah bulan aktif
+```
+
+Ini yang membuat add-on domain aman terhadap churn:
+
+| Skenario | Terima | Biaya | Hasil |
+|---|---|---|---|
+| Pelanggan tetap 12 bulan | Rp 250.000 | Rp 188.667 | **Rp 61.333** |
+| Pelanggan churn bulan ke-5 | Rp 250.000 | Rp 188.667 | **Rp 61.333** |
+| Pelanggan churn bulan ke-1 | Rp 250.000 | Rp 188.667 | **Rp 61.333** |
+
+**Marjin per invoice selalu Rp 61.333, berapa pun lamanya pelanggan
+bertahan.** Churn hanya mengurangi jumlah invoice, tidak pernah mengurangi
+marjin per invoice.
+
 ### Simulasi dengan take-up 60%
 
-Pengrajin yang mengambil add-on membayar **saat pendaftaran**, lalu **setiap
-Januari** untuk tahun berikutnya. Pelanggan yang berhenti berlangganan **tidak
-menagih domain lagi** — dan Cloudflare tidak mengembalikan biaya.
+| Take-up | Invoice | Omzet | Biaya Cloudflare | **Laba** | Marjin |
+|---|---|---|---|---|---|
+| 30% | 417 | Rp 104.278.638 | Rp 78.695.760 | **Rp 25.582.878** | 24,5% |
+| 50% | 695 | Rp 173.797.730 | Rp 131.159.599 | **Rp 42.638.131** | 24,5% |
+| **60%** | **834** | **Rp 208.557.276** | **Rp 157.391.519** | **Rp 51.165.757** | **24,5%** |
+| 80% | 1.112 | Rp 278.076.368 | Rp 209.855.359 | **Rp 68.221.009** | 24,5% |
+| 100% | 1.390 | Rp 347.595.460 | Rp 262.319.199 | **Rp 85.276.262** | 24,5% |
 
-| Komponen | Jumlah 4,2 tahun |
-|---|---|
-| Invoice domain | 834 |
-| Unit-bulan domain aktif | 12.999 |
-| Omzet add-on | Rp 208.557.276 |
-| Biaya Cloudflare | Rp 204.375.087 |
-| **Laba** | **Rp 4.182.189 (marjin 2,0%)** |
+Marjin 24,5% di semua skenario take-up — karena biaya dan harga sama-sama per
+invoice. Take-up hanya menentukan banyaknya invoice.
 
-### Temuan yang membatalkan sebagian rekomendasi saya
+### Harga impas
 
-**Harga Rp 250.000 hampir pas di batas impas.**
-
-Saya sebelumnya menyebut Rp 250.000 "defensif" dengan marjin 33%. Itu
-menghitung kalau 1 invoice menutup 12 bulan biaya. **Kenyataannya tidak
-begitu.** Rata-rata satu invoice hanya menghasilkan **15,6 unit-bulan domain
-aktif**, karena:
-
-- Pelanggan yang churn di bulan ke-5 masa tagihannya sudah habis, tapi
-  biaya Cloudflare masih jalan sampai 12 bulan.
-- Pelanggan yang mendaftar di bulan-bulan akhir periode hanya aktif
-  beberapa bulan sebelum simulasi berakhir.
-
-Harga impas yang sebenarnya: **Rp 245.000 per tahun**. Rp 250.000 hanya
-Rp 5.000 di atasnya.
-
-Sensitivitas terhadap churn — dan churn 3% per bulan itu asumsi saya, bukan
-data:
-
-| Churn per bulan | Umur rata-rata domain | Harga impas |
+| Harga | Laba (take-up 60%) | Marjin |
 |---|---|---|
-| 2% | 50 bulan | Rp 786.000 |
-| **3% (dasar)** | **33 bulan** | **Rp 524.000** |
-| 5% | 20 bulan | Rp 314.000 |
-| 8% | 13 bulan | Rp 197.000 |
+| Rp 150.000 | −Rp 32.257.153 | −25,8% |
+| **Rp 188.667** | **Rp 0** | **0,0%** |
+| Rp 200.000 | Rp 9.454.302 | 5,7% |
+| **Rp 250.000** | **Rp 51.165.757** | **24,5%** |
+| Rp 300.000 | Rp 92.877.212 | 37,1% |
 
-Angka "harga impas" di tabel ini memakai umur teoretis `1/churn`, sedangkan
-simulasi 4,2 tahun menghasilkan angka lebih rendah karena periode terpotong.
-Keduanya memberi arah yang sama: **Rp 250.000 aman kalau churn
-benar-benar 3% atau lebih rendah, dan IMPAS kalau churn 5%.**
+Impas tepat di harga biaya, dan **tidak bergantung pada churn sama sekali**.
 
-Untuk produk yang belum pernah dipakai siapa pun, churn 5% adalah asumsi
-yang lebih jujur daripada 3%.
+### Koreksi: versi sebelumnya salah hitung
 
-### Kenaikan harga yang lebih aman
+Versi dokumen ini sebelumnya menyatakan marjin 2,0% dan "harga impas
+Rp 245.000", dengan alasan bahwa biaya harus "menutup 15,6 bulan". Itu salah:
+biaya Cloudflare **dibayar lunas di awal**, bukan dihitung per bulan aktif.
+Angka yang benar adalah **laba Rp 51.165.757 dengan marjin 24,5%**, dan
+harga impasnya persis Rp 188.667.
 
-| Harga | Take-up 30% | 50% | 60% | 80% |
-|---|---|---|---|---|
-| Rp 200.000 | −Rp 18,8 jt | −Rp 31,3 jt | −Rp 37,5 jt | −Rp 50,0 jt |
-| **Rp 250.000** | **Rp 2,1 jt** | **Rp 3,5 jt** | **Rp 4,2 jt** | **Rp 5,6 jt** |
-| Rp 300.000 | Rp 22,9 jt | Rp 38,2 jt | Rp 45,9 jt | Rp 61,2 jt |
-| Rp 350.000 | Rp 43,8 jt | Rp 73,0 jt | Rp 87,6 jt | Rp 116,8 jt |
+Kesimpulan yang benar: **Rp 250.000 bukan "hampir pas di batas impas" —
+ia memberi jarak Rp 61.333 di atas biaya, dan jarak itu tidak terkikis oleh
+churn.**
 
-Rp 200.000 merugi di semua skenario take-up.
+### Yang benar-benar perlu diwaspadai
+
+Risikonya bukan churn. Risikonya **domain aktif yang tidak pernah ditagih
+lagi**:
+
+```
+1.000 domain aktif tapi tidak ditagih = Rp 188.667.020 per tahun
+```
+
+Itu **3,3 kali lebih besar** dari laba add-on di take-up 60%. Domain yang
+tetap berjalan tanpa pembayaran adalah biaya berulang, bukan sekali
+bayar.
+
+Dua penangkal yang wajib ada:
+
+1. **Invoice tahunan dibuat otomatis** saat `periodEnd` lewat — bukan
+   dihitung manual.
+2. **Suspend otomatis** kalau 3 bulan tidak dibayar. Tanpa ini, model
+   "bayar sekali di bulan 1" akan menimbulkan persis kebocoran ini.
+
+Kedua hal ini membuat model tagih berulang **tidak hanya lebih untung, tapi
+juga lebih aman.**
 
 ### Rekomendasi
 
-**Tetap Rp 250.000, dengan tiga syarat:**
+**Harga Rp 250.000 adalah pilihan yang tepat, dan alasannya lebih kuat dari
+yang saya kira sebelumnya.**
 
-1. **Invoice domain hanya dibuat setelah domain terverifikasi.** Kalau belum
-   `customDomainVerified = true`, jangan tagih — kalau tidak, Anda menagih
-   orang yang tokonya belum bisa diakses lewat domain itu.
-2. **Pelanggan yang churn tidak menagih ulang, dan domain di-*suspend* atau
-   dilepas** setelah 3 bulan tidak dibayar. Tanpa aturan ini, Rp 188.667 per
-   domain per tahun terus berjalan untuk toko yang sudah berhenti.
-3. **Kalau churn riil ternyata di atas 4%, naikkan ke Rp 300.000.** Pada harga
-   itu, add-on domain menghasilkan Rp 46 juta dalam 4,2 tahun — cukup untuk
-   menutup satu orang paruh waktu.
+Marjin per invoice Rp 61.333 (24,5%) tidak tergerus oleh churn berapa pun,
+karena Cloudflare ditagih lunas di awal. Yang perlu dijaga cuma dua hal:
 
-Kalau tidak ada mekanisme refresh otomatis, **jangan tawarkan sama sekali**.
-1.000 domain yang harus Anda ingatkan sendiri setiap tahun bukan bisnis —
-itu beban yang tersembunyi.
+1. **Invoice tahunan dibuat otomatis** saat `periodEnd` lewat, dan
+   **domain di-suspend otomatis** kalau 3 bulan tidak dibayar.
+2. **Invoice hanya dibuat setelah domain terverifikasi**
+   (`customDomainVerified = true`). Kalau belum, jangan tagih — kalau tidak,
+   Anda menagih orang yang tokonya belum bisa diakses lewat domain itu.
+
+Kalau dua hal itu tidak bisa dikerjakan, **jangan tawarkan sama sekali** —
+bukan karena keuntungannya kecil, tapi karena tanpa suspend otomatis,
+1.000 domain yang tidak ditagih akan memakan Rp 188 juta per tahun.
 
 ### Yang belum dihitung di dokumen ini
 
 Angka-angka di bagian ini **belum masuk ke proyeksi margin di Bagian 2 dan 4**,
 karena take-up 60% itu asumsi dan add-on-nya belum diputuskan untuk
-diimplementasikan. Kalau dijumlahkan ke margin total, tambahan paling besar
-Rp 4,2 juta dalam 4,2 tahun — **0,05% dari margin Rp 8,46 miliar**.
+diimplementasikan. Kalau dijumlahkan ke margin total, tambahan **Rp 51,2
+juta** dalam 4,2 tahun — **0,6% dari margin Rp 8,46 miliar**.
 
 Nilai sebenarnya dari add-on domain bukan uangnya. Yang bernilai adalah
 Add-on ini memaksa pengrajin mengikat diri ke FurniTech selama minimal satu
@@ -990,7 +1013,7 @@ tahun, dan itu yang bisa menurunkan churn — kalau diukur dengan benar.
 | Bauran paket | 60 / 30 / 10 | **asumsi Anda** |
 | Porsi bayar tahunan | 30% | **asumsi saya** |
 | Churn | 3% per bulan | **asumsi Anda** — lihat catatan di Bagian 10 |
-| Take-up add-on domain | 60% pelanggan | **asumsi saya** |
+| Take-up add-on domain | 60% pelanggan, Rp 250.000/tahun | **asumsi saya** |
 | Inflasi harga | 5% per tahun | **asumsi Anda** |
 | Kurs USD | **Rp 18.037** | harga real-time 28 Sep 2026 |
 | Interpolasi 2027–2029 | geometris ×1,7783 per tahun | hitungan |
