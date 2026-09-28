@@ -8,6 +8,7 @@ import { db } from "@/db";
 import { saasInvoices, tenants } from "@/db/schema";
 import { requireTenantWrite } from "@/lib/auth/guard";
 import { LEGALITAS_ADDON, legalitasBreakdown } from "@/lib/addons";
+import { effectiveAddonPrice } from "@/lib/addons/settings";
 import { formatDateID, formatRupiah } from "@/lib/format";
 
 export const metadata = { title: "Pendirian PT — FurniTech" };
@@ -59,6 +60,10 @@ export default async function PendirianPage() {
       // sebagai "paket pendirian yang sudah dibeli".
       rows,
     );
+
+  // Harga efektif, bukan konstanta: owner bisa mengubahnya dari panel, dan
+  // halaman harus menampilkan angka yang sama dengan yang ditagih.
+  const hargaLegalitas = await effectiveAddonPrice("legalitas");
 
   const legalitasInvoice = invoice ?? null;
   const breakdown = legalitasBreakdown();
@@ -119,7 +124,7 @@ export default async function PendirianPage() {
                 Total yang Anda bayar
               </p>
               <p className="text-headline-sm text-code-tabular text-foreground">
-                {formatRupiah(LEGALITAS_ADDON.price)}
+                {formatRupiah(hargaLegalitas.price)}
               </p>
             </div>
           </div>
@@ -148,7 +153,7 @@ export default async function PendirianPage() {
             </div>
           ) : (
             <LegalitasPurchaseForm
-              price={LEGALITAS_ADDON.price}
+              price={hargaLegalitas.price}
               langgananAktif={langgananAktif}
               sudahDibeli={false}
             />

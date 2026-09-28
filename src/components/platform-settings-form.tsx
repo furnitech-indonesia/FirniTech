@@ -38,6 +38,7 @@ export function PlatformSettingsForm({
   rateBps,
   defaultRateBps,
   plans,
+  addons,
 }: {
   rateBps: number;
   defaultRateBps: number;
@@ -47,6 +48,19 @@ export function PlatformSettingsForm({
     priceMonthly: number;
     priceSource: "kode" | "override";
   }>;
+  addons: {
+    domain: {
+      price: number;
+      priceSource: "kode" | "override";
+      floor: number;
+      cost: number;
+    };
+    legalitas: {
+      price: number;
+      priceSource: "kode" | "override";
+    };
+    lockedCosts: { pnbp: number; ops: number };
+  };
 }) {
   const [state, formAction, pending] = useActionState<SettingsState, FormData>(
     savePlatformSettings,
@@ -131,6 +145,71 @@ export function PlatformSettingsForm({
       </div>
 
       {/*
+        Harga add-on. Kolomnya dikosongkan kalau masih memakai bawaan kode,
+        sama seperti harga paket -- supaya "sudah disesuaikan" bisa
+        dibedakan dari "belum pernah diubah".
+      */}
+      <div className="flex flex-col gap-4 border-t border-border pt-5">
+        <div>
+          <p className="text-body-md font-medium text-foreground">
+            Harga add-on
+          </p>
+          <p className="text-body-sm text-muted-foreground">
+            Berlaku untuk invoice yang terbit setelah disimpan. Invoice yang
+            sudah terbit mengunci harganya sendiri.
+          </p>
+        </div>
+
+        <Field className="gap-1.5">
+          <FieldLabel htmlFor="domainAddonPrice">
+            Custom domain per tahun{" "}
+            <span className="text-muted-foreground">
+              {addons.domain.priceSource === "override" ? "(diubah)" : ""}
+            </span>
+          </FieldLabel>
+          <Input
+            id="domainAddonPrice"
+            name="domainAddonPrice"
+            type="number"
+            inputMode="numeric"
+            step={1000}
+            min={addons.domain.floor}
+            defaultValue={addons.domain.price}
+            placeholder={String(addons.domain.price)}
+            aria-describedby="domain-addon-hint"
+          />
+          <p id="domain-addon-hint" className="text-body-sm text-muted-foreground">
+            Tidak boleh di bawah Rp {addons.domain.floor.toLocaleString("id-ID")}{" "}
+            — itu biaya Cloudflare per tahun, jadi di bawahnya FurniTech rugi
+            pada setiap perpanjangan.
+          </p>
+        </Field>
+
+        <Field className="gap-1.5">
+          <FieldLabel htmlFor="legalitasAddonPrice">
+            Paket pendirian PT Perorangan{" "}
+            <span className="text-muted-foreground">
+              {addons.legalitas.priceSource === "override" ? "(diubah)" : ""}
+            </span>
+          </FieldLabel>
+          <Input
+            id="legalitasAddonPrice"
+            name="legalitasAddonPrice"
+            type="number"
+            inputMode="numeric"
+            step={1000}
+            min={1}
+            defaultValue={addons.legalitas.price}
+            placeholder={String(addons.legalitas.price)}
+            aria-describedby="legalitas-addon-hint"
+          />
+          <p id="legalitas-addon-hint" className="text-body-sm text-muted-foreground">
+            Dibayar sekali, di luar paket langganan.
+          </p>
+        </Field>
+      </div>
+
+      {/*
         Fee yang dikunci. Ditampilkan, bukan disembunyikan — pertanyaannya
         selalu muncul, dan lebih baik dijawab sekali di sini daripada
         dijawab satu per chat.
@@ -153,11 +232,28 @@ export function PlatformSettingsForm({
               {FEE_PENCAIRAN.toLocaleString("id-ID")}
             </dd>
           </div>
+          <div className="flex items-center justify-between gap-2">
+            <dt className="text-muted-foreground">
+              PNBP pendaftaran AHU
+            </dt>
+            <dd className="text-code-tabular text-foreground">
+              {addons.lockedCosts.pnbp.toLocaleString("id-ID")}
+            </dd>
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <dt className="text-muted-foreground">Ongkos pengurusan</dt>
+            <dd className="text-code-tabular text-foreground">
+              {addons.lockedCosts.ops.toLocaleString("id-ID")}
+            </dd>
+          </div>
         </dl>
         <p className="mt-2 text-body-sm text-muted-foreground">
-          Keduanya sudah dikonfirmasi ke Midtrans dan hanya berubah kalau
-          Midtrans mengubahnya. Menjadikannya bisa diubah berarti tarif yang
-          sedang berjalan bisa bergerak tanpa ada yang memutuskan — dan
+          Fee masuk dan fee pencairan sudah dikonfirmasi ke Midtrans dan
+          hanya berubah kalau Midtrans mengubahnya. PNBP pendaftaran AHU
+          ditetapkan PP 30/2026 pasal 33 — itu tarif negara, dan
+         ubahannya berarti FurniTech mengarang tarif yang ditampilkan ke
+          pelanggan sebagai "biaya negara". Menjadikannya bisa diubah berarti
+          tarif yang sedang berjalan bisa bergerak tanpa ada yang memutuskan — dan
           pengrajin yang sudah menghitung ulang biayanya akan menemukan angka
           berbeda saat menekan tombol bayar.
         </p>

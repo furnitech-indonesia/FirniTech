@@ -947,6 +947,73 @@ MASIH BELUM DIKERJAKAN
   - Laporan keuangan tahunan PT Perorangan tidak termasuk paket; perlu
     keputusan apakah dijual terpisah.
 
+━━━ Sprint 6 — Harga add-on bisa diubah owner (migrasi 0024) ━━━
+
+STATUS: SELESAI, `npm run test:addons` 51 pemeriksaan (semua lulus).
+
+YANG DIKERJAKAN
+  - `platform_settings.addon_price_overrides` jsonb: `{ domain?, legalitas? }`.
+    Partial, NULL = pakai `src/lib/addons.ts`. Bentuknya SAMA dengan
+    `plan_price_overrides` yang sudah jalan.
+  - `src/lib/addons/settings.ts` (server-only): `effectiveAddonPrice()`,
+    `effectiveAddonPriceNumber()`, `loadAddonSettingsSummary()`.
+  - `createDomainInvoice` / `createLegalitasInvoice` / `createDomainRenewal`
+    memakai harga efektif, bukan konstanta.
+  - Dua halaman pengrajin menampilkan harga efektif.
+  - Dua field baru di `/admin/pengaturan` + PNBP dan ongkos ditampilkan
+    TERKUNCI.
+  - CHECK `platform_settings_domain_price_floor`.
+
+BATAS BAWAH YANG DIPAKAI, DAN ALASANNYA
+  Harga cost Cloudflare .com $10,46/tahun = Rp 188.667. Override di bawah
+  itu berarti FurniTech rugi pada SETIAP renewal, dan ruginya baru terlihat
+  di rekonsiliasi tahunan -- bukan di halaman tempat harga diubah. Ditegakkan
+  di zod (pesan bisa dibaca) DAN di CHECK database (karena setiap jalur
+  penulisan lain bisa melewati zod). Harga tepat sama dengan biaya DITERIMA:
+  impas bukan rugi.
+
+YANG TIDAK BISA DIUBAH, DAN KENAPA
+  Beban add-on: PNBP Rp 50.000 dan ongkos Rp 100.000. PNBP itu tarif yang
+  ditetapkan PP 30/2026 pasal 33, bukan angka bisnis -- mengubahnya berarti
+  FurniTech mengarang tarif negara, dan rinciannya tampil ke pelanggan
+  sebagai "biaya negara". Ditampilkan terkunci di halaman yang sama dengan
+  tarif yang bisa diubah, seperti `FEE_MASUK` dan `FEE_PENCAIRAN`.
+
+KOLOM KOSONG = HAPUS OVERRIDE, BUKAN HARGA 0
+  Dua hal ini sempat bertentangan: kode membaca override <= 0 sebagai "tidak
+  ada" (pakai harga kode), sementara CHECK menolak 0 sebagai "di bawah
+  biaya". Kalau 0 ikut tersimpan, ada DUA cara berbeda untuk mengatakan hal
+  yang sama dan hanya satu yang diterima. Sekarang jelas: mengosongkan kolom
+  menghapus override; 0 tidak pernah boleh tersimpan.
+
+OVERRIDE TIDAK RETROACTIVE
+  `saas_invoices.amount` sudah snapshot sejak awal, jadi invoice yang sudah
+  terbit tetap memakai harga lamanya. Ini yang membuat aman menaikkan harga
+  tanpa membatalkan tagihan yang sedang menunggu pembayaran. `test:addons`
+  mengukurnya: tulis invoice di harga override 300.000, ubah override ke
+  harga lain, lalu baca invoice itu lagi.
+
+TEX YANG DIHAPUS DARI HALAMAN
+  "Harga Rp 250.000 per tahun tidak naik" dihapus dari halaman domain.
+  Owner sekarang boleh mengubah harga, jadi klaim itu akan berbohong di
+  halaman yang sama. Yang diganti: harga efektif, biaya Cloudflare, dan
+  selisihnya.
+
+JEBRAKAN SQL (dicatat di AGENTS.md, sempat memakan waktu)
+  - `COMMENT ON CONSTRAINT` TIDAK didukung untuk CHECK constraint. Hanya
+    untuk constraint pada domain dan foreign key. Pesan errornya
+    "syntax error at or near ." yang tidak menyiratkan apa pun soal CHECK.
+  - `scripts/apply-migrations.ts` memecah file HANYA pada
+    `--> statement-breakpoint`. Tanpa itu, seluruh file jadi satu query dan
+    Postgres menolak statement yang gagal PALING AKHIR. Migrasi 0020-0023
+    lolos tanpa breakpoint karena kebetulan, bukan karena benar.
+
+TES HARUS MENYIAPKAN KEADAAN AWALNYA SENDIRI
+  Percobaan pertama meninggalkan `domain: 188667` di database, dan
+  pemeriksaan "tanpa override" langsung gagal. Tes yang bergantung pada
+  keadaan awal bisa lulus di mesin bersih dan gagal di yang sudah pernah
+  dipakai. `ujiOverrideHarga` sekarang memanggil `setOverride(null)` dulu.
+
 ━━━ Konsistensi dokumen proyeksi (2026-09-28) ━━━
 
 MASALAH YANG DISELESAIKAN

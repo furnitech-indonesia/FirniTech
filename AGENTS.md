@@ -75,7 +75,7 @@ npm run test:webhook   # 46 uji: skema, signature, gerbang tenant, e2e webhook
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
 npm run check:proyeksi  # 56 pemeriksaan konsistensi docs/proyeksi-revenue.md
-npm run test:addons    # 41 pemeriksaan add-on domain & paket pendirian PT
+npm run test:addons    # 51 pemeriksaan add-on: domain, pendirian PT, override harga
 ```
 
 **`test:visual` satu-satunya alat yang bisa melihat halaman.** Semua test lain
@@ -776,6 +776,47 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 - **`npm run test:kurir` sedang rusak** (`22P02: invalid input value for
   uuid: ''`) dan itu SEBELUM add-on masuk — sudah diverifikasi dengan
   `git stash`. Bukan regresi.
+
+## Override harga add-on (migrasi 0024)
+
+- **`platform_settings.addon_price_overrides` = `{ domain?, legalitas? }`**,
+  partial, `NULL` = pakai `src/lib/addons.ts`. Bentuknya SAMA dengan
+  `plan_price_overrides` — jangan menyusun bentuk baru.
+- **Harga yang dipakai saat membuat invoice adalah `effectiveAddonPrice()`**
+  di `src/lib/addons/settings.ts` (server-only), BUKAN konstanta di
+  `addons.ts`. Kalau invoice memakai konstanta sementara halaman memakai
+  override, pengrajin menemukan selisihnya setelah menekan tombol bayar.
+- **Override TIDAK retroactive** karena `saasInvoices.amount` sudah snapshot.
+  Ini yang membuat aman menaikkan harga tanpa membatalkan tagihan yang sedang
+  menunggu pembayaran.
+- **Batas bawah harga domain = biaya Cloudflare Rp 188.667**, ditegakkan
+  CHECK database (`platform_settings_domain_price_floor`) DAN zod. Harga di
+  bawah biaya = rugi pada setiap renewal, dan ruginya baru terlihat di
+  rekonsiliasi tahunan.
+- **Kolom kosong berarti "hapus override", bukan harga 0.** Dua hal itu harus
+  dibedakan: `0` ditolak CHECK, sementara kode membaca override `<= 0` sebagai
+  "tidak ada". Kalau `0` ikut tersimpan, ada dua cara berbeda untuk mengatakan
+  hal yang sama dan hanya satu yang diterima.
+- **Beban add-on (PNBP Rp 50.000, ongkos Rp 100.000) TIDAK bisa diubah.**
+  PNBP itu tarif PP 30/2026 pasal 33 — tarif negara, bukan angka bisnis.
+- **Teks "tidak naik" di halaman domain DIHAPUS.** Owner boleh mengubah
+  harga, jadi klaim itu akan berbohong di halaman yang sama.
+
+JEBRAKAN SQL YANG MENYEBABKAN 20 MENIT HILANG
+
+  1. **`COMMENT ON CONSTRAINT` tidak didukung untuk CHECK constraint.**
+     Hanya berlaku untuk constraint pada domain dan foreign key. Memakainya
+     gagal dengan `syntax error at or near "."` — pesan yang TIDAK menyiratkan
+     apa pun soal CHECK. Migrasi 0022 tidak memakainya karena itu. Penjelasan
+     harus tinggal sebagai komentar `--`, bukan `comment on`.
+  2. **`scripts/apply-migrations.ts` memecah file HANYA pada
+     `--> statement-breakpoint`.** Tanpa itu, seluruh file dikirim sebagai satu
+     query dan Postgres menolak statement yang gagal PALING AKHIR — gejalanya
+     "syntax error" di tempat yang sama sekali tidak menyiratkan penyebabnya.
+     Migrasi 0020-0023 lolos tanpa breakpoint bukan karena bentuknya benar,
+     tapi karena kebetulan tidak punya statement yang bermasalah.
+  3. `platform_settings_domain_price_floor` WAJIB dinamai di `add constraint`,
+     bukan cuma saat di-comment — supaya bisa di-drop dengan `if exists`.
 
 ## Dokumen proyeksi revenue
 

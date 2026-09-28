@@ -2,6 +2,7 @@ import { PlatformSettingsForm } from "@/components/platform-settings-form";
 import { SectionCard } from "@/components/panels";
 import { requireSuperAdmin } from "@/lib/auth/guard";
 import { formatDateID } from "@/lib/format";
+import { loadAddonSettingsSummary } from "@/lib/addons/settings";
 import { loadEffectivePlans, loadSettingsSummary } from "@/lib/platform-settings";
 import { PLAN_IDS } from "@/lib/plans";
 
@@ -18,9 +19,10 @@ export const metadata = { title: "Pengaturan Platform — FurniTech" };
 export default async function PlatformSettingsPage() {
   await requireSuperAdmin();
 
-  const [summary, plans] = await Promise.all([
+  const [summary, plans, addons] = await Promise.all([
     loadSettingsSummary(),
     loadEffectivePlans(),
+    loadAddonSettingsSummary(),
   ]);
 
   return (
@@ -50,6 +52,7 @@ export default async function PlatformSettingsPage() {
             priceMonthly: plans[id].priceMonthly,
             priceSource: plans[id].priceSource,
           }))}
+          addons={addons}
         />
       </SectionCard>
     </main>

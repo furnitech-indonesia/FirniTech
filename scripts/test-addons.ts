@@ -365,7 +365,10 @@ async function ujiWebhook() {
       .where(eq(saasInvoices.midtransOrderId, pendingOrderId));
     cek("pending tidak mengaktifkan domain", pendingInv.status === "pending");
 
-    // --- 6. idempoten --------------------------------------------------
+    // --- 6. override harga (migrasi 0024) --------------------------------
+  await ujiOverrideHarga(tenantId);
+
+  // --- 7. idempoten --------------------------------------------------
     const [duplikat] = await db
       .select()
       .from(saasInvoices)
@@ -393,6 +396,154 @@ async function ujiWebhook() {
       await db.delete(tenants).where(eq(tenants.id, tenantId));
     }
   }
+}
+
+/**
+ * Override harga add-on.
+ *
+ * Yang diuji, dan alasannya:
+ *  - Override dibaca Invoice, bukan hanya ditampilkan di halaman. Kalau
+ *    halaman menampilkan harga baru tapi invoice memakai harga lama,
+ *    pengrajin menemukan selisihnya setelah menekan tombol bayar.
+ *  - Override TIDAK retroactive: invoice yang sudah terbit tetap memakai
+ *    harga lamanya. Ini yang membuat aman menaikkan harga tanpa
+ *    membatalkan tagihan yang sedang menunggu pembayaran.
+ *  - Harga di bawah biaya Cloudflare DITOLAK, karena itu rugi pada setiap
+ *    renewal dan ruginya baru terlihat di rekonsiliasi tahunan.
+ *  - Mengosongkan kolom mengembalikan ke harga di kode.
+ */
+async function ujiOverrideHarga(tenantId: string) {
+  console.log("\nOverride harga:");
+
+  const { platformSettings } = await import("@/db/schema");
+  const { effectiveAddonPrice, DOMAIN_PRICE_FLOOR } = await import(
+    "@/lib/addons/settings"
+  );
+
+  /*
+   * Bersihkan override DULUAN, sebelum mengukur apa pun.
+   *
+   * Percobaan sebelumnya meninggalkan `domain: 188667` di database, dan
+   * pemeriksaan pertama langsung gagal karena itu -- bukan karena kodenya
+   * salah. Tes yang bergantung pada keadaan awal bisa lulus di mesin bersih
+   * dan gagal di mesin yang sudah pernah dipakai, atau sebaliknya. Status
+   * awal harus dibuat oleh tesnya sendiri, bukan diasumsikan.
+   */
+  await setOverride(null);
+
+  const sebelum = await effectiveAddonPrice("domain");
+  cek(
+    "tanpa override harga domain sama dengan harga di addons.ts",
+    sebelum.price === DOMAIN_ADDON.price && sebelum.priceSource === "kode",
+    `price=${sebelum.price}, source=${sebelum.priceSource}`,
+  );
+
+  // --- set override, lalu verifikasi invoice ikut berubah ---------------
+  await setOverride({ domain: 300_000 });
+  const setelah = await effectiveAddonPrice("domain");
+  cek("override terbaca", setelah.price === 300_000 && setelah.priceSource === "override");
+  cek(
+    "add-on yang TIDAK di-override tetap memakai harga kode",
+    (await effectiveAddonPrice("legalitas")).price === LEGALITAS_ADDON.price,
+  );
+
+  // Invoice baru harus memakai harga override.
+  const now = new Date();
+  const [invoice] = await db
+    .insert(saasInvoices)
+    .values({
+      tenantId,
+      itemType: "domain",
+      plan: null,
+      period: "yearly",
+      amount: setelah.price,
+      status: "pending",
+      midtransOrderId: `${ORDER_ID_PREFIX.domain}${tenantId.slice(0, 8)}-${Date.now()}`,
+      periodStart: hari(addMonths(now, 24)),
+      periodEnd: hari(addMonths(now, 36)),
+    })
+    .returning();
+  cek(
+    "invoice memakai harga override, bukan harga di kode",
+    invoice.amount === 300_000,
+    `amount=${invoice.amount}`,
+  );
+
+  // --- harga di bawah biaya harus ditolak -------------------------------
+  const { db: dbClient } = await import("@/db");
+  const bawah = 100_000;
+  let ditolak = false;
+  try {
+    await dbClient
+      .update(platformSettings)
+      .set({ addonPriceOverrides: { domain: bawah } })
+      .where(eq(platformSettings.id, 1));
+  } catch {
+    ditolak = true;
+  }
+  cek(
+    `harga domain di bawah biaya (Rp ${bawah.toLocaleString("id-ID")}) ditolak database`,
+    ditolak,
+    "CHECK platform_settings_domain_price_floor tidak menahannya",
+  );
+  cek("batas bawah = biaya Cloudflare", DOMAIN_PRICE_FLOOR === 188_667);
+
+  // Harga tepat di biaya harus Lolos: impas bukan rugi.
+  let batasDiterima = true;
+  try {
+    await dbClient
+      .update(platformSettings)
+      .set({ addonPriceOverrides: { domain: DOMAIN_PRICE_FLOOR } })
+      .where(eq(platformSettings.id, 1));
+  } catch {
+    batasDiterima = false;
+  }
+  cek("harga tepat sama dengan biaya DITERIMA (impas bukan rugi)", batasDiterima);
+
+  // --- override di bawah 1 ditolak database ----------------------------
+  // Kolom KOSONG di form berarti "pakai harga di kode", dan itu disimpan
+  // sebagai key yang tidak ada -- bukan sebagai angka 0. Kalau 0 ikut
+  // disimpan, ada dua cara berbeda untuk mengatakan hal yang sama, dan
+  // CHECK akan menolak yang satu sementara kode membacanya sebagai override.
+  // Menghapus override harus selalu lewat mengosongkan kolom.
+  let nolDitolak = false;
+  try {
+    await dbClient
+      .update(platformSettings)
+      .set({ addonPriceOverrides: { domain: 0 } })
+      .where(eq(platformSettings.id, 1));
+  } catch {
+    nolDitolak = true;
+  }
+  cek("override 0 ditolak database, kolom kosong yang berarti hapus", nolDitolak);
+
+  // --- invoice lama tidak berubah ---------------------------------------
+  const [lama] = await db
+    .select()
+    .from(saasInvoices)
+    .where(eq(saasInvoices.id, invoice.id));
+  cek(
+    "invoice yang sudah terbit TIDAK berubah setelah override diubah",
+    lama.amount === 300_000,
+    `amount=${lama.amount}`,
+  );
+
+  // --- mengosongkan override mengembalikan ke harga kode ----------------
+  await setOverride(null);
+  const kembali = await effectiveAddonPrice("domain");
+  cek(
+    "override dihapus -> kembali ke harga di kode",
+    kembali.price === DOMAIN_ADDON.price && kembali.priceSource === "kode",
+  );
+}
+
+async function setOverride(value: Record<string, number> | null) {
+  const { platformSettings } = await import("@/db/schema");
+  const { db: dbClient } = await import("@/db");
+  await dbClient
+    .update(platformSettings)
+    .set({ addonPriceOverrides: value })
+    .where(eq(platformSettings.id, 1));
 }
 
 async function bacaTenant(id: string) {

@@ -8,6 +8,7 @@ import { db } from "@/db";
 import { tenants } from "@/db/schema";
 import { requireTenantWrite } from "@/lib/auth/guard";
 import { DOMAIN_ADDON } from "@/lib/addons";
+import { effectiveAddonPrice } from "@/lib/addons/settings";
 import { formatDateID, formatRupiah } from "@/lib/format";
 
 export const metadata = { title: "Domain — FurniTech" };
@@ -46,6 +47,15 @@ export default async function DomainSettingsPage() {
     .from(tenants)
     .where(eq(tenants.id, actor.tenantId))
     .limit(1);
+
+  /*
+   * Harga yang DIPAKAI saat tagihan dibuat, bukan konstanta di `addons.ts`.
+   * Owner boleh mengubahnya dari panel, jadi halaman yang menampilkan harga
+   * harus membaca sumber yang sama dengan yang dipakai `createDomainInvoice`.
+   * Dua sumber = pengrajin menghitung ulang lalu menemukan selisihnya.
+   */
+  const hargaDomain = await effectiveAddonPrice("domain");
+  const biayaCloudflare = 188_667;
 
   const now = new Date();
   const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN ?? null;
@@ -96,7 +106,7 @@ export default async function DomainSettingsPage() {
         <SectionCard
           title="Custom domain"
           description={`Pakai nama sendiri, misal tokomelayu.com. ${formatRupiah(
-            DOMAIN_ADDON.price,
+            hargaDomain.price,
           )} per ${DOMAIN_ADDON.periodMonths} bulan, dibayar di muka.`}
         >
           {!tenant?.customDomain ? (
@@ -131,7 +141,7 @@ export default async function DomainSettingsPage() {
                 ) : (
                   <DomainPurchaseForm
                     domain={tenant.customDomain}
-                    price={DOMAIN_ADDON.price}
+                    price={hargaDomain.price}
                     status={tenant.customDomainStatus}
                     suspendedAt={tenant.customDomainSuspendedAt}
                   />
@@ -161,10 +171,10 @@ export default async function DomainSettingsPage() {
         <div className="flex items-start gap-2 rounded-lg border border-border bg-surface-sunken p-4">
           <InfoIcon size={20} className="mt-0.5 shrink-0 text-muted-foreground" />
           <p className="text-body-sm text-muted-foreground">
-            Harga {formatRupiah(DOMAIN_ADDON.price)} per tahun tidak naik, dan
-            biaya FurniTech di Cloudflare {formatRupiah(188_667)} per tahun. Selisih
-            Rp {formatRupiah(DOMAIN_ADDON.price - 188_667)} per tahun adalah
-            margin — bukan biaya tersembunyi.
+            Harga {formatRupiah(hargaDomain.price)} per tahun, dan biaya
+            FurniTech di Cloudflare {formatRupiah(biayaCloudflare)} per tahun.
+            Selisih Rp {formatRupiah(hargaDomain.price - biayaCloudflare)}{" "}
+            per tahun adalah margin — bukan biaya tersembunyi.
           </p>
         </div>
       </div>

@@ -5,12 +5,8 @@ import { headers } from "next/headers";
 
 import { db } from "@/db";
 import { saasInvoices, tenants, users } from "@/db/schema";
-import {
-  DOMAIN_ADDON,
-  LEGALITAS_ADDON,
-  ORDER_ID_PREFIX,
-  nextDomainPeriod,
-} from "@/lib/addons";
+import { ORDER_ID_PREFIX, nextDomainPeriod } from "@/lib/addons";
+import { effectiveAddonPriceNumber } from "@/lib/addons/settings";
 import { createSaasCharge } from "./saas";
 import { getRequestHost } from "@/lib/tenant-host";
 
@@ -100,6 +96,7 @@ export async function createDomainInvoice(input: {
   const now = new Date();
   const period = nextDomainPeriod(now, tenant.customDomainExpiresAt);
   const orderId = addonOrderId(ORDER_ID_PREFIX.domain, input.tenantId, now);
+  const price = await effectiveAddonPriceNumber("domain");
 
   const [invoice] = await db
     .insert(saasInvoices)
@@ -108,7 +105,7 @@ export async function createDomainInvoice(input: {
       itemType: "domain",
       plan: null,
       period: "yearly",
-      amount: DOMAIN_ADDON.price,
+      amount: price,
       status: "pending",
       midtransOrderId: orderId,
       periodStart: toDate(period.start),
@@ -118,7 +115,7 @@ export async function createDomainInvoice(input: {
 
   const charge = await createSaasCharge({
     orderId,
-    amount: DOMAIN_ADDON.price,
+    amount: price,
     customerName: input.tenantName,
     customerEmail: input.email,
     customerPhone: input.phone,
@@ -129,7 +126,7 @@ export async function createDomainInvoice(input: {
   return {
     ok: true,
     redirectTo: charge.redirectUrl,
-    amount: DOMAIN_ADDON.price,
+    amount: price,
     invoiceId: invoice.id,
   };
 }
@@ -147,6 +144,7 @@ export async function createLegalitasInvoice(input: {
 }): Promise<CreateAddonResult> {
   const now = new Date();
   const orderId = addonOrderId(ORDER_ID_PREFIX.legalitas, input.tenantId, now);
+  const price = await effectiveAddonPriceNumber("legalitas");
 
   // Sekali bayar: periode = satu hari. `period_end` wajib NOT NULL, dan
   // memberikan periode 12 bulan di sini akan membuat webhook yang salah
@@ -158,7 +156,7 @@ export async function createLegalitasInvoice(input: {
       itemType: "legalitas",
       plan: null,
       period: "monthly",
-      amount: LEGALITAS_ADDON.price,
+      amount: price,
       status: "pending",
       midtransOrderId: orderId,
       periodStart: toDate(now),
@@ -168,7 +166,7 @@ export async function createLegalitasInvoice(input: {
 
   const charge = await createSaasCharge({
     orderId,
-    amount: LEGALITAS_ADDON.price,
+    amount: price,
     customerName: input.tenantName,
     customerEmail: input.email,
     customerPhone: input.phone,
@@ -179,7 +177,7 @@ export async function createLegalitasInvoice(input: {
   return {
     ok: true,
     redirectTo: charge.redirectUrl,
-    amount: LEGALITAS_ADDON.price,
+    amount: price,
     invoiceId: invoice.id,
   };
 }
@@ -220,6 +218,7 @@ export async function createDomainRenewal(
   // sudah lewat.
   const period = nextDomainPeriod(now, tenant.customDomainExpiresAt);
   const orderId = addonOrderId(ORDER_ID_PREFIX.domain, tenantId, now);
+  const price = await effectiveAddonPriceNumber("domain");
 
   const [invoice] = await db
     .insert(saasInvoices)
@@ -228,7 +227,7 @@ export async function createDomainRenewal(
       itemType: "domain",
       plan: null,
       period: "yearly",
-      amount: DOMAIN_ADDON.price,
+      amount: price,
       status: "pending",
       midtransOrderId: orderId,
       periodStart: toDate(period.start),
@@ -245,7 +244,7 @@ export async function createDomainRenewal(
   const origin = await appOrigin();
   const charge = await createSaasCharge({
     orderId,
-    amount: DOMAIN_ADDON.price,
+    amount: price,
     customerName: owner?.fullName ?? tenant.name,
     customerEmail: owner?.email ?? "admin@furnitech.id",
     customerPhone: owner?.phone ?? null,
@@ -256,7 +255,7 @@ export async function createDomainRenewal(
   return {
     ok: true,
     redirectTo: charge.redirectUrl,
-    amount: DOMAIN_ADDON.price,
+    amount: price,
     invoiceId: invoice.id,
   };
 }

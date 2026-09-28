@@ -71,6 +71,25 @@ export const platformSettings = pgTable("platform_settings", {
     Partial<Record<string, { monthly?: number; yearly?: number }>>
   >(),
 
+  /**
+   * Override harga jual add-on, atau NULL untuk memakai `src/lib/addons.ts`.
+   *
+   * Bentuk dan sifatnya sama persis dengan `planPriceOverrides` di atas:
+   * per item, tidak lengkap, dan yang tidak disebut memakai harga di kode.
+   * Menyusun bentuk lain hanya menambah satu tempat yang harus dipahami.
+   *
+   * YANG TIDAK ADA DI SINI adalah beban add-on. PNBP Rp 50.000 ditetapkan
+   * PP 30/2026 pasal 33 -- itu tarif negara, bukan angka bisnis, dan
+   * mengubahnya di panel berarti mengarang tarif yang ditampilkan ke
+   * pelanggan sebagai "biaya negara".
+   *
+   * Override tidak retroactive: `saasInvoices.amount` adalah snapshot,
+   * jadi invoice yang sudah terbit tetap memakai harga lamanya.
+   */
+  addonPriceOverrides: jsonb("addon_price_overrides").$type<
+    Partial<Record<"domain" | "legalitas", number>>
+  >(),
+
   /** Siapa yang terakhir menyimpan. Untuk rekonsiliasi perubahan tarif. */
   updatedBy: uuid("updated_by").references(() => users.id, {
     onDelete: "set null",

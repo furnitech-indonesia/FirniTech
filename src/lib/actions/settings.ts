@@ -8,6 +8,8 @@ import { db } from "@/db";
 import { integrationAuditLogs, platformSettings } from "@/db/schema";
 import { requireSuperAdmin } from "@/lib/auth/guard";
 import { platformFeeRateFromBps } from "@/lib/platform-settings";
+import { DOMAIN_ADDON, LEGALITAS_ADDON } from "@/lib/addons";
+import { DOMAIN_PRICE_FLOOR } from "@/lib/addons/settings";
 import { PLANS, type PlanId } from "@/lib/plans";
 
 /**
@@ -76,6 +78,37 @@ const settingsSchema = z.object({
     .min(0, "Harga tidak boleh negatif.")
     .max(100_000_000, "Harga terlalu tinggi.")
     .optional(),
+
+  /**
+   * Harga jual add-on custom domain. KOSONG = pakai harga di `addons.ts`.
+   *
+   * Batas bawahnya adalah harga cost Cloudflare, dan itu BUKAN angka
+   * Dresden: menjual domain di bawah Rp 188.667 berarti memberi rugi pada
+   * setiap renewal, dan ruginya baru terlihat di rekonsiliasi tahunan.
+   * Batas yang sama ditegakkan lagi di CHECK database, karena setiap jalur
+   * penulisan lain bisa melewati zod.
+   */
+  domainAddonPrice: z.coerce
+    .number()
+    .int("Harga harus rupiah penuh, tanpa titik atau koma.")
+    .min(
+      DOMAIN_PRICE_FLOOR,
+      `Harga domain tidak boleh di bawah biaya Cloudflare (Rp ${DOMAIN_PRICE_FLOOR.toLocaleString("id-ID")}/tahun).`,
+    )
+    .max(100_000_000, "Harga terlalu tinggi.")
+    .optional(),
+
+  /**
+   * Harga jual paket pendirian PT. Tidak ada batas bawah karena tidak ada
+   * biaya variabel per-unit yang besar -- biayanya flat (PNBP + ongkos),
+   * jadi harga di bawah beban hanya rugi, bukan rugi berulang.
+   */
+  legalitasAddonPrice: z.coerce
+    .number()
+    .int("Harga harus rupiah penuh, tanpa titik atau koma.")
+    .min(1, "Harga tidak boleh nol.")
+    .max(100_000_000, "Harga terlalu tinggi.")
+    .optional(),
 });
 
 export async function savePlatformSettings(
@@ -89,6 +122,8 @@ export async function savePlatformSettings(
     basicPrice: emptyToUndefined(formData.get("basicPrice")),
     proPrice: emptyToUndefined(formData.get("proPrice")),
     maxPrice: emptyToUndefined(formData.get("maxPrice")),
+    domainAddonPrice: emptyToUndefined(formData.get("domainAddonPrice")),
+    legalitasAddonPrice: emptyToUndefined(formData.get("legalitasAddonPrice")),
   });
 
   if (!parsed.success) {
@@ -103,7 +138,14 @@ export async function savePlatformSettings(
     };
   }
 
-  const { platformFeeRateBps, basicPrice, proPrice, maxPrice } = parsed.data;
+  const {
+    platformFeeRateBps,
+    basicPrice,
+    proPrice,
+    maxPrice,
+    domainAddonPrice,
+    legalitasAddonPrice,
+  } = parsed.data;
 
   /*
    * Override hanya berisi paket yang MEMANG berubah.
@@ -127,10 +169,36 @@ export async function savePlatformSettings(
 
   const nextOverrides = Object.keys(overrides).length > 0 ? overrides : null;
 
+  /*
+   * Override add-on, dengan sifat yang SAMA: hanya add-on yang nilainya
+   * benar-benar berubah, dan mengosongkan kolom menghapus override-nya.
+   *
+   * Dua add-on disimpan sebagai dua kunci terpisah, bukan satu blok yang
+   * menimpa keduanya. Kalau satu blok, menaikkan harga domain diam-diam
+   * juga mengubah harga legalitas -- dan yang kedua itu tidak pernah
+   * disetujui siapa pun.
+   */
+  const addonOverrides: Partial<Record<"domain" | "legalitas", number>> = {};
+  if (
+    domainAddonPrice !== undefined &&
+    domainAddonPrice !== DOMAIN_ADDON.price
+  ) {
+    addonOverrides.domain = domainAddonPrice;
+  }
+  if (
+    legalitasAddonPrice !== undefined &&
+    legalitasAddonPrice !== LEGALITAS_ADDON.price
+  ) {
+    addonOverrides.legalitas = legalitasAddonPrice;
+  }
+  const nextAddonOverrides =
+    Object.keys(addonOverrides).length > 0 ? addonOverrides : null;
+
   const [before] = await db
     .select({
       bps: platformSettings.platformFeeRateBps,
       overrides: platformSettings.planPriceOverrides,
+      addonOverrides: platformSettings.addonPriceOverrides,
     })
     .from(platformSettings)
     .where(eq(platformSettings.id, 1))
@@ -142,6 +210,7 @@ export async function savePlatformSettings(
       id: 1,
       platformFeeRateBps,
       planPriceOverrides: nextOverrides,
+      addonPriceOverrides: nextAddonOverrides,
       updatedBy: actor.userId,
     })
     .onConflictDoUpdate({
@@ -149,6 +218,7 @@ export async function savePlatformSettings(
       set: {
         platformFeeRateBps,
         planPriceOverrides: nextOverrides,
+        addonPriceOverrides: nextAddonOverrides,
         updatedBy: actor.userId,
       },
     });
@@ -171,6 +241,8 @@ export async function savePlatformSettings(
       ratePercentAfter: platformFeeRateFromBps(platformFeeRateBps),
       overridesBefore: before?.overrides ?? null,
       overridesAfter: nextOverrides,
+      addonOverridesBefore: before?.addonOverrides ?? null,
+      addonOverridesAfter: nextAddonOverrides,
     },
   });
 
@@ -179,12 +251,16 @@ export async function savePlatformSettings(
   revalidatePath("/daftar");
 
   const changedPlans = Object.keys(overrides);
+  const changedAddons = Object.keys(addonOverrides);
   return {
     message:
       `Tarif fee platform ${(platformFeeRateFromBps(platformFeeRateBps) * 100).toLocaleString("id-ID")}%` +
       (changedPlans.length > 0
         ? ` · harga paket diubah: ${changedPlans.join(", ")}`
-        : " · harga paket tidak berubah"),
+        : " · harga paket tidak berubah") +
+      (changedAddons.length > 0
+        ? ` · harga add-on diubah: ${changedAddons.join(", ")}`
+        : " · harga add-on tidak berubah"),
   };
 }
 
