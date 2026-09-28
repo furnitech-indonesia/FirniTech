@@ -6,11 +6,11 @@ pertumbuhan dan biaya yang dinyatakan terbuka di
 [Bagian 10](#10-asumsi-yang-dapat-diubah). Angka biaya infrastruktur diambil dari
 halaman pricing resmi yang berlaku saat dokumen ini ditulis, bukan dari ingatan.
 
-Ringkasan satu kalimat: **margin bersihnya naik dari Rp 8,5 juta per bulan
-di 2026 menjadi Rp 357,1 juta per bulan di 2030, total Rp 8,46 miliar dalam
-4,2 tahun (96,71% dari omzet)** — karena tidak ada gaji di P&L, tidak ada
+Ringkasan satu kalimat: **margin bersihnya naik dari Rp 7,7 juta per bulan
+di 2026 menjadi Rp 359,7 juta per bulan di 2030, total Rp 8,48 miliar dalam
+4,2 tahun (96,9% dari omzet)** — karena tidak ada gaji di P&L, tidak ada
 biaya legal di 2026, admin dikerjakan berdua, dan PPh cukup 0,5% dari omzet
-lewat Rezim A Perseroan Perorangan. Kebutuhan modal hanya sekitar Rp 2 juta,
+lewat Rezim A Perseroan Perorangan. Kebutuhan modal hanya sekitar Rp 2,4 juta,
 di bulan pertama. Yang tidak terlihat di angka ini: 106 orang harus mendaftar
 dalam 3 bulan pertama, dan 2 orang tidak mungkin menangani 1.000 pelanggan —
 keduanya tidak akan muncul sebagai rupiah di mana pun.
@@ -149,7 +149,7 @@ legal tidak bisa diatribusikan ke satu paket saja.
 | **Basic** | Rp 3.661.934.889 | Rp 36.821.229 | Rp 18.309.674 | Rp 76.630.893 | **Rp 3.530.173.093** | 41,7% |
 | **Pro** | Rp 3.051.612.408 | Rp 18.410.614 | Rp 15.258.062 | Rp 63.859.077 | **Rp 2.954.084.654** | 34,9% |
 | **Max** | Rp 2.034.408.272 | Rp 6.136.871 | Rp 10.172.041 | Rp 42.572.718 | **Rp 1.975.526.641** | 23,4% |
-| **Total** | **Rp 8.747.955.569** | **Rp 61.368.715** | **Rp 43.739.778** | **Rp 183.062.688** | **Rp 8.459.784.389** | 100% |
+| **Total** | **Rp 8.747.955.569** | **Rp 61.368.715** | **Rp 43.739.778** | **Rp 163.815.186** | **Rp 8.479.031.890** | 100% |
 
 Perhatikan kolom "porsi margin" versus porsi omzet: keduanya sama. Itu
 memang benar — margin tiap paket hampir identik secara persentase, karena yang
@@ -170,13 +170,13 @@ nominalnya.
 
 | Tahun | Bln | **Margin bersih/bln** | Pelanggan akhir tahun |
 |---|---|---|---|
-| 2026 | 3 | **Rp 8.459.543** | 100 |
-| 2027 | 12 | **Rp 53.265.954** | 178 |
-| 2028 | 12 | **Rp 102.508.478** | 316 |
-| 2029 | 12 | **Rp 190.003.985** | 562 |
-| 2030 | 12 | **Rp 357.088.729** | 1.000 |
+| 2026 | 3 | **Rp 7.746.231** | 99.99999999999994 |
+| 2027 | 12 | **Rp 53.167.042** | 177.9999999999999 |
+| 2028 | 12 | **Rp 100.819.806** | 315.9999999999998 |
+| 2029 | 12 | **Rp 190.992.531** | 561.9999999999993 |
+| 2030 | 12 | **Rp 359.670.054** | 999.9999999999986 |
 
-Rata-rata 51 bulan: **Rp 165.878.125 per bulan**.
+Rata-rata 51 bulan: **Rp 166.255.527 per bulan**.
 
 ### Total 4,2 tahun
 
@@ -185,71 +185,73 @@ Rata-rata 51 bulan: **Rp 165.878.125 per bulan**.
 | Omzet bruto | Rp 8.747.955.569 |
 | Fee Midtrans | −Rp 61.368.715 |
 | PPh final 0,5% | −Rp 43.739.778 |
-| Infrastruktur | −Rp 166.562.688 |
+| Infrastruktur | −Rp 147.315.186 |
 | Legal dan admin (2027–2030 saja) | −Rp 16.500.000 |
-| **Margin bersih** | **Rp 8.459.784.389 (96,71% dari omzet)** |
+| **Margin bersih** | **Rp 8.479.031.890 (96,9% dari omzet)** |
 
 ### Rincian 51 bulan
 
 Biaya legal **tidak ada di 2026** — hanya muncul 2027 sampai 2030.
 
-| Okt 2026 | 34 | Rp 0 | Rp 0 | Rp 0 | Rp 1.620.608 | Rp 0 | **Rp -1.620.608** |
-| Nov 2026 | 68 | Rp 10.340.445 | Rp 106.771 | Rp 51.702 | Rp 1.620.608 | Rp 0 | **Rp 8.561.363** |
-| Des 2026 | 100 | Rp 20.370.676 | Rp 210.339 | Rp 101.853 | Rp 1.620.608 | Rp 0 | **Rp 18.437.875** |
-| Jan 2027 | 108 | Rp 186.018.000 | Rp 444.000 | Rp 930.090 | Rp 2.235.008 | Rp 291.667 | **Rp 182.117.235** |
-| Feb 2027 | 115 | Rp 34.020.609 | Rp 334.555 | Rp 170.103 | Rp 2.235.008 | Rp 291.667 | **Rp 30.989.276** |
-| Mar 2027 | 122 | Rp 36.363.749 | Rp 357.597 | Rp 181.819 | Rp 2.235.008 | Rp 291.667 | **Rp 33.297.658** |
-| Apr 2027 | 129 | Rp 38.636.595 | Rp 379.948 | Rp 193.183 | Rp 2.235.008 | Rp 291.667 | **Rp 35.536.789** |
-| Mei 2027 | 136 | Rp 40.841.256 | Rp 401.628 | Rp 204.206 | Rp 2.235.008 | Rp 291.667 | **Rp 37.708.746** |
-| Jun 2027 | 143 | Rp 42.979.776 | Rp 422.658 | Rp 214.899 | Rp 2.235.008 | Rp 291.667 | **Rp 39.815.545** |
-| Jul 2027 | 149 | Rp 45.054.142 | Rp 443.057 | Rp 225.271 | Rp 2.235.008 | Rp 291.667 | **Rp 41.859.139** |
-| Agu 2027 | 155 | Rp 47.066.276 | Rp 462.844 | Rp 235.331 | Rp 2.235.008 | Rp 291.667 | **Rp 43.841.425** |
-| Sep 2027 | 161 | Rp 49.018.046 | Rp 482.038 | Rp 245.090 | Rp 2.235.008 | Rp 291.667 | **Rp 45.764.243** |
-| Okt 2027 | 167 | Rp 50.911.263 | Rp 500.656 | Rp 254.556 | Rp 2.235.008 | Rp 291.667 | **Rp 47.629.377** |
-| Nov 2027 | 173 | Rp 52.747.684 | Rp 518.715 | Rp 263.738 | Rp 2.235.008 | Rp 291.667 | **Rp 49.438.556** |
-| Des 2027 | 178 | Rp 54.529.012 | Rp 536.232 | Rp 272.645 | Rp 2.235.008 | Rp 291.667 | **Rp 51.193.460** |
-| Jan 2028 | 192 | Rp 347.667.642 | Rp 790.320 | Rp 1.738.338 | Rp 1.381.248 | Rp 291.667 | **Rp 343.466.069** |
-| Feb 2028 | 205 | Rp 63.557.202 | Rp 595.252 | Rp 317.786 | Rp 1.381.248 | Rp 291.667 | **Rp 60.971.250** |
-| Mar 2028 | 217 | Rp 67.910.036 | Rp 636.019 | Rp 339.550 | Rp 1.381.248 | Rp 291.667 | **Rp 65.261.552** |
-| Apr 2028 | 230 | Rp 72.132.285 | Rp 675.563 | Rp 360.661 | Rp 1.381.248 | Rp 291.667 | **Rp 69.423.146** |
-| Mei 2028 | 242 | Rp 76.227.866 | Rp 713.920 | Rp 381.139 | Rp 1.381.248 | Rp 291.667 | **Rp 73.459.892** |
-| Jun 2028 | 253 | Rp 80.200.580 | Rp 751.127 | Rp 401.003 | Rp 1.381.248 | Rp 291.667 | **Rp 77.375.535** |
-| Jul 2028 | 265 | Rp 84.054.112 | Rp 787.218 | Rp 420.271 | Rp 1.381.248 | Rp 291.667 | **Rp 81.173.709** |
-| Agu 2028 | 275 | Rp 87.792.038 | Rp 822.226 | Rp 438.960 | Rp 1.381.248 | Rp 291.667 | **Rp 84.857.938** |
-| Sep 2028 | 286 | Rp 91.417.827 | Rp 856.183 | Rp 457.089 | Rp 1.381.248 | Rp 291.667 | **Rp 88.431.640** |
-| Okt 2028 | 296 | Rp 94.934.842 | Rp 889.122 | Rp 474.674 | Rp 1.381.248 | Rp 291.667 | **Rp 91.898.130** |
-| Nov 2028 | 306 | Rp 98.346.346 | Rp 921.073 | Rp 491.732 | Rp 1.381.248 | Rp 291.667 | **Rp 95.260.627** |
-| Des 2028 | 316 | Rp 101.655.505 | Rp 952.065 | Rp 508.278 | Rp 1.381.248 | Rp 291.667 | **Rp 98.522.248** |
-| Jan 2029 | 340 | Rp 648.068.110 | Rp 1.403.040 | Rp 3.240.341 | Rp 4.059.008 | Rp 375.000 | **Rp 638.990.722** |
-| Feb 2029 | 363 | Rp 118.508.009 | Rp 1.057.047 | Rp 592.540 | Rp 4.059.008 | Rp 375.000 | **Rp 112.424.414** |
-| Mar 2029 | 386 | Rp 126.655.378 | Rp 1.129.719 | Rp 633.277 | Rp 4.059.008 | Rp 375.000 | **Rp 120.458.375** |
-| Apr 2029 | 408 | Rp 134.558.326 | Rp 1.200.210 | Rp 672.792 | Rp 4.059.008 | Rp 375.000 | **Rp 128.251.317** |
-| Mei 2029 | 430 | Rp 142.224.186 | Rp 1.268.586 | Rp 711.121 | Rp 4.059.008 | Rp 375.000 | **Rp 135.810.470** |
-| Jun 2029 | 450 | Rp 149.660.069 | Rp 1.334.912 | Rp 748.300 | Rp 4.059.008 | Rp 375.000 | **Rp 143.142.849** |
-| Jul 2029 | 470 | Rp 156.872.877 | Rp 1.399.247 | Rp 784.364 | Rp 4.059.008 | Rp 375.000 | **Rp 150.255.257** |
-| Agu 2029 | 490 | Rp 163.869.300 | Rp 1.461.653 | Rp 819.346 | Rp 4.059.008 | Rp 375.000 | **Rp 157.154.292** |
-| Sep 2029 | 509 | Rp 170.655.830 | Rp 1.522.186 | Rp 853.279 | Rp 4.059.008 | Rp 375.000 | **Rp 163.846.357** |
-| Okt 2029 | 527 | Rp 177.238.764 | Rp 1.580.903 | Rp 886.194 | Rp 4.059.008 | Rp 375.000 | **Rp 170.337.659** |
-| Nov 2029 | 545 | Rp 183.624.211 | Rp 1.637.859 | Rp 918.121 | Rp 4.059.008 | Rp 375.000 | **Rp 176.634.223** |
-| Des 2029 | 562 | Rp 189.818.094 | Rp 1.693.106 | Rp 949.090 | Rp 4.059.008 | Rp 375.000 | **Rp 182.741.889** |
-| Jan 2030 | 605 | Rp 1.210.205.670 | Rp 2.495.280 | Rp 6.051.028 | Rp 5.799.808 | Rp 416.667 | **Rp 1.195.442.887** |
-| Feb 2030 | 647 | Rp 221.320.155 | Rp 1.880.088 | Rp 1.106.601 | Rp 5.799.808 | Rp 416.667 | **Rp 212.116.991** |
-| Mar 2030 | 687 | Rp 236.551.760 | Rp 2.009.479 | Rp 1.182.759 | Rp 5.799.808 | Rp 416.667 | **Rp 227.143.048** |
-| Apr 2030 | 726 | Rp 251.326.418 | Rp 2.134.988 | Rp 1.256.632 | Rp 5.799.808 | Rp 416.667 | **Rp 241.718.323** |
-| Mei 2030 | 764 | Rp 265.657.836 | Rp 2.256.732 | Rp 1.328.289 | Rp 5.799.808 | Rp 416.667 | **Rp 255.856.340** |
-| Jun 2030 | 801 | Rp 279.559.311 | Rp 2.374.823 | Rp 1.397.797 | Rp 5.799.808 | Rp 416.667 | **Rp 269.570.217** |
-| Jul 2030 | 837 | Rp 293.043.742 | Rp 2.489.372 | Rp 1.465.219 | Rp 5.799.808 | Rp 416.667 | **Rp 282.872.677** |
-| Agu 2030 | 871 | Rp 306.123.641 | Rp 2.600.484 | Rp 1.530.618 | Rp 5.799.808 | Rp 416.667 | **Rp 295.776.064** |
-| Sep 2030 | 905 | Rp 318.811.142 | Rp 2.708.263 | Rp 1.594.056 | Rp 5.799.808 | Rp 416.667 | **Rp 308.292.349** |
-| Okt 2030 | 938 | Rp 331.118.018 | Rp 2.812.808 | Rp 1.655.590 | Rp 5.799.808 | Rp 416.667 | **Rp 320.433.145** |
-| Nov 2030 | 969 | Rp 343.055.688 | Rp 2.914.217 | Rp 1.715.278 | Rp 5.799.808 | Rp 416.667 | **Rp 332.209.717** |
-| Des 2030 | 1000 | Rp 354.635.228 | Rp 3.012.584 | Rp 1.773.176 | Rp 5.799.808 | Rp 416.667 | **Rp 343.632.993** |
+| Bulan | Aktif | Omzet | Fee | PPh 0,5% | Infrastruktur | Legal | **Margin** |
+|---|---|---|---|---|---|---|---|
+| Okt 2026 | 34 | Rp 0 | Rp 0 | Rp 0 | Rp 2.333.920 | Rp 0 | **Rp -2.333.920** |
+| Nov 2026 | 68 | Rp 10.340.445 | Rp 106.771 | Rp 51.702 | Rp 2.333.920 | Rp 0 | **Rp 7.848.051** |
+| Des 2026 | 100 | Rp 20.370.676 | Rp 210.339 | Rp 101.853 | Rp 2.333.920 | Rp 0 | **Rp 17.724.563** |
+| Jan 2027 | 108 | Rp 186.018.000 | Rp 444.000 | Rp 930.090 | Rp 2.333.920 | Rp 291.667 | **Rp 182.018.323** |
+| Feb 2027 | 115 | Rp 34.020.609 | Rp 334.555 | Rp 170.103 | Rp 2.333.920 | Rp 291.667 | **Rp 30.890.364** |
+| Mar 2027 | 122 | Rp 36.363.749 | Rp 357.597 | Rp 181.819 | Rp 2.333.920 | Rp 291.667 | **Rp 33.198.746** |
+| Apr 2027 | 129 | Rp 38.636.595 | Rp 379.948 | Rp 193.183 | Rp 2.333.920 | Rp 291.667 | **Rp 35.437.877** |
+| Mei 2027 | 136 | Rp 40.841.256 | Rp 401.628 | Rp 204.206 | Rp 2.333.920 | Rp 291.667 | **Rp 37.609.834** |
+| Jun 2027 | 143 | Rp 42.979.776 | Rp 422.658 | Rp 214.899 | Rp 2.333.920 | Rp 291.667 | **Rp 39.716.633** |
+| Jul 2027 | 149 | Rp 45.054.142 | Rp 443.057 | Rp 225.271 | Rp 2.333.920 | Rp 291.667 | **Rp 41.760.227** |
+| Agu 2027 | 155 | Rp 47.066.276 | Rp 462.844 | Rp 235.331 | Rp 2.333.920 | Rp 291.667 | **Rp 43.742.513** |
+| Sep 2027 | 161 | Rp 49.018.046 | Rp 482.038 | Rp 245.090 | Rp 2.333.920 | Rp 291.667 | **Rp 45.665.331** |
+| Okt 2027 | 167 | Rp 50.911.263 | Rp 500.656 | Rp 254.556 | Rp 2.333.920 | Rp 291.667 | **Rp 47.530.465** |
+| Nov 2027 | 173 | Rp 52.747.684 | Rp 518.715 | Rp 263.738 | Rp 2.333.920 | Rp 291.667 | **Rp 49.339.644** |
+| Des 2027 | 178 | Rp 54.529.012 | Rp 536.232 | Rp 272.645 | Rp 2.333.920 | Rp 291.667 | **Rp 51.094.548** |
+| Jan 2028 | 192 | Rp 347.667.642 | Rp 790.320 | Rp 1.738.338 | Rp 3.069.920 | Rp 291.667 | **Rp 341.777.397** |
+| Feb 2028 | 205 | Rp 63.557.202 | Rp 595.252 | Rp 317.786 | Rp 3.069.920 | Rp 291.667 | **Rp 59.282.578** |
+| Mar 2028 | 217 | Rp 67.910.036 | Rp 636.019 | Rp 339.550 | Rp 3.069.920 | Rp 291.667 | **Rp 63.572.880** |
+| Apr 2028 | 230 | Rp 72.132.285 | Rp 675.563 | Rp 360.661 | Rp 3.069.920 | Rp 291.667 | **Rp 67.734.474** |
+| Mei 2028 | 242 | Rp 76.227.866 | Rp 713.920 | Rp 381.139 | Rp 3.069.920 | Rp 291.667 | **Rp 71.771.220** |
+| Jun 2028 | 253 | Rp 80.200.580 | Rp 751.127 | Rp 401.003 | Rp 3.069.920 | Rp 291.667 | **Rp 75.686.863** |
+| Jul 2028 | 265 | Rp 84.054.112 | Rp 787.218 | Rp 420.271 | Rp 3.069.920 | Rp 291.667 | **Rp 79.485.037** |
+| Agu 2028 | 275 | Rp 87.792.038 | Rp 822.226 | Rp 438.960 | Rp 3.069.920 | Rp 291.667 | **Rp 83.169.266** |
+| Sep 2028 | 286 | Rp 91.417.827 | Rp 856.183 | Rp 457.089 | Rp 3.069.920 | Rp 291.667 | **Rp 86.742.968** |
+| Okt 2028 | 296 | Rp 94.934.842 | Rp 889.122 | Rp 474.674 | Rp 3.069.920 | Rp 291.667 | **Rp 90.209.458** |
+| Nov 2028 | 306 | Rp 98.346.346 | Rp 921.073 | Rp 491.732 | Rp 3.069.920 | Rp 291.667 | **Rp 93.571.955** |
+| Des 2028 | 316 | Rp 101.655.505 | Rp 952.065 | Rp 508.278 | Rp 3.069.920 | Rp 291.667 | **Rp 96.833.576** |
+| Jan 2029 | 340 | Rp 648.068.110 | Rp 1.403.040 | Rp 3.240.341 | Rp 3.069.920 | Rp 375.000 | **Rp 639.979.810** |
+| Feb 2029 | 363 | Rp 118.508.009 | Rp 1.057.047 | Rp 592.540 | Rp 3.069.920 | Rp 375.000 | **Rp 113.413.502** |
+| Mar 2029 | 386 | Rp 126.655.378 | Rp 1.129.719 | Rp 633.277 | Rp 3.069.920 | Rp 375.000 | **Rp 121.447.463** |
+| Apr 2029 | 408 | Rp 134.558.326 | Rp 1.200.210 | Rp 672.792 | Rp 3.069.920 | Rp 375.000 | **Rp 129.240.405** |
+| Mei 2029 | 430 | Rp 142.224.186 | Rp 1.268.586 | Rp 711.121 | Rp 3.069.920 | Rp 375.000 | **Rp 136.799.558** |
+| Jun 2029 | 450 | Rp 149.660.069 | Rp 1.334.912 | Rp 748.300 | Rp 3.069.920 | Rp 375.000 | **Rp 144.131.937** |
+| Jul 2029 | 470 | Rp 156.872.877 | Rp 1.399.247 | Rp 784.364 | Rp 3.069.920 | Rp 375.000 | **Rp 151.244.345** |
+| Agu 2029 | 490 | Rp 163.869.300 | Rp 1.461.653 | Rp 819.346 | Rp 3.069.920 | Rp 375.000 | **Rp 158.143.380** |
+| Sep 2029 | 509 | Rp 170.655.830 | Rp 1.522.186 | Rp 853.279 | Rp 3.069.920 | Rp 375.000 | **Rp 164.835.445** |
+| Okt 2029 | 527 | Rp 177.238.764 | Rp 1.580.903 | Rp 886.194 | Rp 3.069.920 | Rp 375.000 | **Rp 171.326.747** |
+| Nov 2029 | 545 | Rp 183.624.211 | Rp 1.637.859 | Rp 918.121 | Rp 3.069.920 | Rp 375.000 | **Rp 177.623.311** |
+| Des 2029 | 562 | Rp 189.818.094 | Rp 1.693.106 | Rp 949.090 | Rp 3.076.427 | Rp 375.000 | **Rp 183.724.470** |
+| Jan 2030 | 605 | Rp 1.210.205.670 | Rp 2.495.280 | Rp 6.051.028 | Rp 3.087.021 | Rp 416.667 | **Rp 1.198.155.675** |
+| Feb 2030 | 647 | Rp 221.320.155 | Rp 1.880.088 | Rp 1.106.601 | Rp 3.113.390 | Rp 416.667 | **Rp 214.803.408** |
+| Mar 2030 | 687 | Rp 236.551.760 | Rp 2.009.479 | Rp 1.182.759 | Rp 3.138.969 | Rp 416.667 | **Rp 229.803.887** |
+| Apr 2030 | 726 | Rp 251.326.418 | Rp 2.134.988 | Rp 1.256.632 | Rp 3.163.780 | Rp 416.667 | **Rp 244.354.351** |
+| Mei 2030 | 764 | Rp 265.657.836 | Rp 2.256.732 | Rp 1.328.289 | Rp 3.187.846 | Rp 416.667 | **Rp 258.468.302** |
+| Jun 2030 | 801 | Rp 279.559.311 | Rp 2.374.823 | Rp 1.397.797 | Rp 3.211.191 | Rp 416.667 | **Rp 272.158.834** |
+| Jul 2030 | 837 | Rp 293.043.742 | Rp 2.489.372 | Rp 1.465.219 | Rp 3.233.835 | Rp 416.667 | **Rp 285.438.650** |
+| Agu 2030 | 871 | Rp 306.123.641 | Rp 2.600.484 | Rp 1.530.618 | Rp 3.255.801 | Rp 416.667 | **Rp 298.320.071** |
+| Sep 2030 | 905 | Rp 318.811.142 | Rp 2.708.263 | Rp 1.594.056 | Rp 3.277.107 | Rp 416.667 | **Rp 310.815.050** |
+| Okt 2030 | 938 | Rp 331.118.018 | Rp 2.812.808 | Rp 1.655.590 | Rp 3.297.773 | Rp 416.667 | **Rp 322.935.179** |
+| Nov 2030 | 969 | Rp 343.055.688 | Rp 2.914.217 | Rp 1.715.278 | Rp 3.317.820 | Rp 416.667 | **Rp 334.691.705** |
+| Des 2030 | 1000 | Rp 354.635.228 | Rp 3.012.584 | Rp 1.773.176 | Rp 3.337.266 | Rp 416.667 | **Rp 346.095.535** |
 
 ### Titik kas terendah
 
-Kas terendah hanya **Rp −1.620.608**, di Oktober 2026 — bulan pertama, dan
-itu hampir seluruhnya biaya infrastruktur. Setelah itu margin positif dan
-langsung menutup seluruh kekurangan. **Kebutuhan modal: sekitar Rp 2 juta.**
+Kas terendah hanya **Rp -2.333.920**, di Okt 2026 — bulan pertama, dan itu hampir
+seluruhnya biaya infrastruktur. Setelah itu margin positif dan langsung menutup
+seluruh kekurangan. **Kebutuhan modal: sekitar Rp 2,4 juta.**
 
 ---
 
@@ -257,36 +259,115 @@ langsung menutup seluruh kekurangan. **Kebutuhan modal: sekitar Rp 2 juta.**
 
 ### 3a. Infrastruktur
 
-Harga diambil dari halaman pricing resmi.
+Harga diambil dari halaman pricing resmi. Semua biaya dalam USD, dikonversi
+dengan kurs asumsi **Rp 16.000/USD**.
 
 | Item | Harga | Keterangan |
 |---|---|---|
 | **Supabase Pro** | $25/bln | 8 GB disk, 100 GB storage, 250 GB egress, 100.000 MAU. Cukup sampai 1.000 pengrajin. |
-| **Supabase PITR** | $100/bln | Dipakai mulai 2029. Point-in-time recovery 7 hari. |
+| **Supabase PITR** | $100/bln | Aktif sejak Okt 2026. Point-in-time recovery 7 hari. |
 | **Vercel Pro** | $20/bln | 1 developer seat, 100 GB transfer, $20 kredit usage. |
-| **Vercel CPU overflow** | $0,128/jam | Di atas 4 jam Fluid CPU gratis per bulan, dikurangi kredit $20. |
-| **Email (Resend)** | gratis → $20/bln | Gratis sampai 3.000 email per bulan. |
-| **Monitoring (Sentry)** | gratis → $26/bln | Gratis sampai 5.000 error. |
-| **Domain .com** | ±$10,44/tahun | Cloudflare Registrar menjual **harga cost** — tanpa markup, tanpa biaya tersembunyi. |
+| **Vercel CPU overflow** | $0,128/jam | Di atas 4 jam Fluid CPU gratis, dikurangi kredit $20. |
+| **Email (Resend)** | gratis → $20/bln | Gratis sampai 3.000 email/bulan, aktif mulai 2028. |
+| **Monitoring (Sentry)** | gratis → $26/bln | Gratis sampai 5.000 error, aktif mulai 2028. |
+| **Domain .com** | $0,87/bln | Cloudflare Registrar menjual **harga cost** — tanpa markup. |
 | **DNS / CDN / SSL** | $0 | Cloudflare gratis selamanya. |
 
-Rincian per tahun (kurs asumsi **Rp 16.000/USD**):
+Tiga keputusan yang dipakai di sini, semuanya bisa diubah:
 
-| Tahun | Infrastruktur/bln | Infrastruktur/tahun |
-|---|---|---|
-| 2026 (3 bln) | $101 | Rp 4.861.824 |
-| 2027 | $140 | Rp 26.820.096 |
-| 2028 | $86 | Rp 16.574.976 |
-| 2029 | $254 | Rp 48.708.096 |
-| 2030 | $362 | Rp 69.597.696 |
-| **Total (4,2 th)** | | **Rp 166.562.688** |
+- **PITR aktif sejak Okt 2026, bukan 2029.** Produk sudah menyimpan data
+  pesanan dan pembayaran pengrajin sejak hari pertama, dan tidak ada
+  recovery yang siap kalau tidak diaktifkan dari awal.
+- **Domain dipindah ke infrastruktur**, bukan legal. Domain adalah komponen
+  teknis yang diurus lewat dashboard, bukan kewajiban hukum.
+- **Biaya CPU dihitung dari pelanggan, bukan dari tebakan per tahun.**
+  Asumsi: **0,3 jam Fluid CPU per pelanggan aktif per bulan**. Ini mencakup
+  render storefront, dashboard, checkout, dan polling status pengiriman.
 
-Kenaikan kurs 10% menambah total infrastruktur sekitar Rp 16,7 juta dalam
-4,2 tahun. Tidak material.
+Perhitungan CPU bulanan:
 
-2026 dan 2027 comparatively mahal per pelanggan karena jumlah pengguna masih
-sedikit sementara tagihan minimum bulanan sudah jalan. Itu hilang sendiri di
-2028.
+```
+jam CPU        = pelanggan aktif × 0,3
+CPU overflow   = max(0, (jam CPU − 4) × $0,128 − $20)
+```
+
+Ambang kredit: CPU baru membayar setelah `(jam − 4) × 0,128 > 20`, yaitu
+**lebih dari 160 jam per bulan** — setara sekitar **534 pelanggan aktif**.
+Kolom CPU overflow bernilai nol sampai sekitar 534 pelanggan. Itu bukan
+gratis — itu belum sampai ambang kredit $20 yang sudah termasuk di Vercel Pro.
+
+### Rincian 51 bulan (Okt 2026 – Des 2030)
+
+Kolom pelanggan adalah pelanggan aktif di awal bulan, karena tagihan
+dihitung di muka.
+
+| Bulan | Pelanggan | Jam CPU | Supabase Pro | PITR | Vercel Pro | CPU overflow | Email | Monitoring | Domain | **Total USD/bln** | **Total Rp/bln** |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| Okt 2026 | 0 | 0.0 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Nov 2026 | 34 | 10 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Des 2026 | 68 | 20 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Jan 2027 | 100 | 30 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Feb 2027 | 108 | 32 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Mar 2027 | 115 | 35 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Apr 2027 | 122 | 37 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Mei 2027 | 129 | 39 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Jun 2027 | 136 | 41 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Jul 2027 | 143 | 43 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Agu 2027 | 149 | 45 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Sep 2027 | 155 | 47 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Okt 2027 | 161 | 48 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Nov 2027 | 167 | 50 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Des 2027 | 173 | 52 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
+| Jan 2028 | 178 | 53 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Feb 2028 | 192 | 57 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Mar 2028 | 205 | 61 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Apr 2028 | 217 | 65 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Mei 2028 | 230 | 69 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Jun 2028 | 242 | 73 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Jul 2028 | 253 | 76 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Agu 2028 | 265 | 79 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Sep 2028 | 275 | 83 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Okt 2028 | 286 | 86 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Nov 2028 | 296 | 89 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Des 2028 | 306 | 92 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Jan 2029 | 316 | 95 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Feb 2029 | 340 | 102 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Mar 2029 | 363 | 109 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Apr 2029 | 386 | 116 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Mei 2029 | 408 | 122 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Jun 2029 | 430 | 129 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Jul 2029 | 450 | 135 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Agu 2029 | 470 | 141 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Sep 2029 | 490 | 147 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Okt 2029 | 509 | 153 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Nov 2029 | 527 | 158 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
+| Des 2029 | 545 | 163 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.076.427** |
+| Jan 2030 | 562 | 169 | $25 | $100 | $20 | $ 1 | $20 | $26 | $0,87 | **$ 193** | **Rp 3.087.021** |
+| Feb 2030 | 605 | 181 | $25 | $100 | $20 | $ 3 | $20 | $26 | $0,87 | **$ 195** | **Rp 3.113.390** |
+| Mar 2030 | 647 | 194 | $25 | $100 | $20 | $ 4 | $20 | $26 | $0,87 | **$ 196** | **Rp 3.138.969** |
+| Apr 2030 | 687 | 206 | $25 | $100 | $20 | $ 6 | $20 | $26 | $0,87 | **$ 198** | **Rp 3.163.780** |
+| Mei 2030 | 726 | 218 | $25 | $100 | $20 | $ 7 | $20 | $26 | $0,87 | **$ 199** | **Rp 3.187.846** |
+| Jun 2030 | 764 | 229 | $25 | $100 | $20 | $ 9 | $20 | $26 | $0,87 | **$ 201** | **Rp 3.211.191** |
+| Jul 2030 | 801 | 240 | $25 | $100 | $20 | $ 10 | $20 | $26 | $0,87 | **$ 202** | **Rp 3.233.835** |
+| Agu 2030 | 837 | 251 | $25 | $100 | $20 | $ 12 | $20 | $26 | $0,87 | **$ 203** | **Rp 3.255.801** |
+| Sep 2030 | 871 | 261 | $25 | $100 | $20 | $ 13 | $20 | $26 | $0,87 | **$ 205** | **Rp 3.277.107** |
+| Okt 2030 | 905 | 272 | $25 | $100 | $20 | $ 14 | $20 | $26 | $0,87 | **$ 206** | **Rp 3.297.773** |
+| Nov 2030 | 938 | 281 | $25 | $100 | $20 | $ 15 | $20 | $26 | $0,87 | **$ 207** | **Rp 3.317.820** |
+| Des 2030 | 969 | 291 | $25 | $100 | $20 | $ 17 | $20 | $26 | $0,87 | **$ 209** | **Rp 3.337.266** |
+| **Total 51 bulan** | | | | | | | | | | **$ 9.207** | **Rp 147.315.186** | |
+
+Total infrastruktur 4,2 tahun: **$9.207 — Rp 147.315.186**.
+
+Tiga hal yang terlihat jelas dari tabel:
+
+1. **Biaya nyaris datar** — naik dari $146 ke $209 per bulan dalam 4,2 tahun,
+   hanya naik 43%. Yang naik adalah jumlah pelanggan 12 kali lipat.
+2. **Biaya per pelanggan turun drastis.** Di Oktober 2026, biaya
+   infrastruktur Rp 2,3 juta untuk **nol** pelanggan. Di akhir 2030,
+   Rp 3,3 juta untuk 969 pelanggan — dari tak terbatas menjadi Rp 3.400
+   per pelanggan per bulan.
+3. **CPU overflow baru muncul di 2029**, dan tetap kecil — total $112 selama
+   4,2 tahun. Server bukan variabel yang perlu dioptimalkan di model ini.
 
 ### 3b. Fonnte — tidak dipakai di arsitektur sekarang
 
@@ -320,16 +401,18 @@ berjadwal. Yang tersisa hanya biaya yang **tidak bisa dikerjakan sendiri**:
 |---|---|---|
 | **2026** | **Rp 0** | PT Perorangan sudah berdiri, tidak ada yang perlu didirikan |
 | Laporan tahunan ke Kementerian Hukum (2027–2030) | Rp 3.500.000/tahun | Wajib dinotarisasi |
-| Renewal domain .com (2027–2030) | Rp 167.000/tahun | Diperpanjang lewat dashboard Cloudflare |
+
+Domain **tidak ada di sini** — dipindah ke tabel infrastruktur (Bagian 3a)
+karena diurus lewat dashboard Cloudflare, bukan kewajiban hukum.
 
 | Tahun | Infrastruktur | Legal & admin | **Total biaya** |
 |---|---|---|---|
-| **2026 (3 bln)** | Rp 4.861.824 | **Rp 0** | **Rp 4.861.824** |
-| 2027 | Rp 26.820.096 | Rp 3.500.000 | **Rp 30.320.096** |
-| 2028 | Rp 16.574.976 | Rp 3.500.000 | **Rp 20.074.976** |
-| 2029 | Rp 48.708.096 | Rp 4.500.000 | **Rp 53.208.096** |
-| 2030 | Rp 69.597.696 | Rp 5.000.000 | **Rp 74.597.696** |
-| **Total** | **Rp 166.562.688** | **Rp 16.500.000** | **Rp 183.062.688** |
+| 2026 (3 bln) | Rp 7.001.760 | **Rp 0** | **Rp 7.001.760** |
+| 2027 | Rp 28.007.040 | Rp 3.500.000 | **Rp 31.507.040** |
+| 2028 | Rp 36.839.040 | Rp 3.500.000 | **Rp 40.339.040** |
+| 2029 | Rp 36.845.547 | Rp 4.500.000 | **Rp 41.345.547** |
+| 2030 | Rp 38.621.799 | Rp 5.000.000 | **Rp 43.621.799** |
+| **Total** | **Rp 147.315.186** | **Rp 16.500.000** | **Rp 163.815.186** |
 
 **"Tidak melibatkan orang lain" tidak bisa 100%.** Laporan tahunan wajib
 dinotarisasi — itu melibatkan pihak ketiga setiap tahun, tidak bisa dikerjakan
@@ -369,24 +452,24 @@ Rincian omzet, margin, dan biaya per bulan ada di
 
 | Tahun | Bln | **Margin bersih/bln** | Pelanggan akhir tahun |
 |---|---|---|---|
-| 2026 | 3 | **Rp 8.459.543** | 100 |
-| 2027 | 12 | **Rp 53.265.954** | 178 |
-| 2028 | 12 | **Rp 102.508.478** | 316 |
-| 2029 | 12 | **Rp 190.003.985** | 562 |
-| 2030 | 12 | **Rp 357.088.729** | 1.000 |
-| **Total 4,2 th** | | **Rp 8.459.784.389** | |
+| 2026 | 3 | **Rp 7.746.231** | 99.99999999999994 |
+| 2027 | 12 | **Rp 53.167.042** | 177.9999999999999 |
+| 2028 | 12 | **Rp 100.819.806** | 315.9999999999998 |
+| 2029 | 12 | **Rp 190.992.531** | 561.9999999999993 |
+| 2030 | 12 | **Rp 359.670.054** | 999.9999999999986 |
+| **Total 4,2 th** | | **Rp 8.479.031.890** | |
 
-Rata-rata 51 bulan: **Rp 165.878.125 per bulan**.
+Rata-rata 51 bulan: **Rp 166.255.527 per bulan**.
 
 ### Kapan cukup untuk gaji
 
 | Margin/bln | Pelanggan aktif | Setara gaji per orang (bila 50:50) |
 |---|---|---|
-| Rp 8.459.543 (rata-rata 2026) | 100 | Rp 4.229.771 |
-| Rp 53.265.954 (rata-rata 2027) | 178 | Rp 26.632.977 |
-| Rp 102.508.478 (rata-rata 2028) | 316 | Rp 51.254.239 |
-| Rp 190.003.985 (rata-rata 2029) | 562 | Rp 95.001.992 |
-| Rp 357.088.729 (rata-rata 2030) | 1.000 | Rp 178.544.364 |
+| Rp 7.746.231 (rata-rata 2026) | 99.99999999999994 | Rp 3.873.116 |
+| Rp 53.167.042 (rata-rata 2027) | 177.9999999999999 | Rp 26.583.521 |
+| Rp 100.819.806 (rata-rata 2028) | 315.9999999999998 | Rp 50.409.903 |
+| Rp 190.992.531 (rata-rata 2029) | 561.9999999999993 | Rp 95.496.265 |
+| Rp 359.670.054 (rata-rata 2030) | 999.9999999999986 | Rp 179.835.027 |
 
 **2026 tidak bisa menanggung gaji apa pun.** Mulai 2027 margin rata-rata
 Rp 53,3 juta per bulan, jadi gaji Rp 25 juta per orang sudah tertutup.
@@ -395,18 +478,18 @@ Rp 53,3 juta per bulan, jadi gaji Rp 25 juta per orang sudah tertutup.
 
 | Paket | ARPU bruto/bln | ARPU tahunan/bln | Infrastruktur per pelanggan/bln |
 |---|---|---|---|
-| Basic | Rp 300.000 | Rp 285.000 | Rp 2.240 |
-| Pro | Rp 500.000 | Rp 475.000 | Rp 2.240 |
-| Max | Rp 1.000.000 | Rp 950.000 | Rp 2.240 |
+| Basic | Rp 300.000 | Rp 285.000 | Rp 3.400 |
+| Pro | Rp 500.000 | Rp 475.000 | Rp 3.400 |
+| Max | Rp 1.000.000 | Rp 950.000 | Rp 3.400 |
 
-Biaya infrastruktur per pelanggan **sama untuk ketiga paket** —_rd karena_
+Biaya infrastruktur per pelanggan **sama untuk ketiga paket** — karena
 infrastruktur tidak membedakan fitur. Yang membedakan hanya harga. Itu sebabnya
 Max menghasilkan 23,3% omzet dari 10% pelanggan.
 
-Biaya infrastruktur per pelanggan turun seiring skala: Rp 2.240 di 2026
-menjadi sekitar Rp 5.800 di 2030, sementara ARPU naik 21,6% karena inflasi
-harga. Karena tidak ada payroll dan tidak ada akuntansi outsourced, hampir
-seluruh revenue menjadi margin: **96,71%** dalam 4,2 tahun. Yang tersisa hanya
+Biaya infrastruktur per pelanggan turun seiring skala: Rp 2,3 juta di Oktober 2026 (untuk nol pelanggan) menjadi
+Rp 3,4 ribu per pelanggan di akhir 2030, sementara ARPU naik 21,6% karena
+inflasi harga. Karena tidak ada payroll dan tidak ada akuntansi outsourced, hampir
+seluruh revenue menjadi margin: **96,9%** dalam 4,2 tahun. Yang tersisa hanya
 fee Midtrans (0,70%), PPh Rezim A (0,50%), dan biaya operasional (2,09%).
 
 ---
@@ -541,7 +624,7 @@ berikutnya:
 | Skenario | Aktif akhir 2026 | Aktif akhir 2030 | Omzet 5 th | Margin 5 th |
 |---|---|---|---|---|
 | 2026 separuh, 2030 tercapai | 50 | 1.000 | Rp 7.088.511.361 | Rp 6.819.589.260 |
-| **Dasar** | **100** | **1.000** | **Rp 8.747.955.569** | **Rp 8.459.784.389** |
+| **Dasar** | **100** | **1.000** | **Rp 8.747.955.569** | **Rp 8.479.031.890** |
 | 2026 naik 50%, 2030 tercapai | 150 | 1.000 | Rp 10.060.087.211 | Rp 9.756.682.564 |
 | 2026 tercapai, 2030 separuh | 100 | 500 | Rp 5.603.624.586 | Rp 5.353.727.402 |
 | keduanya meleset | 50 | 500 | Rp 4.373.977.785 | Rp 4.138.360.850 |
@@ -589,11 +672,11 @@ tapi kemampuan menjaga pertumbuhan menuju 1.000 pada 2030.
    orang adalah 500 pelanggan per orang, tanpa onboarding otomatis. Beban ini
    tidak terlihat di P&L — hanya sebagai kelelahan.
 7. **Gunakan angka bulanan, bukan tahunan, untuk keputusan.** Rata-rata
-   2027 Rp 53,3 juta dan 2030 Rp 357,1 juta. Melihat total lima tahun
+   2027 Rp 53,2 juta dan 2030 Rp 359,7 juta. Melihat total lima tahun
    membuat 2026–2027 terlihat kecil padahal di situlah target 100 dan
    seluruh kurva ditentukan.
-8. **Dana yang dibutuhkan hanya sekitar Rp 2 juta**, di bulan pertama, dan itu
-   hampir seluruhnya biaya infrastruktur. Tidak perlu modal ventura. Tidak ada modal yang memaksa tumbuh cepat, jadi
+8. **Dana yang dibutuhkan hanya sekitar Rp 2,4 juta**, di bulan pertama, dan
+   itu hampir seluruhnya biaya infrastruktur. Tidak perlu modal ventura. Tidak ada modal yang memaksa tumbuh cepat, jadi
    pertumbuhan harus datang dari prioritas, bukan tekanan pendanaan.
 9. **Hitung ulang dokumen ini setiap kali asumsi berubah.** Seluruh asumsi
    terkumpul di [Bagian 10](#10-asumsi-yang-dapat-diubah).
@@ -684,7 +767,7 @@ Dividen yang diterima WP Orang Pribadi dalam negeri dikenai PPh final 10%
 pajak.
 
 Bandingkan dengan Rezim A: bagian Anda **Rp 4.229.892.195** dari margin
-Rp 8.459.784.389. Selisihnya **Rp 320,4 juta** dalam 4,2 tahun.
+Rp 8.479.031.890. Selisihnya **Rp 320 juta** dalam 4,2 tahun.
 
 ### Catatan singkat soal cara uang keluar dari perusahaan
 
@@ -772,10 +855,11 @@ tidak mustahil terjadi.
 | Inflasi harga | 5% per tahun | **asumsi Anda** |
 | Kurs USD | Rp 16.000 | **asumsi saya** |
 | Interpolasi 2027–2029 | geometris ×1,7783 per tahun | hitungan |
-| Legal dan admin | **Rp 0 (2026)** → 3,5–5 jt/tahun | **angka tebakan saya** |
-| Jam CPU Vercel | 20 → 1.500 jam per bulan | **angka tebakan saya** |
-| PITR Supabase | aktif mulai 2029 | keputusan saya |
+| Legal dan admin | **Rp 0 (2026)** → 3,5–5 jt/tahun, tanpa domain | **angka tebakan saya** |
+| Jam CPU Vercel | **0,3 jam per pelanggan aktif per bulan** | **angka tebakan saya** |
+| PITR Supabase | **aktif sejak Okt 2026** ($100/bln) | keputusan Anda |
 | Fonnte | tidak dipakai | `PRD.md` v1.3 (fakta) |
+| Domain .com | $0,87/bln, dihitung di infrastruktur | keputusan Anda |
 | Biaya CAC | nol, diasumsikan organic | **asumsi saya** |
 | Pajak (PPh) | **Rezim A, final 0,5% dari omzet** | **keputusan Anda, perlu konfirmasi konsultan** |
 | Omzet PT Perorangan yang sudah ada | Rp 3,2 miliar (asumsi tetap) | **perlu data Anda** |
@@ -792,3 +876,9 @@ adalah keputusan Anda. Yang tidak diketahui adalah apakah kurva geometris di
 tengahnya realistis, dan apakah 106 rekrutan dalam 3 bulan pertama bisa
 dilakukan oleh 2 orang tanpa anggaran iklan.
 
+Koreksi ketiganya masuk di versi ini. Asumsi jam CPU per tahun (600, 900,
+280, 650, 1.500) diganti jadi **0,3 jam per pelanggan aktif per bulan**,
+karena angka per tahun itu melonjak-turun tanpa alasan yang bisa dijelaskan
+— 900 jam CPU di 2027 dengan 178 pelanggan tidak masuk akal. Dengan model
+berbasis pelanggan, biaya CPU tidak pernah melonjak dan total infrastruktur
+turun dari Rp 166.562.688 menjadi Rp 147.315.186.
