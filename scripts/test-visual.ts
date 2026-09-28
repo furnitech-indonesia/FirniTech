@@ -17,6 +17,7 @@
  */
 import { chromium, type ConsoleMessage } from "playwright";
 import { mkdir } from "node:fs/promises";
+import { globSync, readFileSync } from "node:fs";
 
 import { PLANS } from "../src/lib/plans";
 
@@ -37,6 +38,22 @@ const VIEWPORTS: Viewport[] = [
  * bisa(dirender tanpa kredensial; cakupannya dipisahkan ke test:auth.
  */
 const PAGES = [
+  { path: "/", name: "landing" },
+  { path: "/login", name: "login" },
+  { path: "/daftar", name: "daftar" },
+] as const;
+
+/**
+ * Halaman yang menampilkan brand FurniTech, dipetakan ke komponen logonya.
+ *
+ * Daftar ini ada karena bug nyata: `/daftar` punya header sendiri dengan
+ * huruf "F" di kotak, dan tetap memakai huruf itu setelah logo asli sudah
+ * dipasang di halaman lain. Penyebabnya waktu itu adalah pengarian pada
+ * DAFTAR FILE yang dipilih manual — `/daftar/page.tsx` tidak ada di daftar
+ * itu, jadi tidak pernah ikut diperiksa. Sekarang halaman yang punya brand
+ * disebut satu per satu, dan `test:visual` membawanya ke sini.
+ */
+const BRAND_PAGES = [
   { path: "/", name: "landing" },
   { path: "/login", name: "login" },
   { path: "/daftar", name: "daftar" },
@@ -384,6 +401,79 @@ async function main() {
     await context.close();
   }
 
+  /*
+   * Brand: setiap halaman yang punya identitas FurniTech WAJIB memakai
+   * `<BrandMark>`, dan tidak boleh ada badge huruf buatan sendiri.
+   *
+   * Dua bentuk pemeriksaan, karena keduanya gagal dengan cara berbeda:
+   *   1. SOURCE — tidak boleh ada markup badge "F" buatan sendiri di seluruh
+   *      app. Ini yang menangkap bug `/daftar`, tanpa perlu render.
+   *   2. RENDER — logonya benar-benar termuat, bukan `<img>` yang hampa.
+   *      Yang diperiksa `naturalWidth > 0`, karena `naturalWidth = 0` lolos
+   *      dari setiap pemeriksaan lain: elemennya ada, URL-nya benar, dan
+   *      tidak ada satu pun yang_MEMBERitahu file-nya gagal dimuat.
+   *
+   * Pemeriksaan outline/rounding ada karena keduanya pernah dipasang di
+   * `BrandMark` dan terlihat benar di kode: `border border-border` menggambar
+   * garis abu-abu, dan `rounded-xl` di atas gambar yang sudah punya sudut
+   * membulat sendiri membuatnya terlihat seperti lingkaran.
+   */
+  const sourceFiles = [
+    ...globSync("app/**/*.tsx"),
+    ...globSync("src/components/**/*.tsx"),
+  ];
+  const handRolled = sourceFiles.filter((file) =>
+    /rounded-(?:lg|xl|2xl) bg-primary[^"]*"[^>]*>\s*F\s*</.test(
+      readFileSync(file, "utf8"),
+    ),
+  );
+  check(
+    "tidak ada badge brand huruf buatan sendiri (pakai <BrandMark>)",
+    handRolled.length === 0,
+    handRolled.length
+      ? handRolled.join(", ")
+      : `${sourceFiles.length} berkas bersih`,
+  );
+
+  // Page sendiri: loop di atas menutup `page`-nya per viewport, dan memakai
+  // ulang variabel yang sudah di-close akan jadi `page is not defined` —
+  // bukan hanya hasil yang salah, tapi script yang tidak jalan sama sekali.
+  const brandCtx = await browser.newContext({
+    viewport: { width: 375, height: 812 },
+  });
+  const brandTab = await brandCtx.newPage();
+
+  for (const brandPage of BRAND_PAGES) {
+    await brandTab.goto(`${BASE}${brandPage.path}`, { waitUntil: "networkidle" });
+    await brandTab.waitForTimeout(500);
+    const marks: Array<{ w: number; border: string; radius: string }> =
+      await brandTab
+        .locator('img[src="/brand-mark.png"]')
+        .evaluateAll(
+          (nodes: unknown) =>
+            (nodes as HTMLImageElement[]).map((n) => ({
+              w: n.naturalWidth,
+              border: getComputedStyle(n).borderTopWidth,
+              radius: getComputedStyle(n).borderTopLeftRadius,
+            })),
+        );
+    const loaded = marks.filter((m) => m.w > 0);
+    check(
+      `${brandPage.name}: logo brand benar-benar termuat`,
+      loaded.length > 0,
+      loaded.length
+        ? `${loaded.length} logo, naturalWidth ${loaded[0].w}`
+        : "tidak ada yang termuat",
+    );
+    check(
+      `${brandPage.name}: logo tanpa outline & tanpa rounding tambahan`,
+      marks.length > 0 &&
+        marks.every((m) => m.border === "0px" && m.radius === "0px"),
+      marks.map((m) => `border=${m.border} radius=${m.radius}`).join(" | ") || "-",
+    );
+  }
+
+  await brandCtx.close();
   await browser.close();
 
   console.log(

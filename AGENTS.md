@@ -482,10 +482,20 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   `manifest.ts`; `test:pwa` mengunci keduanya. Hash dari KELIMA berkas, bukan
   satu — kalau hanya `favicon.png` yang di-hash, mengubah `icon-192.png`
   tidak mengubah URL favicon, dan itu perubahan yang mustahil dilacak.
-- **Logo di dalam aplikasi pakai `<BrandMark>`** (`/brand-mark.png`, 128px,
-  ditampilkan 32px). SATU komponen untuk semua tempat. Sebelumnya tiap
-  tempat menulis markup sendiri, dan penulisan ulang di satu tempat berarti
-  ada tempat lain yang lupa diperbarui.
+- **Logo di dalam aplikasi WAJIB lewat `<BrandMark>`** (`/brand-mark.png`,
+  128px, ditampilkan 32px). SATU komponen untuk semua tempat; tidak boleh ada
+  markup logo/badge buatan sendiri di halaman mana pun.
+  `/daftar` pernah punya header sendiri dengan huruf "F" dan tetap begitu
+  setelah halaman lain diperbaiki — karena saat itu penyapuan memakai
+  DAFTAR FILE yang dipilih manual dan `/daftar/page.tsx` tidak ada di sana.
+  `test:visual` sekarang menyisir seluruh `app/` + `src/components/` dan
+  memverifikasi lewat render (`naturalWidth > 0`), jadi kelas bug ini tidak
+  bisa terulang diam-diam.
+- **JANGAN menambah `border`, `rounded-*`, atau `bg-*` di `BrandMark`.**
+  `brand-mark.png` sudah punya sudut membulat sendiri (`rx: 0.18` dari
+  `make-icons`), jadi `rounded-xl` di atasnya tidak menambah apa pun —
+  hanya membuat logo terlihat seperti lingkaran. Dan `border border-border`
+  menggambar garis abu-abu di lempeng yang sebenarnya sudah bersih.
 - **Header storefront TIDAK memakai logo FurniTech.** Di sana tampil nama
   TOKO, dan logo platform di sana akan membuat pembeli mengira dia membeli
   dari FurniTech. Yang tampil di situ tetap glyph storefront generik.

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { BrandMark } from "@/components/brand-mark";
 import Link from "next/link";
 
 import { RegisterForm } from "@/components/register-form";
@@ -37,12 +38,7 @@ export default async function RegisterPage() {
       {/* ---------- Panel kiri: paket ---------- */}
       <aside className="hidden flex-col bg-foreground p-10 lg:flex">
         <p className="flex items-center gap-2 text-title-md text-background">
-          <span
-            aria-hidden
-            className="grid size-8 place-items-center rounded-xl bg-primary text-label-sm font-semibold text-primary-foreground"
-          >
-            F
-          </span>
+          <BrandMark />
           FurniTech
         </p>
 
@@ -86,12 +82,7 @@ export default async function RegisterPage() {
       <section className="flex flex-col justify-center px-4 py-10 sm:px-8">
         <div className="mx-auto w-full max-w-md">
           <p className="mb-8 flex items-center gap-2 lg:hidden">
-            <span
-              aria-hidden
-              className="grid size-8 place-items-center rounded-xl bg-primary text-label-sm font-semibold text-primary-foreground"
-            >
-              F
-            </span>
+            <BrandMark />
             <span className="text-title-md text-foreground">FurniTech</span>
           </p>
 
