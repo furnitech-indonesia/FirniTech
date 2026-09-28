@@ -1,9 +1,23 @@
 Product Requirement Document (PRD) — FurniTech
 Nama Produk: FurniTech
 Tipe Platform: SaaS Multi-Tenant (B2B2C E-Commerce & Internal Operations for Furniture Makers)
-Versi PRD: 1.9
+Versi PRD: 2.0
 Status: Approved for Development
 Catatan Revisi:
+ * v2.0 — **Add-on "Paket Pendirian PT Perorangan" Rp500.000** (§2.E). Nama
+   sebelumnya "Jasa Legalitas PT Perorangan" diganti karena kata "legalitas"
+   memunculkan pertanyaan yang tidak perlu muncul — apakah ia pengacara —
+   sementara isinya semuanya pengurusan administratif. Isi paket: pendaftaran
+   AHU/SABH + Sertifikat Pendaftaran, NIB di OSS, NPWP Elektronik, dan logo
+   perusahaan. **"Akta Perusahaan" DIHAPUS dari daftar** karena dokumen itu
+   tidak pernah terbit untuk PT Perorangan: yang ada adalah Pernyataan
+   Pendirian yang diisi sendiri secara elektronik, tanpa notaris. Biaya resmi
+   hanya **PNBP Rp50.000** (PP 30/2026 pasal 33, berlaku 1 Agustus 2026);
+   sisanya gratis dan dikerjakan pemilik usaha sendiri lewat AHU Online dalam
+   2 hari. Karena itu add-on ini **tidak masuk** proyeksi margin —
+   dampaknya 0,33% dan nilainya bukan pada uang, tapi pada titik masuk pelanggan
+   baru. Detail dan alasannya di `docs/proyeksi-revenue.md` Bagian 11.
+   Tidak ada perubahan harga paket.
  * v1.9 — **Root domain ditetapkan: `mebeltech.com`.** Dipilih `.com` dan bukan
    `.id`/`.co.id` karena hanya `.com` yang tidak butuh verifikasi legalitas
    usaha di Pornas. Dicek ke RDAP Verisign (registry `.com` resmi) pada
@@ -77,6 +91,10 @@ A. Tarif Paket Langganan
    12 bulan, auto renewal setiap 12 bulan, suspend otomatis setelah 3 bulan
    tidak dibayar. Subdomain gratis sudah termasuk di semua paket — add-on
    ini menjual pilihan memakai nama sendiri, bukan kemampuan punya domain.
+ * **Add-on "Paket Pendirian PT Perorangan": Rp500.000, sekali bayar.**
+   Di luar paket langganan, tidak berulang, dan hanya tersedia saat
+   pendaftaran. Biaya negara PNBP Rp50.000 ditanggung pelanggan apa adanya.
+   Rinciannya di §2.E.
  * Diskon tahunan 5%. Semua harga BELUM termasuk PPN 11% karena perusahaan
    berstatus belum PKP, jadi PPN tidak diodeser ke pengrajin maupun pembeli.
  * Harga paket dapat diubah owner dari panel super admin; harga yang sudah
@@ -87,6 +105,7 @@ B. Matriks Fitur & Batasan Paket (Feature Differentiation)
 |---|---|---|---|
 | Subdomain gratis (`tokonya.mebeltech.com`) | ✅ | ✅ | ✅ |
 | Custom Domain sendiri (`tokonya.com`) | Add-on Rp250.000/tahun | Add-on Rp250.000/tahun | Add-on Rp250.000/tahun |
+| Paket Pendirian PT Perorangan | Add-on Rp500.000 (sekali) | Add-on Rp500.000 (sekali) | Add-on Rp500.000 (sekali) |
 | Kurir (unggah bukti & tanda tangan) | ✅ | ✅ | ✅ |
 | Maksimal Katalog Produk | Hingga 20 Produk | Hingga 100 Produk | Unlimited Produk |
 | Jumlah Akun Staf (RBAC) | 2 Akun (Owner + 1 Staf) | 5 Akun Staf/Tukang | Unlimited Akun Staf/Tukang |
@@ -181,6 +200,72 @@ D. Add-on Custom Domain
      per tahun — lebih besar dari seluruh laba add-on.
    * Add-on ini menambah omzet platform, jadi PPh Rezim A 0,5% juga diterapkan
      pada omzet domain.
+
+E. Add-on "Paket Pendirian PT Perorangan"
+   Model ditetapkan pemilik produk pada 2026-09-28 (PRD v2.0). Angka dan
+   analisisnya di `docs/proyeksi-revenue.md` Bagian 11.
+
+   NAMA. Ditutup sebagai "Paket Pendirian PT Perorangan", bukan "Jasa
+   Legalitas PT Perorangan". Alasannya bukan selera copywriting:
+
+   * **"Paket"** menyatakan apa yang dibeli — sekumpulan barang dengan isi
+     terdefinisi. Bukan jenis jasa dan bukan klaim keahlian, jadi tidak ada
+     yang perlu dibuktikan ke pelanggan.
+   * **"Pendirian"** adalah kata yang benar-benar dicari pemilik usaha.
+     Orang mengetik "pendirian PT" di Google, bukan "legalitas".
+   * **"Legalitas" dihilangkan** karena memunculkan pertanyaan yang tidak
+     perlu muncul sebelum orang menekan beli: "apakah mereka pengacara?".
+     Isi paket ini semuanya pengurusan administratif, dan penamaan tidak
+     boleh menjanjikan sesuatu yang tidak dikerjakan.
+
+   ISI PAKET & BIAYA RESMI. Satu-satunya biaya cash adalah PNBP:
+
+   | Item | Asal | Biaya |
+   |---|---|---|
+   | Pendaftaran AHU/SABH + Sertifikat Pendaftaran | PNBP negara | **Rp50.000** |
+   | NIB (OSS) | gratis | Rp0 |
+   | NPWP Elektronik | gratis | Rp0 |
+   | Logo perusahaan | dikerjakan sendiri | Rp0 |
+   | **Total** | | **Rp50.000** |
+
+   Sumber tarif: **PP 30/2026** (berlaku 1 Agustus 2026) pasal 33 —
+   "Pendaftaran Pendirian Perseroan Perorangan untuk Usaha Mikro dan Kecil,
+   per permohonan 50.000,00". Dikonfirmasi di portal resmi Ditjen AHU.
+
+   **TIDAK ADA "AKTA PERUSAHAAN".** Dokumen itu tidak pernah terbit untuk PT
+   Perseroan Perorangan:
+
+   * PT Persekutuan Modal → akta notaris, wajib.
+   * **PT Perseroan Perorangan → Pernyataan Pendirian yang diisi sendiri
+     secara elektronik di SABH.** Bukan akta, dan tidak ada notaris.
+
+   FurniTech adalah Perseroan Perorangan, jadi struktur yang dijual adalah
+   strukturnya sendiri. Yang diserahkan: **Pernyataan Pendirian (e-Akta) +
+   Sertifikat Pendaftaran Perseroan Perorangan**, bukan akta.
+
+   MODEL JUAL. Satu kali, di luar paket langganan, dibeli terpisah.
+
+   * **Dipasang sebagai titik masuk, bukan produk etalase.** Diperkenalkan di
+     langkah "Paket" atau "Bayar" wizard pendaftaran — tempat orang sedang
+     bertransaksi — dan setelah pembayaran langganan berhasil.
+   * Setelah dibayar, **tok FurniTech-nya dibuat dalam sesi yang sama**.
+     Kalau tidak, FurniTech sudah mendapat Rp450.000 tanpa hubungan apa pun
+     dengan produknya, dan orang itu tidak akan pernah kembali.
+   * Rp50.000 PNBP **tidak boleh masuk ke dalam harga paket** dan tidak
+     boleh disembunyikan: biaya negara itu milik pelanggan, bukan margin.
+
+   BATAS YANG MESTI DITULIS DI HALAMAN. Satu kalimat, dan bukan opsional:
+   *"Pelayanan administrasi dan pengurusan dokumen, bukan konsultasi
+   hukum."* Seluruh pekerjaan di paket ini adalah pengisian formulir
+   administratif — cek ketersediaan nama di AHU, memilih KBLI, mengurus NIB
+   dan NPWP. Tidak ada satu pun yang masuk kategori pemberian nasihat hukum,
+   representasi klien, atau penafsiran aturan. Batas ini juga yang melindungi
+   FurniTech dari ekspektasi yang naik sendiri.
+
+   PEMASARAN. **Jangan memakai kata "murah"** di halaman mana pun.
+   Rp500.000 itu murah kalau yang diterimanya benar-benar NIB Indonesia yang
+   bisa dipakai ke bank dan tender, dan mahal kalau hanya nama di sertifikat.
+   Menempelkan kata "murah" membuat orang mengira yang dibeli cuma nama.
 
 3. Tech Stack & Arsitektur Sistem
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -409,6 +494,11 @@ Modul 5: Super Admin Panel & SaaS Billing Engine (FurniTech sebagai SaaS Owner)
      Cloudflare for SaaS API, penagihan add-on tahunan, dan suspend otomatis
      setelah 3 bulan tidak dibayar (§2.D). Invoice add-on TIDAK boleh dibuat
      sebelum `customDomainVerified = true`.
+   * **Penagihan add-on "Paket Pendirian PT Perorangan"** (§2.E): invoice
+     `leg-` issued pada langkah pembayaran wizard, **hanya untuk tenant yang
+     aktivasi melalui webhook langganan**. Webhook `leg-` tidak boleh menulis
+     `subscriptionExpiresAt` maupun mengubah status langganan — kalau tidak,
+     satu invoice tambahan diam-diam memberi satu tahun langganan gratis.
  * Audit & Keamanan:
    * Audit log integrasi pihak ketiga (Midtrans Core/Payouts, Cloudflare, Meta/
      WhatsApp Business API bila notifikasi otomatis-poorongan diaktifkan nanti).
@@ -444,7 +534,9 @@ stok bahan tetap numeric karena satuannya dapat pecahan (m3, Liter).
    Midtrans). Table yang sama juga dipakai untuk tagihan add-on custom domain — perlu
    `item_type` supaya webhook tahu invoice itu domain atau langganan, dan
    `orderId` berawalan berbeda (`saas-` vs `dom-`) supaya aktivasi tenant
-   tidak ikut tersalut.
+   tidak ikut tersalut, dan `leg-` untuk tagihan paket pendirian PT
+   Perorangan (§2.E) yang sekali bayar dan tidak boleh memulai periode
+   langganan apa pun.
  * integration_audit_logs: Jejak integrasi Midtrans, Cloudflare, Meta/WhatsApp
    Business API, Firebase.
  * notification_usage: Pemakaian kuota notifikasi WhatsApp per bulan per tenant.

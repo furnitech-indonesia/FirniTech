@@ -706,11 +706,11 @@ tapi kemampuan menjaga pertumbuhan menuju 1.000 pada 2030.
 8. **Dana yang dibutuhkan hanya sekitar Rp 2,7 juta**, di bulan pertama, dan
    itu hampir seluruhnya biaya infrastruktur. Tidak perlu modal ventura. Tidak ada modal yang memaksa tumbuh cepat, jadi
    pertumbuhan harus datang dari prioritas, bukan tekanan pendanaan.
-9. **Jasa Legalitas PT Perorangan: jangan dijual terpisah, dan jangan
-   dipanggil "legalitas".** Marjinnya 90% tapi seluruh isinya gratis
-   di luar PNBP Rp 50.000 dan bisa dikerjakan sendiri pelanggan dalam
-   2 hari. Satu-satunya tempatnya masuk akal adalah menempel di pendaftaran
-   langganan. Rinciannya di [Bagian 11](#11-add-on-jasa-legalitas-pt-perorangan--rp-500000).
+9. **Paket Pendirian PT Perorangan: jangan dijual terpisah.** Marjinnya 90%
+   tapi seluruh isinya gratis di luar PNBP Rp 50.000 dan bisa dikerjakan
+   sendiri pelanggan dalam 2 hari. Satu-satunya tempatnya masuk akal adalah
+   menempel di wizard pendaftaran, dan tokonya harus dibuat di sesi yang
+   sama. Rinciannya di [Bagian 11](#11-add-on-paket-pendirian-pt-perorangan--rp-500000).
 10. **Tawarkan add-on domain Rp 250.000/tahun, dengan suspend otomatis.**
    Marjin Rp 61.333 per invoice (24,5%) aman dari churn karena Cloudflare
    ditagih lunas di awal — laba Rp 51 juta dalam 4,2 tahun pada take-up 60%.
@@ -1113,11 +1113,18 @@ nilai itu jauh lebih besar dari Rp 231 juta.
 
 ---
 
-## 11. Add-on "Jasa Legalitas PT Perorangan" — Rp 500.000
+## 11. Add-on "Paket Pendirian PT Perorangan" — Rp 500.000
 
 Ditetapkan pemilik produk 2026-09-28. **Belum masuk ke proyeksi margin di
 Bagian 2 dan 4** — alasannya ada di bawah, dan alasannya bukan sekadar
 "belum diputuskan".
+
+Namanya ditutup sebagai **"Paket Pendirian PT Perorangan"**, bukan "Jasa
+Legalitas PT Perorangan". Alasannya bukan selera copywriting: "Paket"
+menyatakan apa yang dibeli tanpa mengklaim keahlian, "Pendirian" adalah kata
+yang benar-benar dicari pemilik usaha, dan "Legalitas" memunculkan pertanyaan
+yang tidak perlu muncul sebelum orang menekan beli — *apakah mereka
+pengacara?* Isinya semuanya administrasi.
 
 ### Isi paket
 
@@ -1208,28 +1215,29 @@ Batasnya nyata dan tidak kabur:
 Semua pekerjaan di paket ini ada di kolom kiri. **Tidak ada satu pun di kolom
 kanan.** Pengisian formulir administratif bukan praktik Advokat.
 
-Tapi nama yang dipakai pelanggan adalah "**Jasa Legalitas**" — dan "legalitas"
-dalam kosa kata orang adalah domain Advokat, bukan domain administrasi.
-UMKM tidak melihat perbedaan itu. Risiko reputasinya nyata meskipun
-unsurnya tidak ada.
+ITU ALASAN NAMA DIGANTI. Nama aslinya adalah "Jasa Legalitas PT Perorangan",
+dan kata "legalitas" dalam kosa kata orang adalah domain Advokat, bukan
+domain administrasi. UMKM tidak melihat perbedaan itu. Risiko reputasinya
+nyata meskipun unsurnya secara yuridis tidak ada.
 
 **Yang paling mungkin terjadi bukan hukum, tapi praktis:** pelanggan
-membaca "legalitas", conferencing ke pengrajin berikutnya, lalu ekspektasinya
+membaca "legalitas", lalu cerita ke pengrajin berikutnya, dan ekspektasinya
 naik ke "masalah perusahaan juga ikut ditangani". Di titik itu FurniTech
 menang Rp 450.000 dan kehilangan pelanggan.
 
 ### Rekomendasi
 
-1. **Ubah nama jadi "Pendampingan Pendirian PT Perorangan".** Satu kata
-   "pendampingan" menghapus seluruh ambiguitas yang ada di kata
-   "legalitas", dan tidak mengubah apa yang benar-benar dikerjakan.
-2. **Jangan jual terpisah.** Tempelkan ke pendaftaran langganan sebagai
-   biaya sekali bayar, seperti pada butir 3.
+1. **Nama sudah diganti jadi "Paket Pendirian PT Perorangan".** Diterima
+   pada 2026-09-28. "Paket" menyatakan apa yang dibeli tanpa mengklaim
+   keahlian; "Pendirian" adalah kata yang benar-benar dicari pemilik usaha.
+2. **Jangan jual terpisah.** Tempelkan ke wizard pendaftaran sebagai biaya
+   sekali bayar, seperti pada butir 3.
 3. **Cantumkan batasnya di halaman.** Satu kalimat — *"Pelayanan
    administrasi dan pengurusan dokumen, bukan konsultasi hukum"* — menghapus
    sebagian besar risiko dan menambah kredibilitas di mata pembeli.
-4. **Kalau tetap mau nama "Jasa Legalitas",** ikat ke Advokat/Notaris rekanan
-   dan biarkan mereka yang menandatangani. Margin turun, risiko hilang.
+4. **Kalau nanti isinya berkembang jadi nasihat hukum,** ikat ke
+   Advokat/Notaris rekanan dan biarkan mereka yang menandatangani.
+   Margin turun, risiko hilang.
 
 ### Kalau memutuskan tetap menjual
 
@@ -1242,8 +1250,9 @@ data), dan Release hanya di bulan-bulan rekrutan:
 | Yang mengambil (20%) | 65 orang |
 | Omzet | Rp 32.500.000 |
 | Biaya PNBP | −Rp 3.250.000 |
+| Fee Midtrans Rp 4.440 per invoice | −Rp 288.600 |
 | Tambahan PPh 0,5% | −Rp 162.500 |
-| **Tambahan margin** | **Rp 29.087.500** |
+| **Tambahan margin** | **Rp 28.798.900** |
 
 **0,33% dari margin Rp 8,69 miliar.** Tidak mengubah kesimpulan apa pun
 tentang bisnis ini, dan menambah satu kewajiban hukum. Itu sebabnya tidak
@@ -1263,7 +1272,7 @@ dimasukkan ke proyeksi utama.
 | Bauran paket | 60 / 30 / 10 | **asumsi Anda** |
 | Porsi bayar tahunan | 30% | **asumsi saya** |
 | Churn | 3% per bulan | **asumsi Anda** — lihat catatan di Bagian 10 |
-| Add-on "Jasa Legalitas PT Perorangan" | Rp 500.000, biaya PNBP Rp 50.000 | **keputusan Anda** — belum masuk proyeksi, Bagian 11 |
+| Add-on "Paket Pendirian PT Perorangan" | Rp 500.000 sekali, biaya PNBP Rp 50.000 | **keputusan Anda** — belum masuk proyeksi, Bagian 11 |
 | Take-up add-on domain | 60% pelanggan, Rp 250.000/tahun | **asumsi saya** |
 | Inflasi harga | 5% per tahun | **asumsi Anda** |
 | Kurs USD | **Rp 18.037** | harga real-time 28 Sep 2026 |

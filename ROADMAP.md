@@ -569,11 +569,13 @@ Gunakan daftar ini saat mengonfigurasi GitHub Codespaces. Versi yang siap
 disalin ada di file .env.example pada repositori.
 
 # NEXT.JS & APP CONFIG
-# Kosongkan ROOT_DOMAIN selama domain milik FurniTech belum tersedia: tenant
-# lalu diakses lewat path /t/<slug>, dan mode host-based aktif otomatis begitu
-# domain diisi (tanpa perubahan kode, tapi perlu build ulang).
+# Root domain ditetapkan `mebeltech.com` (PRD v1.9, 2026-09-28). Isi nilai ini
+# HANYA setelah domain benar-benar dibayar dan DNS wildcard sudah diarahkan ke
+# Vercel. Sebelum itu, biarkan kosong: tenant lalu diakses lewat path
+# /t/<slug>, dan mode host-based menyala otomatis begitu domain diisi (tanpa
+# perubahan kode, tapi WAJIB build ulang).
 NEXT_PUBLIC_APP_URL="https://app.vercel.app"
-NEXT_PUBLIC_ROOT_DOMAIN=""
+NEXT_PUBLIC_ROOT_DOMAIN="mebeltech.com"
 
 # SUPABASE (DATABASE, AUTH, STORAGE, RLS)
 NEXT_PUBLIC_SUPABASE_URL="https://your-supabase-project.supabase.co"
@@ -789,6 +791,98 @@ YANG BELUM DIKERJAKAN - URUTAN PENTING
   Appendix: item_type di saas_invoices, orderId `dom-`, alur verifikasi
   CNAME+TXT, invoice hanya setelah customDomainVerified, suspend otomatis 3
   bulan, halaman /dashboard/pengaturan/domain - semuanya ada di bawah.
+
+━━━ Sprint 6 — Add-on "Paket Pendirian PT Perorangan" (2026-09-28) ━━━
+
+KEPUTUSAN PRODUK (PRD v2.0 §2.E). Analisis di `docs/proyeksi-revenue.md`
+Bagian 11.
+
+NAMA: "Paket Pendirian PT Perorangan", bukan "Jasa Legalitas PT Perorangan".
+  "Paket"       = apa yang dibeli: sekumpulan barang dengan isi terdefinisi.
+                  Bukan jenis jasa, bukan klaim keahlian.
+  "Pendirian"   = kata yang BENAR-BENAR dicari pemilik usaha. Orang mengetik
+                  "pendirian PT" di Google, bukan "legalitas".
+  "Legalitas"   = dihapus karena memunculkan pertanyaan yang tidak perlu
+                  muncul sebelum orang menekan beli: "apakah mereka
+                  pengacara?". Isinya semuanya administrasi, dan penamaan
+                  tidak boleh menjanjikan sesuatu yang tidak dikerjakan.
+
+ISI PAKET & BIAYA RESMI — PNBP ADALAH SATU-SATUNYA BIAYA CASH
+  AHU/SABH + Sertifikat      Rp 50.000   (PNBP)
+  NIB (OSS)                  Rp      0
+  NPWP Elektronik            Rp      0
+  Logo perusahaan            Rp      0
+  Total                      Rp 50.000
+  Harga jual                 Rp 500.000   ->  margin Rp 450.000
+
+  Sumber: PP 30/2026 (berlaku 1 Agustus 2026) pasal 33, dikonfirmasi di
+  portal resmi Ditjen AHU.
+
+  "AKTA PERUSAHAAN" DIHAPUS DARI DAFTAR. Dokumen itu tidak pernah terbit
+  untuk PT Perseroan Perorangan. PT Persekutuan Modal -> akta notaris, wajib.
+  PT Perseroan Perorangan -> Pernyataan Pendirian yang diisi sendiri secara
+  elektronik di SABH. Bukan akta, tidak ada notaris. Janjikan akta = janji
+  dokumen yang tidak ada. FurniTech sendiri adalah Perseroan Perorangan, jadi
+  strukturnya yang dijual.
+
+KENAPA TIDAK MASUK PROYEKSI MARGIN
+  Seluruh isinya gratis di luar PNBP Rp50.000 dan bisa dikerjakan sendiri
+  pelanggan lewat AHU Online dalam 2 hari. Yang dibeli seharga Rp450.000
+  adalah kesederhanaan - bukan penghindaran proses yang sulit, karena
+  prosesnya memang tidak sulit.
+  Dampaknya 0,33% dari margin (Rp29 juta dalam 4,2 th) sehingga tidak
+  mengubah kesimpulan apa pun. Dan produk ini tidak memakai apa pun milik
+  FurniTech kalau dijual terpisah, sehingga tidak ada yang mengikat
+  pelanggan. Yang membuatnya masuk akal hanya sebagai TITIK MASUK.
+
+MODEL JUAL: BUKAN PRODUK ETALASE
+  - Diperkenalkan di langkah "Paket" atau "Bayar" wizard pendaftaran, di
+    tempat orang sedang bertransaksi.
+  - Setelah dibayar, tenant-nya dibuat dalam SESI YANG SAMA. Kalau tidak,
+    FurniTech mendapat Rp450.000 tanpa hubungan apa pun dengan produknya dan
+    orang itu tidak akan pernah kembali.
+  - `saas_invoices.item_type` = `legalitas`, `orderId` berawalan `leg-`.
+  - **Webhook `leg-` DILARANG menulis `subscriptionExpiresAt` atau mengubah
+    status langganan.** Kalau tidak, satu invoice tambahan diam-diam memberi
+    satu tahun langganan gratis - dan tidak ada yang akan mengetahuinya
+    sampai tagihan berikutnya gagal.
+  - PNBP Rp50.000 tidak boleh masuk ke harga paket dan tidak boleh
+    disembunyikan: itu biaya negara milik pelanggan, bukan margin.
+
+BATAS YANG MESTI DITULIS DI HALAMAN (bukan opsional)
+  "Pelayanan administrasi dan pengurusan dokumen, bukan konsultasi hukum."
+  Seluruh pekerjaan = pengisian formulir administratif: cek nama di AHU,
+  pilih KBLI, mengurus NIB & NPWP. Tidak ada satu pun yang masuk kategori
+  pemberian nasihat hukum, representasi klien, atau penafsiran aturan.
+  UU 18/2003 Pasal 1 mengcriminalkan yang "bertindak seolah-olah Advokat
+  tetapi bukan Advokat" (denda s/d Rp50 juta). Unsur itu tidak ada di
+  pekerjaan ini - tapi batasnya harus tertulis, karena yang paling mungkin
+  terjadi bukan hukum melainkan ekspektasi pelanggan yang naik sendiri:
+  membaca "legalitas", lalu mengira FurniTech juga tangani masalah
+  perusahaan.
+
+PEMASARAN: JANGAN PAKAI KATA "MURAH"
+  Rp500.000 itu murah kalau yang diterimanya benar-benar NIB Indonesia yang
+  bisa dipakai ke bank dan tender, dan mahal kalau hanya nama di sertifikat.
+  Menempelkan kata "murah" membuat orang mengira yang dibeli cuma nama.
+
+YANG BELUM DIKERJAKAN (urutan)
+  1. Migrasi: `saas_invoices.item_type` + nilai enum `legalitas`.
+  2. `createSaasCharge()` di src/lib/midtrans/saas.ts sekarang hanya menerima
+     satu `amount` - perlu menerima tagihan terpisah supaya langganan dan
+     paket pendirian tidak tercampur jadi satu invoice.
+  3. Branch webhook `leg-` yang tidak menyentuh periode langganan.
+  4. Komponen di wizard pendaftaran (langkah Paket) + paywall setelah
+     langganan aktif.
+  5. Halaman `/dashboard/pendirian` untuk status: dokumen mana yang sudah
+     terbit, mana yang masih diproses.
+  6. Alur internal: cek nama di AHU, pilih KBLI, mengurus NIB, NPWP, dan logo.
+     Dua yang pertama butuh akses akun AHU/OSS - TIDAK bisa diotomasi
+     sebelum ada keputusan apakah memakai akun FurniTech atau akun
+     pelanggan sendiri.
+  7. Tes yang mengunci: (a) webhook `leg-` tidak menambah periode langganan,
+     (b) PNBP Rp50.000 tercatat sebagai biaya bukan margin, (c) halaman
+     memuat kalimat batas.
 
 ━━━ Model Biaya & Payout (keputusan pemilik produk, 2026-09-27) ━━━
 
