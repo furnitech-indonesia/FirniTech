@@ -420,8 +420,9 @@ async function main() {
       ? "\nsemua pemeriksaan rekening lulus.\n"
       : `\n${failures} pemeriksaan gagal.\n`,
   );
-  await cleanup(tenant.id, [owner.userId, adminUser.userId, courier.userId]);
-  process.exit(failures === 0 ? 0 : 1);
+  process.exitCode = failures === 0 ? 0 : 1;
+  pendingCleanup = async () =>
+    cleanup(tenant.id, [owner.userId, adminUser.userId, courier.userId]);
 }
 
 async function cleanup(tenantId: string, userIds: string[]) {
@@ -439,7 +440,14 @@ async function cleanup(tenantId: string, userIds: string[]) {
   await sqlClient.end();
 }
 
-main().catch((err) => {
-  console.error("Uji rekening gagal:", err);
-  process.exit(1);
-});
+let pendingCleanup: (() => Promise<void>) | null = null;
+
+main()
+  .catch((err) => {
+    console.error("Uji rekening gagal:", err);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    if (pendingCleanup) await pendingCleanup();
+    process.exit(process.exitCode ?? 0);
+  });

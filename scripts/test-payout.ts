@@ -475,7 +475,20 @@ async function main() {
       ? "\nsemua pemeriksaan payout lulus.\n"
       : `\n${failures} pemeriksaan gagal.\n`,
   );
-  process.exit(failures === 0 ? 0 : 1);
+  /*
+   * `process.exitCode`, BUKAN `process.exit()`.
+   *
+   * `process.exit()` menghentikan proses seketika, jadi `.finally()` di bawah
+   * TIDAK PERNAH BERJALAN — dan itu berarti setiap menjalankan skrip ini
+   * menyisakan 5 tenant fikstur di database. Itu bukan kebocoran kecil:
+   * `test:auth` dan `test:webhook` membaca daftar tenant, jadi setiap
+   * eksekusi membuat mereka melihat lebih banyak kebocoran dari run sebelumnya.
+   *
+   * Bug ini persis yang sama sudah pernah terjadi di `test:pwa` dan ditulis
+   * di AGENTS.md sebagai aturan. apparently aturan itu tidak ditulis cukup
+   * keras untuk mencegah ulangnya.
+   */
+  process.exitCode = failures === 0 ? 0 : 1;
 }
 
 async function cleanup(tenantIds: string[]) {

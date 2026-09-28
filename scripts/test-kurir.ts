@@ -578,8 +578,15 @@ async function main() {
   console.log(
     `\n${results.length - failed}/${results.length} pengujian kurir lulus.\n`,
   );
-  await cleanup(tenant.id, otherTenant[0].id, [a, b]);
-  process.exit(failed === 0 ? 0 : 1);
+  process.exitCode = failed === 0 ? 0 : 1;
+
+  // Disimpan di luar `main` supaya `.finally()` di bawah bisa membersihkannya
+  // juga ketika `main` melempar. Kalau cleanup hanya dipanggil di jalur
+  // sukses, satu pemeriksaan yang gagal di tengah menyisakan tenant fikstur —
+  // dan `test:auth`/`test:webhook` membaca daftar tenant, jadi setiap
+  // eksekusi yang gagal menambah satu kebocoran lagi.
+  pendingCleanup = async () =>
+    cleanup(tenant.id, otherTenant[0].id, [a, b]);
 }
 
 /**
@@ -612,7 +619,14 @@ async function cleanup(
   await sqlClient.end();
 }
 
-main().catch((err) => {
-  console.error("Uji kurir gagal:", err);
-  process.exit(1);
-});
+let pendingCleanup: (() => Promise<void>) | null = null;
+
+main()
+  .catch((err) => {
+    console.error("Uji kurir gagal:", err);
+    process.exitCode = 1;
+  })
+  .finally(async () => {
+    if (pendingCleanup) await pendingCleanup();
+    process.exit(process.exitCode ?? 0);
+  });

@@ -237,7 +237,10 @@ async function main() {
       ? "\nsemua pemeriksaan COD lulus.\n"
       : `\n${failures} pemeriksaan gagal.\n`,
   );
-  process.exit(failures === 0 ? 0 : 1);
+  // `process.exitCode`, bukan `process.exit()` — yang kedua membatalkan
+  // `.finally()` di bawah dan menyisakan fikstur. Lihat catatan yang sama di
+  // `scripts/test-payout.ts`.
+  process.exitCode = failures === 0 ? 0 : 1;
 }
 
 main()
