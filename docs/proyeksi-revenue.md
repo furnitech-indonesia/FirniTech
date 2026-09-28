@@ -3,14 +3,14 @@
 Status: proyeksi, bukan ramalan. Semua angka dihitung dari `src/lib/plans.ts`
 (harga paket) dan `PRD.md` bagian Biaya (pembagian fee), dengan asumsi
 pertumbuhan dan biaya yang dinyatakan terbuka di
-[Bagian 10](#10-asumsi-yang-dapat-diubah). Angka biaya infrastruktur diambil dari
+[Bagian 11](#11-asumsi-yang-dapat-diubah). Angka biaya infrastruktur diambil dari
 halaman pricing resmi yang berlaku saat dokumen ini ditulis, bukan dari ingatan.
 
 Ringkasan satu kalimat: **margin bersihnya naik dari Rp 7,7 juta per bulan
 di 2026 menjadi Rp 359,7 juta per bulan di 2030, total Rp 8,48 miliar dalam
 4,2 tahun (96,9% dari omzet)** — karena tidak ada gaji di P&L, tidak ada
 biaya legal di 2026, admin dikerjakan berdua, dan PPh cukup 0,5% dari omzet
-lewat Rezim A Perseroan Perorangan. Kebutuhan modal hanya sekitar Rp 2,4 juta,
+lewat Rezim A Perseroan Perorangan. Kebutuhan modal hanya sekitar Rp 2,7 juta,
 di bulan pertama. Yang tidak terlihat di angka ini: 106 orang harus mendaftar
 dalam 3 bulan pertama, dan 2 orang tidak mungkin menangani 1.000 pelanggan —
 keduanya tidak akan muncul sebagai rupiah di mana pun.
@@ -170,13 +170,13 @@ nominalnya.
 
 | Tahun | Bln | **Margin bersih/bln** | Pelanggan akhir tahun |
 |---|---|---|---|
-| 2026 | 3 | **Rp 7.746.231** | 99.99999999999994 |
-| 2027 | 12 | **Rp 53.167.042** | 177.9999999999999 |
-| 2028 | 12 | **Rp 100.819.806** | 315.9999999999998 |
-| 2029 | 12 | **Rp 190.992.531** | 561.9999999999993 |
-| 2030 | 12 | **Rp 359.670.054** | 999.9999999999986 |
+| 2026 | 3 | **Rp 7.449.094** | 100 |
+| 2027 | 12 | **Rp 52.869.905** | 178 |
+| 2028 | 12 | **Rp 100.428.967** | 316 |
+| 2029 | 12 | **Rp 190.601.623** | 562 |
+| 2030 | 12 | **Rp 359.260.301** | 1000 |
 
-Rata-rata 51 bulan: **Rp 166.255.527 per bulan**.
+Rata-rata 51 bulan: **Rp 165.887.781 per bulan**.
 
 ### Total 4,2 tahun
 
@@ -185,9 +185,9 @@ Rata-rata 51 bulan: **Rp 166.255.527 per bulan**.
 | Omzet bruto | Rp 8.747.955.569 |
 | Fee Midtrans | −Rp 61.368.715 |
 | PPh final 0,5% | −Rp 43.739.778 |
-| Infrastruktur | −Rp 147.315.186 |
+| Infrastruktur | −Rp 166.070.251 |
 | Legal dan admin (2027–2030 saja) | −Rp 16.500.000 |
-| **Margin bersih** | **Rp 8.479.031.890 (96,9% dari omzet)** |
+| **Margin bersih** | **Rp 8.460.276.826 (96,7% dari omzet)** |
 
 ### Rincian 51 bulan
 
@@ -195,63 +195,63 @@ Biaya legal **tidak ada di 2026** — hanya muncul 2027 sampai 2030.
 
 | Bulan | Aktif | Omzet | Fee | PPh 0,5% | Infrastruktur | Legal | **Margin** |
 |---|---|---|---|---|---|---|---|
-| Okt 2026 | 34 | Rp 0 | Rp 0 | Rp 0 | Rp 2.333.920 | Rp 0 | **Rp -2.333.920** |
-| Nov 2026 | 68 | Rp 10.340.445 | Rp 106.771 | Rp 51.702 | Rp 2.333.920 | Rp 0 | **Rp 7.848.051** |
-| Des 2026 | 100 | Rp 20.370.676 | Rp 210.339 | Rp 101.853 | Rp 2.333.920 | Rp 0 | **Rp 17.724.563** |
-| Jan 2027 | 108 | Rp 186.018.000 | Rp 444.000 | Rp 930.090 | Rp 2.333.920 | Rp 291.667 | **Rp 182.018.323** |
-| Feb 2027 | 115 | Rp 34.020.609 | Rp 334.555 | Rp 170.103 | Rp 2.333.920 | Rp 291.667 | **Rp 30.890.364** |
-| Mar 2027 | 122 | Rp 36.363.749 | Rp 357.597 | Rp 181.819 | Rp 2.333.920 | Rp 291.667 | **Rp 33.198.746** |
-| Apr 2027 | 129 | Rp 38.636.595 | Rp 379.948 | Rp 193.183 | Rp 2.333.920 | Rp 291.667 | **Rp 35.437.877** |
-| Mei 2027 | 136 | Rp 40.841.256 | Rp 401.628 | Rp 204.206 | Rp 2.333.920 | Rp 291.667 | **Rp 37.609.834** |
-| Jun 2027 | 143 | Rp 42.979.776 | Rp 422.658 | Rp 214.899 | Rp 2.333.920 | Rp 291.667 | **Rp 39.716.633** |
-| Jul 2027 | 149 | Rp 45.054.142 | Rp 443.057 | Rp 225.271 | Rp 2.333.920 | Rp 291.667 | **Rp 41.760.227** |
-| Agu 2027 | 155 | Rp 47.066.276 | Rp 462.844 | Rp 235.331 | Rp 2.333.920 | Rp 291.667 | **Rp 43.742.513** |
-| Sep 2027 | 161 | Rp 49.018.046 | Rp 482.038 | Rp 245.090 | Rp 2.333.920 | Rp 291.667 | **Rp 45.665.331** |
-| Okt 2027 | 167 | Rp 50.911.263 | Rp 500.656 | Rp 254.556 | Rp 2.333.920 | Rp 291.667 | **Rp 47.530.465** |
-| Nov 2027 | 173 | Rp 52.747.684 | Rp 518.715 | Rp 263.738 | Rp 2.333.920 | Rp 291.667 | **Rp 49.339.644** |
-| Des 2027 | 178 | Rp 54.529.012 | Rp 536.232 | Rp 272.645 | Rp 2.333.920 | Rp 291.667 | **Rp 51.094.548** |
-| Jan 2028 | 192 | Rp 347.667.642 | Rp 790.320 | Rp 1.738.338 | Rp 3.069.920 | Rp 291.667 | **Rp 341.777.397** |
-| Feb 2028 | 205 | Rp 63.557.202 | Rp 595.252 | Rp 317.786 | Rp 3.069.920 | Rp 291.667 | **Rp 59.282.578** |
-| Mar 2028 | 217 | Rp 67.910.036 | Rp 636.019 | Rp 339.550 | Rp 3.069.920 | Rp 291.667 | **Rp 63.572.880** |
-| Apr 2028 | 230 | Rp 72.132.285 | Rp 675.563 | Rp 360.661 | Rp 3.069.920 | Rp 291.667 | **Rp 67.734.474** |
-| Mei 2028 | 242 | Rp 76.227.866 | Rp 713.920 | Rp 381.139 | Rp 3.069.920 | Rp 291.667 | **Rp 71.771.220** |
-| Jun 2028 | 253 | Rp 80.200.580 | Rp 751.127 | Rp 401.003 | Rp 3.069.920 | Rp 291.667 | **Rp 75.686.863** |
-| Jul 2028 | 265 | Rp 84.054.112 | Rp 787.218 | Rp 420.271 | Rp 3.069.920 | Rp 291.667 | **Rp 79.485.037** |
-| Agu 2028 | 275 | Rp 87.792.038 | Rp 822.226 | Rp 438.960 | Rp 3.069.920 | Rp 291.667 | **Rp 83.169.266** |
-| Sep 2028 | 286 | Rp 91.417.827 | Rp 856.183 | Rp 457.089 | Rp 3.069.920 | Rp 291.667 | **Rp 86.742.968** |
-| Okt 2028 | 296 | Rp 94.934.842 | Rp 889.122 | Rp 474.674 | Rp 3.069.920 | Rp 291.667 | **Rp 90.209.458** |
-| Nov 2028 | 306 | Rp 98.346.346 | Rp 921.073 | Rp 491.732 | Rp 3.069.920 | Rp 291.667 | **Rp 93.571.955** |
-| Des 2028 | 316 | Rp 101.655.505 | Rp 952.065 | Rp 508.278 | Rp 3.069.920 | Rp 291.667 | **Rp 96.833.576** |
-| Jan 2029 | 340 | Rp 648.068.110 | Rp 1.403.040 | Rp 3.240.341 | Rp 3.069.920 | Rp 375.000 | **Rp 639.979.810** |
-| Feb 2029 | 363 | Rp 118.508.009 | Rp 1.057.047 | Rp 592.540 | Rp 3.069.920 | Rp 375.000 | **Rp 113.413.502** |
-| Mar 2029 | 386 | Rp 126.655.378 | Rp 1.129.719 | Rp 633.277 | Rp 3.069.920 | Rp 375.000 | **Rp 121.447.463** |
-| Apr 2029 | 408 | Rp 134.558.326 | Rp 1.200.210 | Rp 672.792 | Rp 3.069.920 | Rp 375.000 | **Rp 129.240.405** |
-| Mei 2029 | 430 | Rp 142.224.186 | Rp 1.268.586 | Rp 711.121 | Rp 3.069.920 | Rp 375.000 | **Rp 136.799.558** |
-| Jun 2029 | 450 | Rp 149.660.069 | Rp 1.334.912 | Rp 748.300 | Rp 3.069.920 | Rp 375.000 | **Rp 144.131.937** |
-| Jul 2029 | 470 | Rp 156.872.877 | Rp 1.399.247 | Rp 784.364 | Rp 3.069.920 | Rp 375.000 | **Rp 151.244.345** |
-| Agu 2029 | 490 | Rp 163.869.300 | Rp 1.461.653 | Rp 819.346 | Rp 3.069.920 | Rp 375.000 | **Rp 158.143.380** |
-| Sep 2029 | 509 | Rp 170.655.830 | Rp 1.522.186 | Rp 853.279 | Rp 3.069.920 | Rp 375.000 | **Rp 164.835.445** |
-| Okt 2029 | 527 | Rp 177.238.764 | Rp 1.580.903 | Rp 886.194 | Rp 3.069.920 | Rp 375.000 | **Rp 171.326.747** |
-| Nov 2029 | 545 | Rp 183.624.211 | Rp 1.637.859 | Rp 918.121 | Rp 3.069.920 | Rp 375.000 | **Rp 177.623.311** |
-| Des 2029 | 562 | Rp 189.818.094 | Rp 1.693.106 | Rp 949.090 | Rp 3.076.427 | Rp 375.000 | **Rp 183.724.470** |
-| Jan 2030 | 605 | Rp 1.210.205.670 | Rp 2.495.280 | Rp 6.051.028 | Rp 3.087.021 | Rp 416.667 | **Rp 1.198.155.675** |
-| Feb 2030 | 647 | Rp 221.320.155 | Rp 1.880.088 | Rp 1.106.601 | Rp 3.113.390 | Rp 416.667 | **Rp 214.803.408** |
-| Mar 2030 | 687 | Rp 236.551.760 | Rp 2.009.479 | Rp 1.182.759 | Rp 3.138.969 | Rp 416.667 | **Rp 229.803.887** |
-| Apr 2030 | 726 | Rp 251.326.418 | Rp 2.134.988 | Rp 1.256.632 | Rp 3.163.780 | Rp 416.667 | **Rp 244.354.351** |
-| Mei 2030 | 764 | Rp 265.657.836 | Rp 2.256.732 | Rp 1.328.289 | Rp 3.187.846 | Rp 416.667 | **Rp 258.468.302** |
-| Jun 2030 | 801 | Rp 279.559.311 | Rp 2.374.823 | Rp 1.397.797 | Rp 3.211.191 | Rp 416.667 | **Rp 272.158.834** |
-| Jul 2030 | 837 | Rp 293.043.742 | Rp 2.489.372 | Rp 1.465.219 | Rp 3.233.835 | Rp 416.667 | **Rp 285.438.650** |
-| Agu 2030 | 871 | Rp 306.123.641 | Rp 2.600.484 | Rp 1.530.618 | Rp 3.255.801 | Rp 416.667 | **Rp 298.320.071** |
-| Sep 2030 | 905 | Rp 318.811.142 | Rp 2.708.263 | Rp 1.594.056 | Rp 3.277.107 | Rp 416.667 | **Rp 310.815.050** |
-| Okt 2030 | 938 | Rp 331.118.018 | Rp 2.812.808 | Rp 1.655.590 | Rp 3.297.773 | Rp 416.667 | **Rp 322.935.179** |
-| Nov 2030 | 969 | Rp 343.055.688 | Rp 2.914.217 | Rp 1.715.278 | Rp 3.317.820 | Rp 416.667 | **Rp 334.691.705** |
-| Des 2030 | 1000 | Rp 354.635.228 | Rp 3.012.584 | Rp 1.773.176 | Rp 3.337.266 | Rp 416.667 | **Rp 346.095.535** |
+| Okt 2026 | 34 | Rp 0 | Rp 0 | Rp 0 | Rp 2.631.057 | Rp 0 | **Rp -2.631.057** |
+| Nov 2026 | 68 | Rp 10.340.445 | Rp 106.771 | Rp 51.702 | Rp 2.631.057 | Rp 0 | **Rp 7.550.914** |
+| Des 2026 | 100 | Rp 20.370.676 | Rp 210.339 | Rp 101.853 | Rp 2.631.057 | Rp 0 | **Rp 17.427.426** |
+| Jan 2027 | 108 | Rp 186.018.000 | Rp 444.000 | Rp 930.090 | Rp 2.631.057 | Rp 291.667 | **Rp 181.721.186** |
+| Feb 2027 | 115 | Rp 34.020.609 | Rp 334.555 | Rp 170.103 | Rp 2.631.057 | Rp 291.667 | **Rp 30.593.227** |
+| Mar 2027 | 122 | Rp 36.363.749 | Rp 357.597 | Rp 181.819 | Rp 2.631.057 | Rp 291.667 | **Rp 32.901.609** |
+| Apr 2027 | 129 | Rp 38.636.595 | Rp 379.948 | Rp 193.183 | Rp 2.631.057 | Rp 291.667 | **Rp 35.140.740** |
+| Mei 2027 | 136 | Rp 40.841.256 | Rp 401.628 | Rp 204.206 | Rp 2.631.057 | Rp 291.667 | **Rp 37.312.697** |
+| Jun 2027 | 143 | Rp 42.979.776 | Rp 422.658 | Rp 214.899 | Rp 2.631.057 | Rp 291.667 | **Rp 39.419.495** |
+| Jul 2027 | 149 | Rp 45.054.142 | Rp 443.057 | Rp 225.271 | Rp 2.631.057 | Rp 291.667 | **Rp 41.463.090** |
+| Agu 2027 | 155 | Rp 47.066.276 | Rp 462.844 | Rp 235.331 | Rp 2.631.057 | Rp 291.667 | **Rp 43.445.376** |
+| Sep 2027 | 161 | Rp 49.018.046 | Rp 482.038 | Rp 245.090 | Rp 2.631.057 | Rp 291.667 | **Rp 45.368.194** |
+| Okt 2027 | 167 | Rp 50.911.263 | Rp 500.656 | Rp 254.556 | Rp 2.631.057 | Rp 291.667 | **Rp 47.233.327** |
+| Nov 2027 | 173 | Rp 52.747.684 | Rp 518.715 | Rp 263.738 | Rp 2.631.057 | Rp 291.667 | **Rp 49.042.507** |
+| Des 2027 | 178 | Rp 54.529.012 | Rp 536.232 | Rp 272.645 | Rp 2.631.057 | Rp 291.667 | **Rp 50.797.411** |
+| Jan 2028 | 192 | Rp 347.667.642 | Rp 790.320 | Rp 1.738.338 | Rp 3.460.759 | Rp 291.667 | **Rp 341.386.558** |
+| Feb 2028 | 205 | Rp 63.557.202 | Rp 595.252 | Rp 317.786 | Rp 3.460.759 | Rp 291.667 | **Rp 58.891.739** |
+| Mar 2028 | 217 | Rp 67.910.036 | Rp 636.019 | Rp 339.550 | Rp 3.460.759 | Rp 291.667 | **Rp 63.182.041** |
+| Apr 2028 | 230 | Rp 72.132.285 | Rp 675.563 | Rp 360.661 | Rp 3.460.759 | Rp 291.667 | **Rp 67.343.635** |
+| Mei 2028 | 242 | Rp 76.227.866 | Rp 713.920 | Rp 381.139 | Rp 3.460.759 | Rp 291.667 | **Rp 71.380.380** |
+| Jun 2028 | 253 | Rp 80.200.580 | Rp 751.127 | Rp 401.003 | Rp 3.460.759 | Rp 291.667 | **Rp 75.296.024** |
+| Jul 2028 | 265 | Rp 84.054.112 | Rp 787.218 | Rp 420.271 | Rp 3.460.759 | Rp 291.667 | **Rp 79.094.198** |
+| Agu 2028 | 275 | Rp 87.792.038 | Rp 822.226 | Rp 438.960 | Rp 3.460.759 | Rp 291.667 | **Rp 82.778.426** |
+| Sep 2028 | 286 | Rp 91.417.827 | Rp 856.183 | Rp 457.089 | Rp 3.460.759 | Rp 291.667 | **Rp 86.352.128** |
+| Okt 2028 | 296 | Rp 94.934.842 | Rp 889.122 | Rp 474.674 | Rp 3.460.759 | Rp 291.667 | **Rp 89.818.619** |
+| Nov 2028 | 306 | Rp 98.346.346 | Rp 921.073 | Rp 491.732 | Rp 3.460.759 | Rp 291.667 | **Rp 93.181.115** |
+| Des 2028 | 316 | Rp 101.655.505 | Rp 952.065 | Rp 508.278 | Rp 3.460.759 | Rp 291.667 | **Rp 96.442.737** |
+| Jan 2029 | 340 | Rp 648.068.110 | Rp 1.403.040 | Rp 3.240.341 | Rp 3.460.759 | Rp 375.000 | **Rp 639.588.970** |
+| Feb 2029 | 363 | Rp 118.508.009 | Rp 1.057.047 | Rp 592.540 | Rp 3.460.759 | Rp 375.000 | **Rp 113.022.663** |
+| Mar 2029 | 386 | Rp 126.655.378 | Rp 1.129.719 | Rp 633.277 | Rp 3.460.759 | Rp 375.000 | **Rp 121.056.623** |
+| Apr 2029 | 408 | Rp 134.558.326 | Rp 1.200.210 | Rp 672.792 | Rp 3.460.759 | Rp 375.000 | **Rp 128.849.565** |
+| Mei 2029 | 430 | Rp 142.224.186 | Rp 1.268.586 | Rp 711.121 | Rp 3.460.759 | Rp 375.000 | **Rp 136.408.719** |
+| Jun 2029 | 450 | Rp 149.660.069 | Rp 1.334.912 | Rp 748.300 | Rp 3.460.759 | Rp 375.000 | **Rp 143.741.098** |
+| Jul 2029 | 470 | Rp 156.872.877 | Rp 1.399.247 | Rp 784.364 | Rp 3.460.759 | Rp 375.000 | **Rp 150.853.506** |
+| Agu 2029 | 490 | Rp 163.869.300 | Rp 1.461.653 | Rp 819.346 | Rp 3.460.759 | Rp 375.000 | **Rp 157.752.541** |
+| Sep 2029 | 509 | Rp 170.655.830 | Rp 1.522.186 | Rp 853.279 | Rp 3.460.759 | Rp 375.000 | **Rp 164.444.606** |
+| Okt 2029 | 527 | Rp 177.238.764 | Rp 1.580.903 | Rp 886.194 | Rp 3.460.759 | Rp 375.000 | **Rp 170.935.908** |
+| Nov 2029 | 545 | Rp 183.624.211 | Rp 1.637.859 | Rp 918.121 | Rp 3.460.759 | Rp 375.000 | **Rp 177.232.471** |
+| Des 2029 | 562 | Rp 189.818.094 | Rp 1.693.106 | Rp 949.090 | Rp 3.468.095 | Rp 375.000 | **Rp 183.332.802** |
+| Jan 2030 | 605 | Rp 1.210.205.670 | Rp 2.495.280 | Rp 6.051.028 | Rp 3.480.037 | Rp 416.667 | **Rp 1.197.762.658** |
+| Feb 2030 | 647 | Rp 221.320.155 | Rp 1.880.088 | Rp 1.106.601 | Rp 3.509.764 | Rp 416.667 | **Rp 214.407.035** |
+| Mar 2030 | 687 | Rp 236.551.760 | Rp 2.009.479 | Rp 1.182.759 | Rp 3.538.599 | Rp 416.667 | **Rp 229.404.257** |
+| Apr 2030 | 726 | Rp 251.326.418 | Rp 2.134.988 | Rp 1.256.632 | Rp 3.566.568 | Rp 416.667 | **Rp 243.951.563** |
+| Mei 2030 | 764 | Rp 265.657.836 | Rp 2.256.732 | Rp 1.328.289 | Rp 3.593.699 | Rp 416.667 | **Rp 258.062.449** |
+| Jun 2030 | 801 | Rp 279.559.311 | Rp 2.374.823 | Rp 1.397.797 | Rp 3.620.016 | Rp 416.667 | **Rp 271.750.009** |
+| Jul 2030 | 837 | Rp 293.043.742 | Rp 2.489.372 | Rp 1.465.219 | Rp 3.645.543 | Rp 416.667 | **Rp 285.026.942** |
+| Agu 2030 | 871 | Rp 306.123.641 | Rp 2.600.484 | Rp 1.530.618 | Rp 3.670.305 | Rp 416.667 | **Rp 297.905.567** |
+| Sep 2030 | 905 | Rp 318.811.142 | Rp 2.708.263 | Rp 1.594.056 | Rp 3.694.323 | Rp 416.667 | **Rp 310.397.833** |
+| Okt 2030 | 938 | Rp 331.118.018 | Rp 2.812.808 | Rp 1.655.590 | Rp 3.717.621 | Rp 416.667 | **Rp 322.515.332** |
+| Nov 2030 | 969 | Rp 343.055.688 | Rp 2.914.217 | Rp 1.715.278 | Rp 3.740.220 | Rp 416.667 | **Rp 334.269.305** |
+| Des 2030 | 1000 | Rp 354.635.228 | Rp 3.012.584 | Rp 1.773.176 | Rp 3.762.142 | Rp 416.667 | **Rp 345.670.659** |
 
 ### Titik kas terendah
 
-Kas terendah hanya **Rp -2.333.920**, di Okt 2026 — bulan pertama, dan itu hampir
+Kas terendah hanya **Rp -2.631.057**, di Okt 2026 — bulan pertama, dan itu hampir
 seluruhnya biaya infrastruktur. Setelah itu margin positif dan langsung menutup
-seluruh kekurangan. **Kebutuhan modal: sekitar Rp 2,4 juta.**
+seluruh kekurangan. **Kebutuhan modal: sekitar Rp 2,7 juta.**
 
 ---
 
@@ -260,7 +260,7 @@ seluruh kekurangan. **Kebutuhan modal: sekitar Rp 2,4 juta.**
 ### 3a. Infrastruktur
 
 Harga diambil dari halaman pricing resmi. Semua biaya dalam USD, dikonversi
-dengan kurs asumsi **Rp 16.000/USD**.
+dengan kurs asumsi **Rp 18.037/USD** (harga real-time 28 September 2026).
 
 | Item | Harga | Keterangan |
 |---|---|---|
@@ -303,60 +303,62 @@ dihitung di muka.
 
 | Bulan | Pelanggan | Jam CPU | Supabase Pro | PITR | Vercel Pro | CPU overflow | Email | Monitoring | Domain | **Total USD/bln** | **Total Rp/bln** |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| Okt 2026 | 0 | 0.0 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Nov 2026 | 34 | 10 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Des 2026 | 68 | 20 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Jan 2027 | 100 | 30 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Feb 2027 | 108 | 32 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Mar 2027 | 115 | 35 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Apr 2027 | 122 | 37 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Mei 2027 | 129 | 39 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Jun 2027 | 136 | 41 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Jul 2027 | 143 | 43 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Agu 2027 | 149 | 45 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Sep 2027 | 155 | 47 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Okt 2027 | 161 | 48 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Nov 2027 | 167 | 50 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Des 2027 | 173 | 52 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.333.920** |
-| Jan 2028 | 178 | 53 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Feb 2028 | 192 | 57 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Mar 2028 | 205 | 61 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Apr 2028 | 217 | 65 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Mei 2028 | 230 | 69 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Jun 2028 | 242 | 73 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Jul 2028 | 253 | 76 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Agu 2028 | 265 | 79 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Sep 2028 | 275 | 83 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Okt 2028 | 286 | 86 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Nov 2028 | 296 | 89 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Des 2028 | 306 | 92 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Jan 2029 | 316 | 95 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Feb 2029 | 340 | 102 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Mar 2029 | 363 | 109 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Apr 2029 | 386 | 116 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Mei 2029 | 408 | 122 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Jun 2029 | 430 | 129 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Jul 2029 | 450 | 135 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Agu 2029 | 470 | 141 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Sep 2029 | 490 | 147 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Okt 2029 | 509 | 153 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Nov 2029 | 527 | 158 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.069.920** |
-| Des 2029 | 545 | 163 | $25 | $100 | $20 | $ 0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.076.427** |
-| Jan 2030 | 562 | 169 | $25 | $100 | $20 | $ 1 | $20 | $26 | $0,87 | **$ 193** | **Rp 3.087.021** |
-| Feb 2030 | 605 | 181 | $25 | $100 | $20 | $ 3 | $20 | $26 | $0,87 | **$ 195** | **Rp 3.113.390** |
-| Mar 2030 | 647 | 194 | $25 | $100 | $20 | $ 4 | $20 | $26 | $0,87 | **$ 196** | **Rp 3.138.969** |
-| Apr 2030 | 687 | 206 | $25 | $100 | $20 | $ 6 | $20 | $26 | $0,87 | **$ 198** | **Rp 3.163.780** |
-| Mei 2030 | 726 | 218 | $25 | $100 | $20 | $ 7 | $20 | $26 | $0,87 | **$ 199** | **Rp 3.187.846** |
-| Jun 2030 | 764 | 229 | $25 | $100 | $20 | $ 9 | $20 | $26 | $0,87 | **$ 201** | **Rp 3.211.191** |
-| Jul 2030 | 801 | 240 | $25 | $100 | $20 | $ 10 | $20 | $26 | $0,87 | **$ 202** | **Rp 3.233.835** |
-| Agu 2030 | 837 | 251 | $25 | $100 | $20 | $ 12 | $20 | $26 | $0,87 | **$ 203** | **Rp 3.255.801** |
-| Sep 2030 | 871 | 261 | $25 | $100 | $20 | $ 13 | $20 | $26 | $0,87 | **$ 205** | **Rp 3.277.107** |
-| Okt 2030 | 905 | 272 | $25 | $100 | $20 | $ 14 | $20 | $26 | $0,87 | **$ 206** | **Rp 3.297.773** |
-| Nov 2030 | 938 | 281 | $25 | $100 | $20 | $ 15 | $20 | $26 | $0,87 | **$ 207** | **Rp 3.317.820** |
-| Des 2030 | 969 | 291 | $25 | $100 | $20 | $ 17 | $20 | $26 | $0,87 | **$ 209** | **Rp 3.337.266** |
-| **Total 51 bulan** | | | | | | | | | | **$ 9.207** | **Rp 147.315.186** | |
+| Okt 2026 | 0 | 0.0 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Nov 2026 | 34 | 10 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Des 2026 | 68 | 20 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Jan 2027 | 100 | 30 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Feb 2027 | 108 | 32 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Mar 2027 | 115 | 35 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Apr 2027 | 122 | 37 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Mei 2027 | 129 | 39 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Jun 2027 | 136 | 41 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Jul 2027 | 143 | 43 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Agu 2027 | 149 | 45 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Sep 2027 | 155 | 47 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Okt 2027 | 161 | 48 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Nov 2027 | 167 | 50 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Des 2027 | 173 | 52 | $25 | $100 | $20 | $0 | $0 | $0 | $0,87 | **$ 146** | **Rp 2.631.057** |
+| Jan 2028 | 178 | 53 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Feb 2028 | 192 | 57 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Mar 2028 | 205 | 61 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Apr 2028 | 217 | 65 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Mei 2028 | 230 | 69 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Jun 2028 | 242 | 73 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Jul 2028 | 253 | 76 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Agu 2028 | 265 | 79 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Sep 2028 | 275 | 83 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Okt 2028 | 286 | 86 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Nov 2028 | 296 | 89 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Des 2028 | 306 | 92 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Jan 2029 | 316 | 95 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Feb 2029 | 340 | 102 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Mar 2029 | 363 | 109 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Apr 2029 | 386 | 116 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Mei 2029 | 408 | 122 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Jun 2029 | 430 | 129 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Jul 2029 | 450 | 135 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Agu 2029 | 470 | 141 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Sep 2029 | 490 | 147 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Okt 2029 | 509 | 153 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Nov 2029 | 527 | 158 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.460.759** |
+| Des 2029 | 545 | 163 | $25 | $100 | $20 | $0 | $20 | $26 | $0,87 | **$ 192** | **Rp 3.468.095** |
+| Jan 2030 | 562 | 169 | $25 | $100 | $20 | $ 1 | $20 | $26 | $0,87 | **$ 193** | **Rp 3.480.037** |
+| Feb 2030 | 605 | 181 | $25 | $100 | $20 | $ 3 | $20 | $26 | $0,87 | **$ 195** | **Rp 3.509.764** |
+| Mar 2030 | 647 | 194 | $25 | $100 | $20 | $ 4 | $20 | $26 | $0,87 | **$ 196** | **Rp 3.538.599** |
+| Apr 2030 | 687 | 206 | $25 | $100 | $20 | $ 6 | $20 | $26 | $0,87 | **$ 198** | **Rp 3.566.568** |
+| Mei 2030 | 726 | 218 | $25 | $100 | $20 | $ 7 | $20 | $26 | $0,87 | **$ 199** | **Rp 3.593.699** |
+| Jun 2030 | 764 | 229 | $25 | $100 | $20 | $ 9 | $20 | $26 | $0,87 | **$ 201** | **Rp 3.620.016** |
+| Jul 2030 | 801 | 240 | $25 | $100 | $20 | $ 10 | $20 | $26 | $0,87 | **$ 202** | **Rp 3.645.543** |
+| Agu 2030 | 837 | 251 | $25 | $100 | $20 | $ 12 | $20 | $26 | $0,87 | **$ 203** | **Rp 3.670.305** |
+| Sep 2030 | 871 | 261 | $25 | $100 | $20 | $ 13 | $20 | $26 | $0,87 | **$ 205** | **Rp 3.694.323** |
+| Okt 2030 | 905 | 272 | $25 | $100 | $20 | $ 14 | $20 | $26 | $0,87 | **$ 206** | **Rp 3.717.621** |
+| Nov 2030 | 938 | 281 | $25 | $100 | $20 | $ 15 | $20 | $26 | $0,87 | **$ 207** | **Rp 3.740.220** |
+| Des 2030 | 969 | 291 | $25 | $100 | $20 | $ 17 | $20 | $26 | $0,87 | **$ 209** | **Rp 3.762.142** |
+| **Total 51 bulan** | | | | | | | | | | **$ 9207** | **Rp 166.070.251** | |
 
-Total infrastruktur 4,2 tahun: **$9.207 — Rp 147.315.186**.
+Total infrastruktur 4,2 tahun: **$9.207 — Rp 166.070.251**.
+
+Kurs yang dipakai **Rp 18.037/USD** — harga domain Cloudflare yang Anda cek real-time pada 28 September 2026. Angka dollar di tabel tidak berubah; hanya konversinya.
 
 Tiga hal yang terlihat jelas dari tabel:
 
@@ -407,12 +409,12 @@ karena diurus lewat dashboard Cloudflare, bukan kewajiban hukum.
 
 | Tahun | Infrastruktur | Legal & admin | **Total biaya** |
 |---|---|---|---|
-| 2026 (3 bln) | Rp 7.001.760 | **Rp 0** | **Rp 7.001.760** |
-| 2027 | Rp 28.007.040 | Rp 3.500.000 | **Rp 31.507.040** |
-| 2028 | Rp 36.839.040 | Rp 3.500.000 | **Rp 40.339.040** |
-| 2029 | Rp 36.845.547 | Rp 4.500.000 | **Rp 41.345.547** |
-| 2030 | Rp 38.621.799 | Rp 5.000.000 | **Rp 43.621.799** |
-| **Total** | **Rp 147.315.186** | **Rp 16.500.000** | **Rp 163.815.186** |
+| 2026 (3 bln) | Rp 7.893.171 | **Rp 0** | **Rp 7.893.171** |
+| 2027 | Rp 31.555.140 | Rp 3.500.000 | **Rp 35.055.140** |
+| 2028 | Rp 41.535.030 | Rp 3.500.000 | **Rp 45.035.030** |
+| 2029 | Rp 41.542.506 | Rp 4.500.000 | **Rp 46.042.506** |
+| 2030 | Rp 43.544.403 | Rp 5.000.000 | **Rp 48.544.403** |
+| **Total** | **Rp 166.070.251** | **Rp 16.500.000** | **Rp 182.570.251** |
 
 **"Tidak melibatkan orang lain" tidak bisa 100%.** Laporan tahunan wajib
 dinotarisasi — itu melibatkan pihak ketiga setiap tahun, tidak bisa dikerjakan
@@ -452,24 +454,24 @@ Rincian omzet, margin, dan biaya per bulan ada di
 
 | Tahun | Bln | **Margin bersih/bln** | Pelanggan akhir tahun |
 |---|---|---|---|
-| 2026 | 3 | **Rp 7.746.231** | 99.99999999999994 |
-| 2027 | 12 | **Rp 53.167.042** | 177.9999999999999 |
-| 2028 | 12 | **Rp 100.819.806** | 315.9999999999998 |
-| 2029 | 12 | **Rp 190.992.531** | 561.9999999999993 |
-| 2030 | 12 | **Rp 359.670.054** | 999.9999999999986 |
-| **Total 4,2 th** | | **Rp 8.479.031.890** | |
+| 2026 | 3 | **Rp 7.449.094** | 100 |
+| 2027 | 12 | **Rp 52.869.905** | 178 |
+| 2028 | 12 | **Rp 100.428.967** | 316 |
+| 2029 | 12 | **Rp 190.601.623** | 562 |
+| 2030 | 12 | **Rp 359.260.301** | 1000 |
+| **Total 4,2 th** | | **Rp 8.460.276.826** | |
 
-Rata-rata 51 bulan: **Rp 166.255.527 per bulan**.
+Rata-rata 51 bulan: **Rp 165.887.781 per bulan**.
 
 ### Kapan cukup untuk gaji
 
 | Margin/bln | Pelanggan aktif | Setara gaji per orang (bila 50:50) |
 |---|---|---|
-| Rp 7.746.231 (rata-rata 2026) | 99.99999999999994 | Rp 3.873.116 |
-| Rp 53.167.042 (rata-rata 2027) | 177.9999999999999 | Rp 26.583.521 |
-| Rp 100.819.806 (rata-rata 2028) | 315.9999999999998 | Rp 50.409.903 |
-| Rp 190.992.531 (rata-rata 2029) | 561.9999999999993 | Rp 95.496.265 |
-| Rp 359.670.054 (rata-rata 2030) | 999.9999999999986 | Rp 179.835.027 |
+| Rp 7.449.094 (rata-rata 2026) | 100 | Rp 3.724.547 |
+| Rp 52.869.905 (rata-rata 2027) | 178 | Rp 26.434.952 |
+| Rp 100.428.967 (rata-rata 2028) | 316 | Rp 50.214.483 |
+| Rp 190.601.623 (rata-rata 2029) | 562 | Rp 95.300.811 |
+| Rp 359.260.301 (rata-rata 2030) | 1000 | Rp 179.630.150 |
 
 **2026 tidak bisa menanggung gaji apa pun.** Mulai 2027 margin rata-rata
 Rp 53,3 juta per bulan, jadi gaji Rp 25 juta per orang sudah tertutup.
@@ -624,7 +626,7 @@ berikutnya:
 | Skenario | Aktif akhir 2026 | Aktif akhir 2030 | Omzet 5 th | Margin 5 th |
 |---|---|---|---|---|
 | 2026 separuh, 2030 tercapai | 50 | 1.000 | Rp 7.088.511.361 | Rp 6.819.589.260 |
-| **Dasar** | **100** | **1.000** | **Rp 8.747.955.569** | **Rp 8.479.031.890** |
+| **Dasar** | **100** | **1.000** | **Rp 8.747.955.569** | **Rp 8.460.276.826** |
 | 2026 naik 50%, 2030 tercapai | 150 | 1.000 | Rp 10.060.087.211 | Rp 9.756.682.564 |
 | 2026 tercapai, 2030 separuh | 100 | 500 | Rp 5.603.624.586 | Rp 5.353.727.402 |
 | keduanya meleset | 50 | 500 | Rp 4.373.977.785 | Rp 4.138.360.850 |
@@ -675,11 +677,16 @@ tapi kemampuan menjaga pertumbuhan menuju 1.000 pada 2030.
    2027 Rp 53,2 juta dan 2030 Rp 359,7 juta. Melihat total lima tahun
    membuat 2026–2027 terlihat kecil padahal di situlah target 100 dan
    seluruh kurva ditentukan.
-8. **Dana yang dibutuhkan hanya sekitar Rp 2,4 juta**, di bulan pertama, dan
+8. **Dana yang dibutuhkan hanya sekitar Rp 2,7 juta**, di bulan pertama, dan
    itu hampir seluruhnya biaya infrastruktur. Tidak perlu modal ventura. Tidak ada modal yang memaksa tumbuh cepat, jadi
    pertumbuhan harus datang dari prioritas, bukan tekanan pendanaan.
-9. **Hitung ulang dokumen ini setiap kali asumsi berubah.** Seluruh asumsi
-   terkumpul di [Bagian 10](#10-asumsi-yang-dapat-diubah).
+9. **Add-on domain hanya layak kalau ada mekanisme refresh otomatis.**
+   Harga Rp 250.000 hampir pas di batas impas —Rp 4,2 juta laba dalam 4,2
+   tahun pada take-up 60%. Kalau churn riil di atas 4%, naikkan ke Rp 300.000.
+   Kalau harus Anda ingat 1.000 domain setiap tahun, jangan tawarkan sama
+   sekali. Rinciannya di [Bagian 10](#10-add-on-domain-com).
+10. **Hitung ulang dokumen ini setiap kali asumsi berubah.** Seluruh asumsi
+   terkumpul di [Bagian 11](#11-asumsi-yang-dapat-diubah).
 
 ---
 
@@ -767,7 +774,7 @@ Dividen yang diterima WP Orang Pribadi dalam negeri dikenai PPh final 10%
 pajak.
 
 Bandingkan dengan Rezim A: bagian Anda **Rp 4.229.892.195** dari margin
-Rp 8.479.031.890. Selisihnya **Rp 320 juta** dalam 4,2 tahun.
+Rp 8.460.276.826. Selisihnya **Rp 320 juta** dalam 4,2 tahun.
 
 ### Catatan singkat soal cara uang keluar dari perusahaan
 
@@ -840,7 +847,138 @@ tidak mustahil terjadi.
 
 ---
 
-## 10. Asumsi yang dapat diubah
+## 10. Add-on domain .com
+
+### Keputusan
+
+Domain `.com` ditawarkan sebagai **add-on tahunan** dengan harga
+**Rp 250.000 per tahun, flat, tidak naik**. Satu harga untuk semua tahun —
+bukan naik di tengah jalan.
+
+Ekstensinya hanya `.com`. Alasannya bukan sekadar menyederhanakan:
+**Cloudflare Registrar tidak menjual `.id` maupun `.co.id` sama sekali.**
+Saya cek daftar 430 TLD mereka — tidak ada satu pun ccTLD Indonesia. Jadi
+memang tidak ada pilihan di registrar ini.
+
+### Harga Cloudflare (diambil 28 September 2026)
+
+Cloudflare menjual **harga cost** — persis biaya registry plus ICANN fee $0,18,
+tanpa markup. Tidak ada harga first-year yang menggoda, jadi tidak ada jebakan
+renewal. Sumber: `cfdomainpricing.com/prices.json`.
+
+| TLD | Registrasi | Renewal | Keterangan |
+|---|---|---|---|
+| **.com** | **$10,46** | **$10,46** | **Rp 188.667/tahun** (kurs Rp 18.037). Flat selamanya. |
+| .net | $11,86 | $11,86 | Rp 213.919/tahun |
+| .org | $8,50 | $11,20 | Registrasi murah, renewal lebih mahal |
+| .app | $14,20 | $14,20 | Rp 256.125/tahun |
+| .shop | $30,20 | $30,20 | Rp 544.717/tahun — mahal untuk SMB |
+| .store | $4,99 | **$42,20** | Renewal 8,5× lebih mahal — jebakan |
+| .site / .online | $4,99 | $27,70 | Sama, jebakan renewal |
+
+Hanya `.com` yang dipakai karena satu alasan tambahan: **biaya renewal-nya
+paling rendah di antara pilihan yang masuk akal**, dan tidak pernah naik.
+
+### Economics
+
+```
+harga jual        Rp 250.000/tahun
+biaya Cloudflare  Rp 188.667/tahun
+marjin            Rp  61.333/tahun  (32% di atas biaya)
+```
+
+### Simulasi dengan take-up 60%
+
+Pengrajin yang mengambil add-on membayar **saat pendaftaran**, lalu **setiap
+Januari** untuk tahun berikutnya. Pelanggan yang berhenti berlangganan **tidak
+menagih domain lagi** — dan Cloudflare tidak mengembalikan biaya.
+
+| Komponen | Jumlah 4,2 tahun |
+|---|---|
+| Invoice domain | 834 |
+| Unit-bulan domain aktif | 12.999 |
+| Omzet add-on | Rp 208.557.276 |
+| Biaya Cloudflare | Rp 204.375.087 |
+| **Laba** | **Rp 4.182.189 (marjin 2,0%)** |
+
+### Temuan yang membatalkan sebagian rekomendasi saya
+
+**Harga Rp 250.000 hampir pas di batas impas.**
+
+Saya sebelumnya menyebut Rp 250.000 "defensif" dengan marjin 33%. Itu
+menghitung kalau 1 invoice menutup 12 bulan biaya. **Kenyataannya tidak
+begitu.** Rata-rata satu invoice hanya menghasilkan **15,6 unit-bulan domain
+aktif**, karena:
+
+- Pelanggan yang churn di bulan ke-5 masa tagihannya sudah habis, tapi
+  biaya Cloudflare masih jalan sampai 12 bulan.
+- Pelanggan yang mendaftar di bulan-bulan akhir periode hanya aktif
+  beberapa bulan sebelum simulasi berakhir.
+
+Harga impas yang sebenarnya: **Rp 245.000 per tahun**. Rp 250.000 hanya
+Rp 5.000 di atasnya.
+
+Sensitivitas terhadap churn — dan churn 3% per bulan itu asumsi saya, bukan
+data:
+
+| Churn per bulan | Umur rata-rata domain | Harga impas |
+|---|---|---|
+| 2% | 50 bulan | Rp 786.000 |
+| **3% (dasar)** | **33 bulan** | **Rp 524.000** |
+| 5% | 20 bulan | Rp 314.000 |
+| 8% | 13 bulan | Rp 197.000 |
+
+Angka "harga impas" di tabel ini memakai umur teoretis `1/churn`, sedangkan
+simulasi 4,2 tahun menghasilkan angka lebih rendah karena periode terpotong.
+Keduanya memberi arah yang sama: **Rp 250.000 aman kalau churn
+benar-benar 3% atau lebih rendah, dan IMPAS kalau churn 5%.**
+
+Untuk produk yang belum pernah dipakai siapa pun, churn 5% adalah asumsi
+yang lebih jujur daripada 3%.
+
+### Kenaikan harga yang lebih aman
+
+| Harga | Take-up 30% | 50% | 60% | 80% |
+|---|---|---|---|---|
+| Rp 200.000 | −Rp 18,8 jt | −Rp 31,3 jt | −Rp 37,5 jt | −Rp 50,0 jt |
+| **Rp 250.000** | **Rp 2,1 jt** | **Rp 3,5 jt** | **Rp 4,2 jt** | **Rp 5,6 jt** |
+| Rp 300.000 | Rp 22,9 jt | Rp 38,2 jt | Rp 45,9 jt | Rp 61,2 jt |
+| Rp 350.000 | Rp 43,8 jt | Rp 73,0 jt | Rp 87,6 jt | Rp 116,8 jt |
+
+Rp 200.000 merugi di semua skenario take-up.
+
+### Rekomendasi
+
+**Tetap Rp 250.000, dengan tiga syarat:**
+
+1. **Invoice domain hanya dibuat setelah domain terverifikasi.** Kalau belum
+   `customDomainVerified = true`, jangan tagih — kalau tidak, Anda menagih
+   orang yang tokonya belum bisa diakses lewat domain itu.
+2. **Pelanggan yang churn tidak menagih ulang, dan domain di-*suspend* atau
+   dilepas** setelah 3 bulan tidak dibayar. Tanpa aturan ini, Rp 188.667 per
+   domain per tahun terus berjalan untuk toko yang sudah berhenti.
+3. **Kalau churn riil ternyata di atas 4%, naikkan ke Rp 300.000.** Pada harga
+   itu, add-on domain menghasilkan Rp 46 juta dalam 4,2 tahun — cukup untuk
+   menutup satu orang paruh waktu.
+
+Kalau tidak ada mekanisme refresh otomatis, **jangan tawarkan sama sekali**.
+1.000 domain yang harus Anda ingatkan sendiri setiap tahun bukan bisnis —
+itu beban yang tersembunyi.
+
+### Yang belum dihitung di dokumen ini
+
+Angka-angka di bagian ini **belum masuk ke proyeksi margin di Bagian 2 dan 4**,
+karena take-up 60% itu asumsi dan add-on-nya belum diputuskan untuk
+diimplementasikan. Kalau dijumlahkan ke margin total, tambahan paling besar
+Rp 4,2 juta dalam 4,2 tahun — **0,05% dari margin Rp 8,46 miliar**.
+
+Nilai sebenarnya dari add-on domain bukan uangnya. Yang bernilai adalah
+Add-on ini memaksa pengrajin mengikat diri ke FurniTech selama minimal satu
+tahun, dan itu yang bisa menurunkan churn — kalau diukur dengan benar.
+
+---
+
+## 11. Asumsi yang dapat diubah
 
 | Asumsi | Nilai | Sumber |
 |---|---|---|
@@ -851,15 +989,17 @@ tidak mustahil terjadi.
 | HRESULT | Rp 430.000 per pelanggan per bulan | hitungan dari `src/lib/plans.ts` |
 | Bauran paket | 60 / 30 / 10 | **asumsi Anda** |
 | Porsi bayar tahunan | 30% | **asumsi saya** |
-| Churn | 3% per bulan | **asumsi Anda** |
+| Churn | 3% per bulan | **asumsi Anda** — lihat catatan di Bagian 10 |
+| Take-up add-on domain | 60% pelanggan | **asumsi saya** |
 | Inflasi harga | 5% per tahun | **asumsi Anda** |
-| Kurs USD | Rp 16.000 | **asumsi saya** |
+| Kurs USD | **Rp 18.037** | harga real-time 28 Sep 2026 |
 | Interpolasi 2027–2029 | geometris ×1,7783 per tahun | hitungan |
 | Legal dan admin | **Rp 0 (2026)** → 3,5–5 jt/tahun, tanpa domain | **angka tebakan saya** |
 | Jam CPU Vercel | **0,3 jam per pelanggan aktif per bulan** | **angka tebakan saya** |
 | PITR Supabase | **aktif sejak Okt 2026** ($100/bln) | keputusan Anda |
 | Fonnte | tidak dipakai | `PRD.md` v1.3 (fakta) |
-| Domain .com | $0,87/bln, dihitung di infrastruktur | keputusan Anda |
+| Domain .com (infrastruktur) | $0,87/bln, domain FurniTech sendiri | keputusan Anda |
+| Domain .com (add-on pelanggan) | **Rp 250.000/tahun, flat** | **keputusan Anda** |
 | Biaya CAC | nol, diasumsikan organic | **asumsi saya** |
 | Pajak (PPh) | **Rezim A, final 0,5% dari omzet** | **keputusan Anda, perlu konfirmasi konsultan** |
 | Omzet PT Perorangan yang sudah ada | Rp 3,2 miliar (asumsi tetap) | **perlu data Anda** |
@@ -880,5 +1020,10 @@ Koreksi ketiganya masuk di versi ini. Asumsi jam CPU per tahun (600, 900,
 280, 650, 1.500) diganti jadi **0,3 jam per pelanggan aktif per bulan**,
 karena angka per tahun itu melonjak-turun tanpa alasan yang bisa dijelaskan
 — 900 jam CPU di 2027 dengan 178 pelanggan tidak masuk akal. Dengan model
-berbasis pelanggan, biaya CPU tidak pernah melonjak dan total infrastruktur
-turun dari Rp 166.562.688 menjadi Rp 147.315.186.
+berbasis pelanggan, biaya CPU tidak pernah melonjak.
+
+Koreksi keempat: kurs dinaikkan dari **Rp 16.000 ke Rp 18.037/USD** — harga
+real-time yang Anda cek pada 28 September 2026. Ini menaikkan total
+infrastruktur dari Rp 147.315.186 menjadi Rp 166.070.251, dan menurunkan
+margin bersih sebesar Rp 18,8 juta (0,22%). Dampak kecil karena
+infrastruktur cuma 2% dari pendapatan.
