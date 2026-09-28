@@ -3,7 +3,7 @@
 Status: proyeksi, bukan ramalan. Semua angka dihitung dari `src/lib/plans.ts`
 (harga paket) dan `PRD.md` bagian Biaya (pembagian fee), dengan asumsi
 pertumbuhan dan biaya yang dinyatakan terbuka di
-[Bagian 11](#11-asumsi-yang-dapat-diubah). Angka biaya infrastruktur diambil dari
+[Bagian 12](#12-asumsi-yang-dapat-diubah). Angka biaya infrastruktur diambil dari
 halaman pricing resmi yang berlaku saat dokumen ini ditulis, bukan dari ingatan.
 
 Ringkasan satu kalimat: **margin bersihnya naik dari Rp 7,7 juta per bulan
@@ -706,14 +706,19 @@ tapi kemampuan menjaga pertumbuhan menuju 1.000 pada 2030.
 8. **Dana yang dibutuhkan hanya sekitar Rp 2,7 juta**, di bulan pertama, dan
    itu hampir seluruhnya biaya infrastruktur. Tidak perlu modal ventura. Tidak ada modal yang memaksa tumbuh cepat, jadi
    pertumbuhan harus datang dari prioritas, bukan tekanan pendanaan.
-9. **Tawarkan add-on domain Rp 250.000/tahun, dengan suspend otomatis.**
+9. **Jasa Legalitas PT Perorangan: jangan dijual terpisah, dan jangan
+   dipanggil "legalitas".** Marjinnya 90% tapi seluruh isinya gratis
+   di luar PNBP Rp 50.000 dan bisa dikerjakan sendiri pelanggan dalam
+   2 hari. Satu-satunya tempatnya masuk akal adalah menempel di pendaftaran
+   langganan. Rinciannya di [Bagian 11](#11-add-on-jasa-legalitas-pt-perorangan--rp-500000).
+10. **Tawarkan add-on domain Rp 250.000/tahun, dengan suspend otomatis.**
    Marjin Rp 61.333 per invoice (24,5%) aman dari churn karena Cloudflare
    ditagih lunas di awal — laba Rp 51 juta dalam 4,2 tahun pada take-up 60%.
    Yang menentukan bukan keuntungannya tapi kewajiban suspend: tanpa itu,
    Rp 188 juta per tahun bisa hilang dari domain yang tidak ditagih.
    Rinciannya di [Bagian 10](#10-add-on-domain-com).
 10. **Hitung ulang dokumen ini setiap kali asumsi berubah.** Seluruh asumsi
-   terkumpul di [Bagian 11](#11-asumsi-yang-dapat-diubah).
+   terkumpul di [Bagian 12](#12-asumsi-yang-dapat-diubah).
 
 ---
 
@@ -1108,7 +1113,145 @@ nilai itu jauh lebih besar dari Rp 231 juta.
 
 ---
 
-## 11. Asumsi yang dapat diubah
+## 11. Add-on "Jasa Legalitas PT Perorangan" — Rp 500.000
+
+Ditetapkan pemilik produk 2026-09-28. **Belum masuk ke proyeksi margin di
+Bagian 2 dan 4** — alasannya ada di bawah, dan alasannya bukan sekadar
+"belum diputuskan".
+
+### Isi paket
+
+| Item | Sumber | Biaya ke FurniTech |
+|---|---|---|
+| Pendaftaran AHU (SABH) + Sertifikat Pendaftaran | PNBP negara | **Rp 50.000** |
+| Pernyataan Pendirian (e-Akta) | AHU | **Rp 0** |
+| NIB | OSS, gratis | **Rp 0** |
+| NPWP Elektronik | DJP, gratis | **Rp 0** |
+| Logo perusahaan | dikerjakan sendiri | **Rp 0** |
+| **Total biaya cash** | | **Rp 50.000** |
+
+Sumber tarif: **PP 30/2026** (berlaku 1 Agustus 2026), pasal 33 —
+*"Pendaftaran Pendirian Perseroan Perorangan untuk Usaha Mikro dan Kecil,
+per permohonan 50.000,00"*. Dikonfirmasi juga di portal resmi Ditjen AHU:
+Rp 50.000,00 per permohonan, jangka waktu **real time**.
+
+### Koreksi: tidak ada "Akta Perusahaan"
+
+Daftar awal menyebut "Akta Perusahaan". **Dokumen itu tidak ada untuk PT
+Perorangan** dan tidak akan pernah terbit:
+
+- PT Persekutuan Modal → akta notaris, wajib.
+- **PT Perorangan → Pernyataan Pendirian yang diisi sendiri secara elektronik
+  di SABH.** Tidak ada notaris, tidak ada akta.
+
+Kwitansi resmi Ditjen AHU: *"Pendirian sangat mudah, bisa dilakukan sendiri
+secara online (tidak perlu ke notaris)."*
+
+Kalau FurniTech menjanjikan "Akta Perusahaan", pelanggan akan menagih dokumen
+yang tidak pernah ada, dan klaim legalitasnya jadi tidak bisa dipertanggungjawabkan.
+Yang benar dan setara nilainya: **Pernyataan Pendirian (e-Akta) + Sertifikat
+Pendaftaran Perseroan Perorangan**.
+
+### Marjin, dan kenapa produk ini belum masuk proyeksi
+
+```
+Harga jual              Rp 500.000
+Biaya PNBP              Rp  50.000
+─────────────────────────────
+Marjin per pelanggan    Rp 450.000   (90%)
+```
+
+Marjin 90% dan risikonya nol — secara aritmetika produk ini menang telak.
+Pembandingnya ada di baris **"mandiri"** di bawah:
+
+```
+Mandiri lewat AHU Online   Rp  50.000
+Sertifikat                real time
+Tanpa perlu menunggu siapa pun
+```
+
+Semua item di paket ini **dapat dikerjakan sendiri oleh pelanggan tanpa
+bantuan siapa pun**, karena semuanya gratis kecuali PNBP Rp 50.000. Yang
+dibeli pelanggan seharga Rp 450.000 adalah kesederhanaan — bukan
+menghindari proses yang sulit, karena prosesnya memang tidak sulit.
+
+Bukan itu alasan utamanya menolak. Alasan utamanya: **produk ini tidak
+menggunakan apa pun milik FurniTech**. Pelanggan yang sudah berhenti tidak
+punya alasan untuk membayar — tidak ada onboarding, tidak ada integrasi
+dengan langganan, tidak ada yang mengikat mereka. Ini berbeda dari add-on
+domain, yang memaksa mereka bertahan minimal satu tahun.
+
+Kalau add-on ini tetap dijual, ada tempat yang masuk akal: disatukan ke dalam
+**pendaftaran langganan** sebagai titik masuk, bukan dijual terpisah di
+etalase. Pelanggan baru mendaftarkan PT-nya **sekaligus** membuka toko di
+FurniTech, dan FurniTech yang mengurus keduanya. Di situ Rp 450.000 bukan
+biaya tambahan — itu ongkos untuk mengajari pengrajin yang belum tahu bahwa
+mendirikan perusahaan dan membuka toko itu dua hal berbeda.
+
+### Risiko hukum yang harus dicatat
+
+**UU 18/2003 tentang Advokat, Pasal 1:** *"Setiap orang yang dengan sengaja
+menjalankan pekerjaan profesi Advokat dan bertindak seolah-olah sebagai
+Advokat, tetapi bukan Advokat, dipidana dengan pidana penjara paling lama
+5 (lima) tahun dan denda paling banyak Rp 50.000.000,00."*
+
+Batasnya nyata dan tidak kabur:
+
+| Boleh | Tidak boleh |
+|---|---|
+| Mengisi formulir pendaftaran atas nama pelanggan | Memberikan nasihat hukum |
+| Mengecek ketersediaan nama di AHU | Menentukan strategi hukum |
+| Mempilih KBLI yang sesuai jenis usaha | Menafsirkan aturan yang ambigu |
+| Mengurus NIB & NPWP di OSS | Mewakili klien dalam sengketa |
+| Membuat logo | Menjanjikan hasil hukum |
+
+Semua pekerjaan di paket ini ada di kolom kiri. **Tidak ada satu pun di kolom
+kanan.** Pengisian formulir administratif bukan praktik Advokat.
+
+Tapi nama yang dipakai pelanggan adalah "**Jasa Legalitas**" — dan "legalitas"
+dalam kosa kata orang adalah domain Advokat, bukan domain administrasi.
+UMKM tidak melihat perbedaan itu. Risiko reputasinya nyata meskipun
+unsurnya tidak ada.
+
+**Yang paling mungkin terjadi bukan hukum, tapi praktis:** pelanggan
+membaca "legalitas", conferencing ke pengrajin berikutnya, lalu ekspektasinya
+naik ke "masalah perusahaan juga ikut ditangani". Di titik itu FurniTech
+menang Rp 450.000 dan kehilangan pelanggan.
+
+### Rekomendasi
+
+1. **Ubah nama jadi "Pendampingan Pendirian PT Perorangan".** Satu kata
+   "pendampingan" menghapus seluruh ambiguitas yang ada di kata
+   "legalitas", dan tidak mengubah apa yang benar-benar dikerjakan.
+2. **Jangan jual terpisah.** Tempelkan ke pendaftaran langganan sebagai
+   biaya sekali bayar, seperti pada butir 3.
+3. **Cantumkan batasnya di halaman.** Satu kalimat — *"Pelayanan
+   administrasi dan pengurusan dokumen, bukan konsultasi hukum"* — menghapus
+   sebagian besar risiko dan menambah kredibilitas di mata pembeli.
+4. **Kalau tetap mau nama "Jasa Legalitas",** ikat ke Advokat/Notaris rekanan
+   dan biarkan mereka yang menandatangani. Margin turun, risiko hilang.
+
+### Kalau memutuskan tetap menjual
+
+Dengan take-up 20% dari pelanggan baru (angka tebakan saya — tidak ada
+data), dan Release hanya di bulan-bulan rekrutan:
+
+| | 4,2 tahun |
+|---|---|
+| Pelanggan ditawari | 325 orang |
+| Yang mengambil (20%) | 65 orang |
+| Omzet | Rp 32.500.000 |
+| Biaya PNBP | −Rp 3.250.000 |
+| Tambahan PPh 0,5% | −Rp 162.500 |
+| **Tambahan margin** | **Rp 29.087.500** |
+
+**0,33% dari margin Rp 8,69 miliar.** Tidak mengubah kesimpulan apa pun
+tentang bisnis ini, dan menambah satu kewajiban hukum. Itu sebabnya tidak
+dimasukkan ke proyeksi utama.
+
+---
+
+## 12. Asumsi yang dapat diubah
 
 | Asumsi | Nilai | Sumber |
 |---|---|---|
@@ -1120,6 +1263,7 @@ nilai itu jauh lebih besar dari Rp 231 juta.
 | Bauran paket | 60 / 30 / 10 | **asumsi Anda** |
 | Porsi bayar tahunan | 30% | **asumsi saya** |
 | Churn | 3% per bulan | **asumsi Anda** — lihat catatan di Bagian 10 |
+| Add-on "Jasa Legalitas PT Perorangan" | Rp 500.000, biaya PNBP Rp 50.000 | **keputusan Anda** — belum masuk proyeksi, Bagian 11 |
 | Take-up add-on domain | 60% pelanggan, Rp 250.000/tahun | **asumsi saya** |
 | Inflasi harga | 5% per tahun | **asumsi Anda** |
 | Kurs USD | **Rp 18.037** | harga real-time 28 Sep 2026 |
