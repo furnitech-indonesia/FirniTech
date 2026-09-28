@@ -129,7 +129,7 @@ function jalankan() {
     perTahun[y] = {
       omzet: 0, fee: 0, pph: 0, infra: 0, admin: 0, root: 0,
       omzetDomain: 0, biayaDomain: 0, omzetLegalitas: 0, bebanLegalitas: 0,
-      feeLegalitas: 0, margin: 0,
+      feeLegalitas: 0, feeDomain: 0, margin: 0,
     };
   }
   const bulan = [];
@@ -175,6 +175,17 @@ function jalankan() {
       if (bln === 1) tagihDomain += domainAktif;
       const omzetDomain = tagihDomain * HARGA_DOMAIN;
       const biayaDomain = ambilDomain * ASLI_DOMAIN;
+      /*
+       * Fee Midtrans juga berlaku untuk add-on domain.
+       *
+       * Ini dulu TIDAK dihitung, dan itu kelalaian: `createDomainInvoice`
+       * memanggil `createSaasCharge` yang memanggil `createSnapCharge`, jadi
+       * tagihannya lewat Midtrans dan fee Rp 4.440 benar-benar terpakai.
+       * Yang hilang cuma Rp 3,7 juta dalam 4,2 tahun - cukup kecil untuk
+       * lolos tanpa terlihat, dan cukup nyata untuk tidak boleh ditulis
+       * bahwa gratis.
+       */
+      const feeDomain = ambilDomain * FEE;
       domainAktif = (domainAktif + ambilDomain) * (1 - CHURN);
 
       // Add-on legalitas: sekali bayar, hanya di bulan rekrut.
@@ -194,19 +205,19 @@ function jalankan() {
 
       const omzet = ro + omzetDomain + omzetLegalitas;
       const pph = omzet * PPH;
-      const biaya = rf + infra + admin + biayaDomain + bebanLegalitas + feeLegalitas + root;
+      const biaya = rf + infra + admin + biayaDomain + bebanLegalitas + feeLegalitas + feeDomain + root;
       const margin = omzet - biaya - pph;
 
       bulan.push({
         tahun, bln, pelanggan, omzet: ro, fee: rf, pph, infra, admin, root,
-        omzetDomain, biayaDomain, omzetLegalitas, bebanLegalitas, feeLegalitas, margin,
+        omzetDomain, biayaDomain, omzetLegalitas, bebanLegalitas, feeLegalitas, feeDomain, margin,
       });
       const T = perTahun[tahun];
       T.omzet += ro; T.fee += rf; T.pph += pph; T.infra += infra;
       T.admin += admin; T.root += root;
       T.omzetDomain += omzetDomain; T.biayaDomain += biayaDomain;
       T.omzetLegalitas += omzetLegalitas; T.bebanLegalitas += bebanLegalitas;
-      T.feeLegalitas += feeLegalitas; T.margin += margin;
+      T.feeLegalitas += feeLegalitas; T.feeDomain += feeDomain; T.margin += margin;
     }
   }
   return { bulan, perTahun, rekrutan };
@@ -247,14 +258,15 @@ const hasil = [];
 const catat = (nama, lulus, pesan) => hasil.push({ nama, lulus, pesan });
 
 // --- Total 4,2 tahun -------------------------------------------------------
-sama("Margin bersih 4,2 th", sum((b) => b.margin), 8_801_752_510);
-sama("Rata-rata margin per bulan", sum((b) => b.margin) / 51, 172_583_383);
+sama("Margin bersih 4,2 th", sum((b) => b.margin), 8_797_420_079);
+sama("Rata-rata margin per bulan", sum((b) => b.margin) / 51, 172_498_433);
 sama("Omzet langganan", sum((b) => b.omzet), 8_747_955_569);
 sama("Omzet domain", sum((b) => b.omzetDomain), 417_343_184);
 sama("Biaya domain", sum((b) => b.biayaDomain), 184_096_134);
 sama("Omzet legalitas", sum((b) => b.omzetLegalitas), 162_628_789);
 sama("Beban legalitas", sum((b) => b.bebanLegalitas), 48_788_637);
 sama("Fee legalitas", sum((b) => b.feeLegalitas), 1_444_144);
+sama("Fee domain", sum((b) => b.feeDomain), 4_332_431);
 sama("PPh total", sum((b) => b.pph), 46_639_638);
 sama("Infrastruktur", sum((b) => b.infra), 166_394_430);
 sama("Legal + admin", sum((b) => b.admin), 16_500_000);
@@ -268,8 +280,8 @@ sama(
 
 // --- Margin per bulan per tahun ---------------------------------------------
 const MARGIN_TAHUN = {
-  2026: 11_092_890, 2027: 55_246_282, 2028: 104_662_324,
-  2029: 198_138_318, 2030: 372_659_229,
+  2026: 10_998_541, 2027: 55_217_052, 2028: 104_610_520,
+  2029: 198_046_080, 2030: 372_495_053,
 };
 for (const y of TAHUN) {
   sama(`Margin rata-rata ${y}`, T[y].margin / nBulanTahun(y), MARGIN_TAHUN[y]);

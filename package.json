@@ -40,7 +40,8 @@
     "test:pwa": "tsx scripts/test-pwa.ts",
     "test:lacak": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-lacak.ts",
     "check:proyeksi": "node scripts/check-projection.mjs",
-    "test:addons": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-addons.ts"
+    "test:addons": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-addons.ts",
+    "test:revenue": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-revenue.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

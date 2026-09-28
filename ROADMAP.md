@@ -1014,6 +1014,79 @@ TES HARUS MENYIAPKAN KEADAAN AWALNYA SENDIRI
   keadaan awal bisa lulus di mesin bersih dan gagal di yang sudah pernah
   dipakai. `ujiOverrideHarga` sekarang memanggil `setOverride(null)` dulu.
 
+━━━ Sprint 6 — Rekap pendapatan platform (2026-09-28) ━━━
+
+STATUS: SELESAI, `npm run test:revenue` 18 pemeriksaan (semua lulus).
+
+MASALAH YANG DIPERBAIKI
+
+  Panel admin TIDAK PERNAH menampilkan pendapatan platform. Variabelnya
+  bernama `mrr`, tapi isinya `sum(orders.net_tenant_amount)` -- itu SALDO
+  PENGRAJIN, bukan pendapatan berulang. Kolom `platformFee` bahkan
+  dipilih lalu tidak pernah dipakai. Komentarnya menulis "pendapatan
+  platform hanya dari langganan (baris MRR di atas)" padahal baris itu
+  tidak pernah berisi pendapatan platform.
+
+  Sekarang ada `src/lib/admin/revenue.ts` sebagai satu-satunya sumber
+  angka, dan panel menampilkan DUA kelompok yang tidak boleh dicampur:
+    "Pendapatan platform"  dari saas_invoices -- uang yang masuk ke FurniTech
+    "Aliran transaksi"     dari orders        -- uang milik pengrajin
+
+TIGA DEFINISI YANG DIJAGA (dan masing-masing punya pemeriksaan sendiri)
+
+  1. MRR = pendapatan berulang / jumlah bulan. Invoice tahunan Rp 3.420.000
+     menambah Rp 285.000, bukan Rp 3.420.000. Tanpa normalisasi, bulan jatuh
+     tempo tahunan terlihat seperti lonjakan pendapatan yang tidak terjadi.
+  2. Legalitas BUKAN MRR. Sekali bayar. Kalau ikut dihitung, MRR naik Rp
+     500.000 setiap ada yang beli lalu turun lagi sebulan kemudian, dan
+     terlihat seperti pertumbuhan yang sebenarnya tidak ada.
+  3. Satu (tenant, jenis) dihitung SATU KALI, memakai `period_end` paling
+     jauh. Pelanggan yang membayar domain dua tahun berturut-turut punya dua
+     invoice lunas; menjumlahkan keduanya menghitung tahun yang belum dibayar.
+
+  Dasarnya `saasInvoices.amount` -- snapshot harga saat invoice terbit --
+  BUKAN harga di plans.ts/addons.ts. Kalau yang dijumlahkan konstanta, rekap
+  melapor sesuatu yang tidak pernah ditagih, dan tetap "benar" setelah owner
+  mengubah harga lewat panel.
+
+BUG YANG DITEMUKAN SAAT MEMBUATNYA
+
+  1. `sql<number>` HANYA cast TypeScript. `count(*)::bigint` dan `sum(...)`
+     kembali dari postgres.js sebagai STRING, jadi `tenantDenganDomainAktif
+     === 1` bernilai FALSE padahal nilainya 1. Pesannya tidak menyiratkan
+     apa pun soal tipe. Semua nilai dari postgres.js harus dibungkus
+     `Number()`.
+  2. `sql` template dengan kolom `timestamptz` melempar
+     `ERR_INVALID_ARG_TYPE` kalau diberi objek `Date` -- dan error itu dari
+     DRIVER, bukan dari Postgres, jadi tidak menyiratkan apa pun soal kolom.
+     Harus `toISOString()`.
+  3. Tabel rincian pertama TIDAK punya padanan kartu di mobile, jadi
+     `test:responsive` turun dari 23 ke 22. Bukan aturan formalitas: tabel
+     tiga kolom di 375px memaksa scroll horizontal, dan angka terpenting
+     (bersih bulan ini) justru keluar dari layar.
+
+PROVEN: TES DI-SABOTASE
+  `return 1;` di `bulanDalam()` (hilang normalisasi tahunan) ->
+    GAGAL  invoice tahunan Rp 3.420.000 = MRR Rp 285.000 -- mrrLangganan=3720000
+    GAGAL  MRR tahunan BUKAN sebesar nominal invoice
+    GAGAL  dua invoice domain beririsan dihitung SATU KALI
+  15/18 lulus, dikembalikan -> 18/18.
+
+KOREKSI PROYEKSI YANG TERNYATAKAN PEKERJAAN INI
+
+  Fee Midtrans untuk add-on DOMAIN tidak pernah dihitung di
+  docs/proyeksi-revenue.md, padahal createDomainInvoice memanggil
+  createSaasCharge yang memanggil createSnapCharge -- jadi fee-nya benar-benar
+  terpakai. Kelalaian Rp 4.332.431 dalam 4,2 tahun: cukup kecil untuk lolos
+  tanpa terlihat, cukup nyata untuk tidak boleh ditulis sebagai gratis.
+  Margin turun dari Rp 8.801.752.510 menjadi Rp 8.797.420.079.
+  `check:proyeksi` sekarang 57 pemeriksaan (tambah satu untuk Fee domain).
+
+REGRESI
+  test:revenue 18/18, test:addons 51/51, check:proyeksi 57/57,
+  test:webhook, test:rekening, test:payout, test:cod, test:settings,
+  test:sprint3 16/16, test:responsive 23/23.
+
 ━━━ Konsistensi dokumen proyeksi (2026-09-28) ━━━
 
 MASALAH YANG DISELESAIKAN

@@ -176,20 +176,21 @@ nominalnya.
 
 | Tahun | Bln | **Margin bersih/bln** | Pelanggan akhir tahun |
 |---|---|---|---|
-| 2026 | 3 | **Rp 11.092.890** | 100 |
-| 2027 | 12 | **Rp 55.246.282** | 178 |
-| 2028 | 12 | **Rp 104.662.324** | 316 |
-| 2029 | 12 | **Rp 198.138.318** | 562 |
-| 2030 | 12 | **Rp 372.659.229** | 1000 |
+| 2026 | 3 | **Rp 10.998.541** | 100 |
+| 2027 | 12 | **Rp 55.217.052** | 178 |
+| 2028 | 12 | **Rp 104.610.520** | 316 |
+| 2029 | 12 | **Rp 198.046.080** | 562 |
+| 2030 | 12 | **Rp 372.495.053** | 1000 |
 
-Rata-rata 51 bulan: **Rp 172.583.383 per bulan**.
+Rata-rata 51 bulan: **Rp 172.498.433 per bulan**.
 
 ### Total 4,2 tahun
 
 | Komponen | Jumlah |
 |---|---|
 | Omzet langganan | Rp 8.747.955.569 |
-| Fee Midtrans | −Rp 61.368.715 |
+| Fee Midtrans langganan | −Rp 61.368.715 |
+| Fee Midtrans add-on domain | −Rp 4.332.431 |
 | PPh final 0,5% (semua omzet) | −Rp 46.639.638 |
 | Infrastruktur | −Rp 166.394.420 |
 | Legal dan admin (2027–2030 saja) | −Rp 16.500.000 |
@@ -198,8 +199,8 @@ Rata-rata 51 bulan: **Rp 172.583.383 per bulan**.
 | Biaya domain Cloudflare | −Rp 184.096.134 |
 | Add-on paket pendirian PT (20% ambil) | +Rp 162.628.789 |
 | Beban paket pendirian PT (PNBP + operasional) | −Rp 48.788.637 |
-| Fee Midtrans invoice legalitas | −Rp 1.444.144 |
-| **Margin bersih** | **Rp 8.801.752.510 (94,4% dari omzet)** |
+| Fee Midtrans paket pendirian PT | −Rp 1.444.144 |
+| **Margin bersih** | **Rp 8.797.420.079 (94,4% dari omzet)** |
 
 ### Rincian 51 bulan
 
@@ -533,24 +534,24 @@ Rincian omzet, margin, dan biaya per bulan ada di
 
 | Tahun | Bln | **Margin bersih/bln** | Pelanggan akhir tahun |
 |---|---|---|---|
-| 2026 | 3 | **Rp 11.092.890** | 100 |
-| 2027 | 12 | **Rp 55.246.282** | 178 |
-| 2028 | 12 | **Rp 104.662.324** | 316 |
-| 2029 | 12 | **Rp 198.138.318** | 562 |
-| 2030 | 12 | **Rp 372.659.229** | 1000 |
-| **Total 4,2 th** | | **Rp 8.801.752.510** | |
+| 2026 | 3 | **Rp 10.998.541** | 100 |
+| 2027 | 12 | **Rp 55.217.052** | 178 |
+| 2028 | 12 | **Rp 104.610.520** | 316 |
+| 2029 | 12 | **Rp 198.046.080** | 562 |
+| 2030 | 12 | **Rp 372.495.053** | 1000 |
+| **Total 4,2 th** | | **Rp 8.797.420.079** | |
 
-Rata-rata 51 bulan: **Rp 172.583.383 per bulan**.
+Rata-rata 51 bulan: **Rp 172.498.433 per bulan**.
 
 ### Kapan cukup untuk gaji
 
 | Margin/bln | Pelanggan aktif | Setara gaji per orang (bila 50:50) |
 |---|---|---|
-| Rp 11.092.890 (rata-rata 2026) | 100 | Rp 5.546.445 |
-| Rp 55.246.282 (rata-rata 2027) | 178 | Rp 27.623.141 |
-| Rp 104.662.324 (rata-rata 2028) | 316 | Rp 52.331.162 |
-| Rp 198.138.318 (rata-rata 2029) | 562 | Rp 99.069.159 |
-| Rp 372.659.229 (rata-rata 2030) | 1000 | Rp 186.329.614 |
+| Rp 10.998.541 (rata-rata 2026) | 100 | Rp 5.499.270 |
+| Rp 55.217.052 (rata-rata 2027) | 178 | Rp 27.608.526 |
+| Rp 104.610.520 (rata-rata 2028) | 316 | Rp 52.305.260 |
+| Rp 198.046.080 (rata-rata 2029) | 562 | Rp 99.023.040 |
+| Rp 372.495.053 (rata-rata 2030) | 1000 | Rp 186.247.526 |
 
 **2026 tidak bisa menanggung gaji apa pun.** Mulai 2027 margin rata-rata
 Rp 53,3 juta per bulan, jadi gaji Rp 25 juta per orang sudah tertutup.
@@ -892,13 +893,13 @@ sama dengan total margin di Bagian 4, jadi perbandingannya fair.
 
 | | |
 |---|---|
-| **Total** | **Rp 9.327.927.542** | **Rp 8.895.354.431** | **Rp 1.953.277.039** | **Rp 3.471.038.696** | **Rp 347.103.870** | **Rp 3.123.934.826** | **Rp 8.801.752.510** |
+| **Total** | **Rp 9.327.927.542** | **Rp 8.895.354.431** | **Rp 1.953.277.039** | **Rp 3.471.038.696** | **Rp 347.103.870** | **Rp 3.123.934.826** | **Rp 8.797.420.079** |
 
 Dividen yang diterima WP Orang Pribadi dalam negeri dikenai PPh final 10%
 (PP 55/2022 Pasal 23 huruf m). Karena itu kolom "Anda net" adalah **setelah**
 pajak.
 
-Bandingkan dengan Rezim A: bagian Anda **Rp 8.801.752.510** dengan
+Bandingkan dengan Rezim A: bagian Anda **Rp 8.797.420.079** dengan
 Rezim B **Rp 3.123.934.826**. Selisihnya **Rp 5,68 miliar** dalam 4,2
 tahun — hampir dua kali seluruh margin di Rezim A.
 
@@ -1118,7 +1119,8 @@ marjin per invoice.
 |---|---|
 | Omzet langganan | Rp 8.747.955.569 |
 | **Omzet add-on domain** | **Rp 417.343.184** |
-| Fee Midtrans | −Rp 61.368.715 |
+| Fee Midtrans langganan | −Rp 61.368.715 |
+| Fee Midtrans add-on domain | −Rp 4.332.431 |
 | PPh final 0,5% (termasuk omzet domain) | −Rp 45.826.494 |
 | Infrastruktur | −Rp 166.394.420 |
 | Legal dan admin | −Rp 16.500.000 |
@@ -1126,8 +1128,8 @@ marjin per invoice.
 | **Biaya domain Cloudflare** | **−Rp 184.096.134** |
 | **Omzet paket pendirian PT** | **+Rp 162.628.789** |
 | Beban paket pendirian PT (PNBP Rp 50.000 + operasional Rp 100.000) | **−Rp 48.788.637** |
-| Fee Midtrans invoice legalitas (Rp 4.440 × 325) | **−Rp 1.444.144** |
-| **Margin bersih** | **Rp 8.801.752.510** |
+| Fee Midtrans paket pendirian PT (Rp 4.440 × 325) | **−Rp 1.444.144** |
+| **Margin bersih** | **Rp 8.797.420.079** |
 
 Tanpa add-on, marginnya Rp 8.460.276.826. Jadi add-on menambah
 **Rp 231.158.800 (+2,73%)** dan menaikkan margin per bulan dari
@@ -1300,8 +1302,8 @@ order masuk.
 
 | | Tanpa add-on | Dengan add-on (20%) |
 |---|---|---|
-| Margin 4,2 tahun | Rp 8.690.492.291 | **Rp 8.801.752.510** |
-| Rata-rata per bulan | Rp 170.401.810 | **Rp 172.583.383** |
+| Margin 4,2 tahun | Rp 8.690.492.291 | **Rp 8.797.420.079** |
+| Rata-rata per bulan | Rp 170.401.810 | **Rp 172.498.433** |
 | **Delta** | | **+Rp 111.582.865 (+1,28%)** |
 
 Porsi per tahun:

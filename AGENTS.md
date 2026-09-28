@@ -74,8 +74,9 @@ npm run test:pwa      # 20 pemeriksaan PWA & luring (menyalakan servernya sendir
 npm run test:webhook   # 46 uji: skema, signature, gerbang tenant, e2e webhook
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
-npm run check:proyeksi  # 56 pemeriksaan konsistensi docs/proyeksi-revenue.md
+npm run check:proyeksi  # 57 pemeriksaan konsistensi docs/proyeksi-revenue.md
 npm run test:addons    # 51 pemeriksaan add-on: domain, pendirian PT, override harga
+npm run test:revenue    # 18 pemeriksaan rekap pendapatan platform (MRR)
 ```
 
 **`test:visual` satu-satunya alat yang bisa melihat halaman.** Semua test lain
@@ -817,6 +818,44 @@ JEBRAKAN SQL YANG MENYEBABKAN 20 MENIT HILANG
      tapi karena kebetulan tidak punya statement yang bermasalah.
   3. `platform_settings_domain_price_floor` WAJIB dinamai di `add constraint`,
      bukan cuma saat di-comment — supaya bisa di-drop dengan `if exists`.
+
+## Rekap pendapatan platform (Sprint 6)
+
+- **`src/lib/admin/revenue.ts` adalah satu-satunya sumber angka pendapatan.**
+  Dasarnya `saasInvoices.amount` — snapshot harga saat invoice terbit — BUKAN
+  harga di `plans.ts`/`addons.ts`. Kalau yang dijumlahkan harga konstanta,
+  rekap akan melapor sesuatu yang tidak pernah ditagih.
+- **Tiga definisi yang tidak boleh dicampur:**
+  1. **MRR = pendapatan berulang / jumlah bulan.** Invoice tahunan
+     Rp 3.420.000 menambah Rp 285.000, bukan Rp 3.420.000. Tanpa
+     normalisasi, bulan jatuh tempo tahunan terlihat seperti lonjakan.
+  2. **Legalitas bukan MRR** — sekali bayar. Kalau ikut dihitung, MRR naik lalu
+     turun sebulan kemudian dan terlihat seperti pertumbuhan.
+  3. **Satu (tenant, jenis) dihitung SATU KALI**, memakai `period_end` paling
+     jauh. Kalau tidak, pelanggan yang membayar domain dua tahun berturut-turut
+     dihitung dua tahun padahal hanya satu yang sudah dibayar.
+- **Invoice yang periodenya sudah lewat atau belum dibayar TIDAK masuk MRR.**
+  Syaratnya `period_start <= hari ini < period_end` DAN `status = 'paid'`.
+- **`sql<number>` HANYA cast TypeScript.** `count(*)::bigint` dan
+  `sum(...)` kembali dari postgres.js sebagai STRING; harus dibungkus
+  `Number()`. Tanpa itu `=== 1` bernilai false meski angkanya benar — dan
+  pesannya tidak menyiratkan apa pun soal tipe.
+- **Kolom `timestamptz` lewat `sql` template harus `toISOString()`.** Mengirim
+  objek `Date` melempar `ERR_INVALID_ARG_TYPE` dari DRIVER, bukan dari
+  Postgres, jadi pesannya tidak menyiratkan apa pun soal kolom.
+- **Fee Midtrans berlaku untuk SEMUA tagihan Midtrans**: langganan, add-on
+  domain, DAN paket pendirian PT. Yang tidak kena hanya tagihan pesanan
+  pembeli (fee-nya dipotong dari pengrajin).
+  Fee domain Add-on pernah tidak dihitung di proyeksi — kelalaian
+  Rp 4.332.431 dalam 4,2 tahun, sudah dikoreksi.
+- **Panel admin menampilkan DUA kelompok angka yang tidak boleh dicampur:**
+  "Pendapatan platform" (dari `saas_invoices`) dan "Aliran transaksi"
+  (dari `orders`, milik pengrajin). Versi lama menamai variabel `mrr` padahal
+  isinya `sum(orders.net_tenant_amount)` — itu saldo pengrajin.
+- **Tabel baru di `app/` wajib punya padanan kartu di mobile** (`md:hidden` +
+  `overflow-x-auto`), kalau tidak `test:responsive` gagal. Itu bukan aturan
+  formalitas: tabel tiga kolom di 375px memaksa scroll horizontal, dan
+  angka terpenting justru keluar dari layar.
 
 ## Dokumen proyeksi revenue
 
