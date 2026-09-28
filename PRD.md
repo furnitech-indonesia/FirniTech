@@ -4,20 +4,21 @@ Tipe Platform: SaaS Multi-Tenant (B2B2C E-Commerce & Internal Operations for Fur
 Versi PRD: 2.0
 Status: Approved for Development
 Catatan Revisi:
- * v2.0 — **Add-on "Paket Pendirian PT Perorangan" Rp500.000** (§2.E). Nama
-   sebelumnya "Jasa Legalitas PT Perorangan" diganti karena kata "legalitas"
-   memunculkan pertanyaan yang tidak perlu muncul — apakah ia pengacara —
-   sementara isinya semuanya pengurusan administratif. Isi paket: pendaftaran
-   AHU/SABH + Sertifikat Pendaftaran, NIB di OSS, NPWP Elektronik, dan logo
-   perusahaan. **"Akta Perusahaan" DIHAPUS dari daftar** karena dokumen itu
-   tidak pernah terbit untuk PT Perorangan: yang ada adalah Pernyataan
-   Pendirian yang diisi sendiri secara elektronik, tanpa notaris. Biaya resmi
-   hanya **PNBP Rp50.000** (PP 30/2026 pasal 33, berlaku 1 Agustus 2026);
-   sisanya gratis dan dikerjakan pemilik usaha sendiri lewat AHU Online dalam
-   2 hari. Karena itu add-on ini **tidak masuk** proyeksi margin —
-   dampaknya 0,33% dan nilainya bukan pada uang, tapi pada titik masuk pelanggan
-   baru. Detail dan alasannya di `docs/proyeksi-revenue.md` Bagian 11.
-   Tidak ada perubahan harga paket.
+ * v2.0 — **Add-on "Paket Pendirian PT Perorangan" Rp500.000** (§2.E), dan
+   add-on ini **sudah masuk** proyeksi margin. Nama sebelumnya "Jasa Legalitas
+   PT Perorangan" diganti karena kata "legalitas" memunculkan pertanyaan yang
+   tidak perlu muncul — apakah ia pengacara — sementara isinya semuanya
+   pengurusan administratif. Isi paket: pendaftaran AHU/SABH + Sertifikat
+   Pendaftaran, NIB di OSS, NPWP Elektronik, dan logo perusahaan. **"Akta
+   Perusahaan" DIHAPUS dari daftar** karena dokumen itu tidak pernah terbit
+   untuk PT Perseroan Perorangan: yang ada adalah Pernyataan Pendirian yang
+   diisi sendiri secara elektronik, tanpa notaris. Beban per pelanggan
+   **Rp150.000** = PNBP Rp50.000 (PP 30/2026 pasal 33, berlaku 1 Agustus 2026)
+   + ongkos pengurusan Rp100.000, jadi margin bersih 68,6% setelah fee
+   Midtrans Rp4.440 dan PPh 0,5%. Dengan take-up 20% dari rekrut, tambahan
+   margin **Rp111,6 juta dalam 4,2 tahun (+1,28%)** — dan angka itu tidak
+   bergantung pada take-up maupun churn. Perhitungan lengkap di
+   `docs/proyeksi-revenue.md` Bagian 11. Tidak ada perubahan harga paket.
  * v1.9 — **Root domain ditetapkan: `mebeltech.com`.** Dipilih `.com` dan bukan
    `.id`/`.co.id` karena hanya `.com` yang tidak butuh verifikasi legalitas
    usaha di Pornas. Dicek ke RDAP Verisign (registry `.com` resmi) pada
@@ -41,8 +42,7 @@ Catatan Revisi:
    diunggah kurir sebagai ganti jadwal 06.00/18.00 WIB, metode COD
    ditambahkan, peran Kurir diperkenalkan, diskon langganan tahunan jadi 5%,
    dan harga dinyatakan belum termasuk PPN karena perusahaan belum PKP.
-   Pendapatan platform sekarang hanya dari langganan. Memperbarui §2.A,
-   §2.B, §2.C, Modul 1, Modul 1a (baru), Modul 3, dan Modul 5.
+   Pendapatan platform sekarang dari langganan dan add-on (§2.D, §2.E). Memperbarui §2.A, §2.B, §2.C, Modul 1, Modul 1a (baru), Modul 3, dan Modul 5.
  * v1.6 — Finalisasi pembagian beban: fee masuk Rp 4.440 ditanggung
    pengrajin, fee pencairan Rp 5.000 (per batch) ditanggung platform dari
    merchant balance, dan platform fee 1,5% utuh tanpa dipotong. Kanal
@@ -218,15 +218,28 @@ E. Add-on "Paket Pendirian PT Perorangan"
      Isi paket ini semuanya pengurusan administratif, dan penamaan tidak
      boleh menjanjikan sesuatu yang tidak dikerjakan.
 
-   ISI PAKET & BIAYA RESMI. Satu-satunya biaya cash adalah PNBP:
+   ISI PAKET & BEBAN. NIB dan NPWP gratis, jadi beban seluruhnya
+   ada di dua tempat: PNBP dan ongkos pengurusan.
 
-   | Item | Asal | Biaya |
+   | Komponen | Keterangan | Beban |
    |---|---|---|
-   | Pendaftaran AHU/SABH + Sertifikat Pendaftaran | PNBP negara | **Rp50.000** |
-   | NIB (OSS) | gratis | Rp0 |
-   | NPWP Elektronik | gratis | Rp0 |
-   | Logo perusahaan | dikerjakan sendiri | Rp0 |
-   | **Total** | | **Rp50.000** |
+   | PNBP AHU | PP 30/2026 pasal 33, ke negara | **Rp50.000** |
+   | Jasa pembuatan logo | dikerjakan sendiri | termasuk |
+   | Ongkos pengurusan | transport, bolak-balik, loket | **Rp100.000** |
+   | **Total beban per pelanggan** | | **Rp150.000** |
+
+   ```
+   harga              Rp500.000
+   beban              −Rp150.000
+   fee Midtrans       −Rp  4.440   (per invoice, ditanggung FurniTech)
+   PPh 0,5% dari omzet −Rp  2.500
+   ───────────────────────────
+   margin bersih      ±Rp343.060   (68,6%)
+   ```
+
+   Fee Midtrans Rp4.440 tidak boleh diabaikan: add-on ini memakai jalur
+   tagihan yang sama dengan langganan, dan pada tagihan langganan fee itu
+   ditanggung FurniTech (§2.C).
 
    Sumber tarif: **PP 30/2026** (berlaku 1 Agustus 2026) pasal 33 —
    "Pendaftaran Pendirian Perseroan Perorangan untuk Usaha Mikro dan Kecil,
@@ -251,8 +264,11 @@ E. Add-on "Paket Pendirian PT Perorangan"
    * Setelah dibayar, **tok FurniTech-nya dibuat dalam sesi yang sama**.
      Kalau tidak, FurniTech sudah mendapat Rp450.000 tanpa hubungan apa pun
      dengan produknya, dan orang itu tidak akan pernah kembali.
-   * Rp50.000 PNBP **tidak boleh masuk ke dalam harga paket** dan tidak
-     boleh disembunyikan: biaya negara itu milik pelanggan, bukan margin.
+   * **Rincian beban harus bisa ditunjukkan.** Rp50.000 PNBP dan Rp100.000
+     ongkos pengurusan bukan angka yang boleh disembunyikan di balik
+     "Rp500.000". Kalau ditanya, jawabannya: "Rp150.000 untuk negara,
+     sisanya untuk pengurusan" — jawaban itu jauh lebih kuat daripada
+     sekadar menyebut harga.
 
    BATAS YANG MESTI DITULIS DI HALAMAN. Satu kalimat, dan bukan opsional:
    *"Pelayanan administrasi dan pengurusan dokumen, bukan konsultasi

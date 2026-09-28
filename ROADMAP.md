@@ -825,15 +825,12 @@ ISI PAKET & BIAYA RESMI — PNBP ADALAH SATU-SATUNYA BIAYA CASH
   dokumen yang tidak ada. FurniTech sendiri adalah Perseroan Perorangan, jadi
   strukturnya yang dijual.
 
-KENAPA TIDAK MASUK PROYEKSI MARGIN
-  Seluruh isinya gratis di luar PNBP Rp50.000 dan bisa dikerjakan sendiri
-  pelanggan lewat AHU Online dalam 2 hari. Yang dibeli seharga Rp450.000
-  adalah kesederhanaan - bukan penghindaran proses yang sulit, karena
-  prosesnya memang tidak sulit.
-  Dampaknya 0,33% dari margin (Rp29 juta dalam 4,2 th) sehingga tidak
-  mengubah kesimpulan apa pun. Dan produk ini tidak memakai apa pun milik
-  FurniTech kalau dijual terpisah, sehingga tidak ada yang mengikat
-  pelanggan. Yang membuatnya masuk akal hanya sebagai TITIK MASUK.
+CATATAN TENTANG HARGA (tidak mengubah keputusan di atas)
+  NIB dan NPWP gratis, dan seluruh beban ada di PNBP + ongkos. Yang dibeli
+  seharga selisihnya adalah waktu dan waktu: pengurusan. Tapi też tidak
+  berarti tidak ada batasnya - kalau pengurusan memakan 3 jam,
+  Rp100.000 itu murah; kalau 30 menit, terlalu mahal untuk durasi
+  tersebut. Angka ini belum diuji.
 
 MODEL JUAL: BUKAN PRODUK ETALASE
   - Diperkenalkan di langkah "Paket" atau "Bayar" wizard pendaftaran, di
@@ -881,8 +878,13 @@ YANG BELUM DIKERJAKAN (urutan)
      sebelum ada keputusan apakah memakai akun FurniTech atau akun
      pelanggan sendiri.
   7. Tes yang mengunci: (a) webhook `leg-` tidak menambah periode langganan,
-     (b) PNBP Rp50.000 tercatat sebagai biaya bukan margin, (c) halaman
-     memuat kalimat batas.
+     (b) PNBP Rp50.000 tercatat sebagai BIAYA bukan margin, (c) halaman
+     memuat kalimat batas, (d) `test:webhook` menolak orderId `leg-` yang
+     mengaktifkan tenant pending.
+  8. **Catatan waktu.** Ongkos Rp100.000 mengasumsikan pengurusan selesai
+     dalam waktu yang masuk akal. Kalau satu order memakan 3 jam, angka itu
+     terlalu murah untuk dipakai sebagai patokan; kalau 30 menit, terlalu
+     mahal. Ukur dulu di 10 order pertama, baru tetapkan.
 
 ━━━ Model Biaya & Payout (keputusan pemilik produk, 2026-09-27) ━━━
 
