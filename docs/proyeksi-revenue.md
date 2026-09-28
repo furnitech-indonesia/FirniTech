@@ -7,8 +7,8 @@ pertumbuhan dan biaya yang dinyatakan terbuka di
 halaman pricing resmi yang berlaku saat dokumen ini ditulis, bukan dari ingatan.
 
 Ringkasan satu kalimat: **margin bersihnya naik dari Rp 8,5 juta per bulan
-di 2026 menjadi Rp 280,7 juta per bulan di 2030, total Rp 6,65 miliar dalam
-4,2 tahun (95,97% dari omzet)** — karena tidak ada gaji di P&L, tidak ada
+di 2026 menjadi Rp 357,1 juta per bulan di 2030, total Rp 8,46 miliar dalam
+4,2 tahun (96,71% dari omzet)** — karena tidak ada gaji di P&L, tidak ada
 biaya legal di 2026, admin dikerjakan berdua, dan PPh cukup 0,5% dari omzet
 lewat Rezim A Perseroan Perorangan. Kebutuhan modal hanya sekitar Rp 2 juta,
 di bulan pertama. Yang tidak terlihat di angka ini: 106 orang harus mendaftar
@@ -69,27 +69,187 @@ Harga paket diambil apa adanya dari `src/lib/plans.ts`:
 | Pro | Rp 500.000 | Rp 5.700.000 | 30% |
 | Max | Rp 1.000.000 | Rp 11.400.000 | 10% |
 
-- **ARPU bruto = Rp 430.000 per pelanggan per bulan** — hasil hitung
-  `0,6 × 300.000 + 0,3 × 500.000 + 0,1 × 1.000.000`.
-- Pelanggan tahunan membayar `ARPU × 0,95` (diskon 5%). Diasumsikan 30%
-  pelanggan memilih paket tahunan.
-- **Fee Midtrans Rp 4.440 per invoice ditanggung FurniTech** (`PRD.md`:
-  `feeLangganan = Rp4.440 per invoice → FurniTech`). Ini dipotong dari
-  pendapatan, jadi kolom "pendapatan bersih" di bawah sudah bebas fee tersebut.
-- Harga dinaikkan 5% per tahun (inflasi) mulai 2027.
+Harga tahunan **dihitung**, bukan diketik: `priceMonthly × 12 × 0,95`.
 
-### Proyeksi
+### Cara perhitungannya
 
-| Tahun | Pelanggan | Omzet | Fee Midtrans | **Revenue bersih** |
+Setiap pelanggan dipisah menjadi dua kohort, lalu dihitung terpisah tiap bulan:
+
+```
+70% pelanggan  -> kohort BULANAN  : bayar priceMonthly tiap bulan
+30% pelanggan  -> kohort TAHUNAN  : bayar priceYearly SEKALI di bulan Januari
+```
+
+Perhitungan omzet bulanan:
+
+```
+omzet bulan ini = (jumlah kohort bulanan × harga bulanan)
+                + (bila bulan Januari: jumlah kohort tahunan × harga tahunan)
+```
+
+Biaya per bulan:
+
+```
+fee Midtrans = (jumlah kohort bulanan × Rp 4.440)
+             + (bila bulan Januari: jumlah kohort tahunan × Rp 4.440)
+
+PPh Rezim A  = omzet × 0,5%
+biaya        = infrastruktur + legal/admin
+margin       = omzet − fee Midtrans − PPh − biaya
+```
+
+Tiga hal yang perlu diperhatikan:
+
+- **Porsi paket diterapkan pada rekrut, bukan pada tagihan.** Setiap rekrutan
+  baru langsung masuk ke kohort Basic (60%), Pro (30%), atau Max (10%).
+  Kohort itu lalu dibayar dengan harga paketnya sendiri.
+- **Tagihan tahunan masuk seluruhnya di Januari.** Jadi Januari selalu
+  terlihat 4–5 kali lebih tinggi dari bulan biasa. Itu bukan seasonality, itu
+  cara penagihan — dan alasan kenapa rata-rata bulanan lebih berguna
+  untuk KPI daripada angka Januari.
+- **Biaya dibagi proporsional ke tiap paket** sesuai porsi omzet, karena
+  infrastruktur dan legal tidak bisa diatribusikan ke satu paket saja.
+
+### ARPU
+
+Dengan bauran 60/30/10 dan diskon tahunan 5%:
+
+```
+ARPU bruto per bulan = 0,6 × 300.000 + 0,3 × 500.000 + 0,1 × 1.000.000
+                     = Rp 430.000
+```
+
+Tiga asumsi lain yang berlaku: **Fee Midtrans Rp 4.440 per invoice
+ditanggung FurniTech** (`PRD.md`: `feeLangganan = Rp4.440 per invoice →
+FurniTech`), **harga dinaikkan 5% per tahun** mulai 2027, dan **churn 3% per
+bulan**.
+
+### Omzet per paket
+
+| Paket | Harga/bln | Harga/thn | 2026 | 2027 | 2028 | 2029 | 2030 | Total 4,2 th | Porsi |
+|---|---|---|---|---|---|---|---|---|---|
+| **Basic** | Rp 300.000 | Rp 3.420.000 | Rp 12.855.818 | Rp 283.891.984 | Rp 529.910.071 | Rp 988.640.855 | Rp 1.846.636.162 | **Rp 3.661.934.889** | 41,9% |
+| **Pro** | Rp 500.000 | Rp 5.700.000 | Rp 10.713.181 | Rp 236.576.653 | Rp 441.591.726 | Rp 823.867.379 | Rp 1.538.863.468 | **Rp 3.051.612.408** | 34,9% |
+| **Max** | Rp 1.000.000 | Rp 11.400.000 | Rp 7.142.121 | Rp 157.717.769 | Rp 294.394.484 | Rp 549.244.919 | Rp 1.025.908.979 | **Rp 2.034.408.272** | 23,3% |
+| **Total** | | | Rp 30.711.120 | Rp 678.186.406 | Rp 1.265.896.280 | Rp 2.361.753.153 | Rp 4.411.408.609 | **Rp 8.747.955.569** | 100% |
+
+Perhatikan kolom porsi: **Max hanya 10% pelanggan tapi menyumbang 23,3%
+omzet.** Kalau 100 pelanggan Basicbernilai Rp 30 juta, 30 pelanggan Pro Rp 15
+juta, dan 10 pelanggan Max Rp 10 juta — Max sepadan dengan satu pertiga pelanggan
+Basic. Ini yang membuat naikkan bauran ke Max bernilai jauh lebih besar
+daripada kenaikan jumlah pelanggan.
+
+### Margin per paket
+
+Biaya dibagi proporsional terhadap omzet tiap paket, karena infrastruktur dan
+legal tidak bisa diatribusikan ke satu paket saja.
+
+| Paket | Omzet | Fee Midtrans | PPh 0,5% | Biaya proporsional | **Margin** | Porsi margin |
+|---|---|---|---|---|---|---|
+| **Basic** | Rp 3.661.934.889 | Rp 36.821.229 | Rp 18.309.674 | Rp 76.630.893 | **Rp 3.530.173.093** | 41,7% |
+| **Pro** | Rp 3.051.612.408 | Rp 18.410.614 | Rp 15.258.062 | Rp 63.859.077 | **Rp 2.954.084.654** | 34,9% |
+| **Max** | Rp 2.034.408.272 | Rp 6.136.871 | Rp 10.172.041 | Rp 42.572.718 | **Rp 1.975.526.641** | 23,4% |
+| **Total** | **Rp 8.747.955.569** | **Rp 61.368.715** | **Rp 43.739.778** | **Rp 183.062.688** | **Rp 8.459.784.389** | 100% |
+
+Perhatikan kolom "porsi margin" versus porsi omzet: keduanya sama. Itu
+memang benar — margin tiap paket hampir identik secara persentase, karena yang
+dipotong (fee Midtrans per invoice, PPh 0,5% dari omzet, biaya variabel)
+mengikutskan semua paket dengan rate yang sama. Yang membedakan hanya
+nominalnya.
+
+### Pelanggan per paket
+
+| Paket | Porsi | Rekrut 4,2 th | Aktif akhir 2030 | Churned |
 |---|---|---|---|---|
-| 2026 | 100 | Rp 30.711.120 | Rp 317.110 | **Rp 30.394.010** |
-| 2027 | 178 | Rp 536.641.156 | Rp 5.283.929 | **Rp 531.357.228** |
-| 2028 | 316 | Rp 1.001.348.208 | Rp 9.390.088 | **Rp 991.958.120** |
-| 2029 | 562 | Rp 1.868.623.657 | Rp 16.688.469 | **Rp 1.851.935.188** |
-| 2030 | 1.000 | Rp 3.490.536.090 | Rp 29.689.119 | **Rp 3.460.846.971** |
-| **Total** | | **Rp 6.927.860.232** | **Rp 61.368.715** | **Rp 6.866.491.517** |
+| **Basic** | 60,0% | 976 | 600 | 376 |
+| **Pro** | 30,0% | 488 | 300 | 188 |
+| **Max** | 10,0% | 163 | 100 | 63 |
+| **Total** | 100% | 1626 | 1.000 | 626 |
 
-Fee Midtrans total Rp 61,4 juta, yaitu 0,89% dari omzet. Tidak material.
+### Ringkasan per bulan
+
+| Tahun | Bln | **Margin bersih/bln** | Pelanggan akhir tahun |
+|---|---|---|---|
+| 2026 | 3 | **Rp 8.459.543** | 100 |
+| 2027 | 12 | **Rp 53.265.954** | 178 |
+| 2028 | 12 | **Rp 102.508.478** | 316 |
+| 2029 | 12 | **Rp 190.003.985** | 562 |
+| 2030 | 12 | **Rp 357.088.729** | 1.000 |
+
+Rata-rata 51 bulan: **Rp 165.878.125 per bulan**.
+
+### Total 4,2 tahun
+
+| Komponen | Jumlah |
+|---|---|
+| Omzet bruto | Rp 8.747.955.569 |
+| Fee Midtrans | −Rp 61.368.715 |
+| PPh final 0,5% | −Rp 43.739.778 |
+| Infrastruktur | −Rp 166.562.688 |
+| Legal dan admin (2027–2030 saja) | −Rp 16.500.000 |
+| **Margin bersih** | **Rp 8.459.784.389 (96,71% dari omzet)** |
+
+### Rincian 51 bulan
+
+Biaya legal **tidak ada di 2026** — hanya muncul 2027 sampai 2030.
+
+| Okt 2026 | 34 | Rp 0 | Rp 0 | Rp 0 | Rp 1.620.608 | Rp 0 | **Rp -1.620.608** |
+| Nov 2026 | 68 | Rp 10.340.445 | Rp 106.771 | Rp 51.702 | Rp 1.620.608 | Rp 0 | **Rp 8.561.363** |
+| Des 2026 | 100 | Rp 20.370.676 | Rp 210.339 | Rp 101.853 | Rp 1.620.608 | Rp 0 | **Rp 18.437.875** |
+| Jan 2027 | 108 | Rp 186.018.000 | Rp 444.000 | Rp 930.090 | Rp 2.235.008 | Rp 291.667 | **Rp 182.117.235** |
+| Feb 2027 | 115 | Rp 34.020.609 | Rp 334.555 | Rp 170.103 | Rp 2.235.008 | Rp 291.667 | **Rp 30.989.276** |
+| Mar 2027 | 122 | Rp 36.363.749 | Rp 357.597 | Rp 181.819 | Rp 2.235.008 | Rp 291.667 | **Rp 33.297.658** |
+| Apr 2027 | 129 | Rp 38.636.595 | Rp 379.948 | Rp 193.183 | Rp 2.235.008 | Rp 291.667 | **Rp 35.536.789** |
+| Mei 2027 | 136 | Rp 40.841.256 | Rp 401.628 | Rp 204.206 | Rp 2.235.008 | Rp 291.667 | **Rp 37.708.746** |
+| Jun 2027 | 143 | Rp 42.979.776 | Rp 422.658 | Rp 214.899 | Rp 2.235.008 | Rp 291.667 | **Rp 39.815.545** |
+| Jul 2027 | 149 | Rp 45.054.142 | Rp 443.057 | Rp 225.271 | Rp 2.235.008 | Rp 291.667 | **Rp 41.859.139** |
+| Agu 2027 | 155 | Rp 47.066.276 | Rp 462.844 | Rp 235.331 | Rp 2.235.008 | Rp 291.667 | **Rp 43.841.425** |
+| Sep 2027 | 161 | Rp 49.018.046 | Rp 482.038 | Rp 245.090 | Rp 2.235.008 | Rp 291.667 | **Rp 45.764.243** |
+| Okt 2027 | 167 | Rp 50.911.263 | Rp 500.656 | Rp 254.556 | Rp 2.235.008 | Rp 291.667 | **Rp 47.629.377** |
+| Nov 2027 | 173 | Rp 52.747.684 | Rp 518.715 | Rp 263.738 | Rp 2.235.008 | Rp 291.667 | **Rp 49.438.556** |
+| Des 2027 | 178 | Rp 54.529.012 | Rp 536.232 | Rp 272.645 | Rp 2.235.008 | Rp 291.667 | **Rp 51.193.460** |
+| Jan 2028 | 192 | Rp 347.667.642 | Rp 790.320 | Rp 1.738.338 | Rp 1.381.248 | Rp 291.667 | **Rp 343.466.069** |
+| Feb 2028 | 205 | Rp 63.557.202 | Rp 595.252 | Rp 317.786 | Rp 1.381.248 | Rp 291.667 | **Rp 60.971.250** |
+| Mar 2028 | 217 | Rp 67.910.036 | Rp 636.019 | Rp 339.550 | Rp 1.381.248 | Rp 291.667 | **Rp 65.261.552** |
+| Apr 2028 | 230 | Rp 72.132.285 | Rp 675.563 | Rp 360.661 | Rp 1.381.248 | Rp 291.667 | **Rp 69.423.146** |
+| Mei 2028 | 242 | Rp 76.227.866 | Rp 713.920 | Rp 381.139 | Rp 1.381.248 | Rp 291.667 | **Rp 73.459.892** |
+| Jun 2028 | 253 | Rp 80.200.580 | Rp 751.127 | Rp 401.003 | Rp 1.381.248 | Rp 291.667 | **Rp 77.375.535** |
+| Jul 2028 | 265 | Rp 84.054.112 | Rp 787.218 | Rp 420.271 | Rp 1.381.248 | Rp 291.667 | **Rp 81.173.709** |
+| Agu 2028 | 275 | Rp 87.792.038 | Rp 822.226 | Rp 438.960 | Rp 1.381.248 | Rp 291.667 | **Rp 84.857.938** |
+| Sep 2028 | 286 | Rp 91.417.827 | Rp 856.183 | Rp 457.089 | Rp 1.381.248 | Rp 291.667 | **Rp 88.431.640** |
+| Okt 2028 | 296 | Rp 94.934.842 | Rp 889.122 | Rp 474.674 | Rp 1.381.248 | Rp 291.667 | **Rp 91.898.130** |
+| Nov 2028 | 306 | Rp 98.346.346 | Rp 921.073 | Rp 491.732 | Rp 1.381.248 | Rp 291.667 | **Rp 95.260.627** |
+| Des 2028 | 316 | Rp 101.655.505 | Rp 952.065 | Rp 508.278 | Rp 1.381.248 | Rp 291.667 | **Rp 98.522.248** |
+| Jan 2029 | 340 | Rp 648.068.110 | Rp 1.403.040 | Rp 3.240.341 | Rp 4.059.008 | Rp 375.000 | **Rp 638.990.722** |
+| Feb 2029 | 363 | Rp 118.508.009 | Rp 1.057.047 | Rp 592.540 | Rp 4.059.008 | Rp 375.000 | **Rp 112.424.414** |
+| Mar 2029 | 386 | Rp 126.655.378 | Rp 1.129.719 | Rp 633.277 | Rp 4.059.008 | Rp 375.000 | **Rp 120.458.375** |
+| Apr 2029 | 408 | Rp 134.558.326 | Rp 1.200.210 | Rp 672.792 | Rp 4.059.008 | Rp 375.000 | **Rp 128.251.317** |
+| Mei 2029 | 430 | Rp 142.224.186 | Rp 1.268.586 | Rp 711.121 | Rp 4.059.008 | Rp 375.000 | **Rp 135.810.470** |
+| Jun 2029 | 450 | Rp 149.660.069 | Rp 1.334.912 | Rp 748.300 | Rp 4.059.008 | Rp 375.000 | **Rp 143.142.849** |
+| Jul 2029 | 470 | Rp 156.872.877 | Rp 1.399.247 | Rp 784.364 | Rp 4.059.008 | Rp 375.000 | **Rp 150.255.257** |
+| Agu 2029 | 490 | Rp 163.869.300 | Rp 1.461.653 | Rp 819.346 | Rp 4.059.008 | Rp 375.000 | **Rp 157.154.292** |
+| Sep 2029 | 509 | Rp 170.655.830 | Rp 1.522.186 | Rp 853.279 | Rp 4.059.008 | Rp 375.000 | **Rp 163.846.357** |
+| Okt 2029 | 527 | Rp 177.238.764 | Rp 1.580.903 | Rp 886.194 | Rp 4.059.008 | Rp 375.000 | **Rp 170.337.659** |
+| Nov 2029 | 545 | Rp 183.624.211 | Rp 1.637.859 | Rp 918.121 | Rp 4.059.008 | Rp 375.000 | **Rp 176.634.223** |
+| Des 2029 | 562 | Rp 189.818.094 | Rp 1.693.106 | Rp 949.090 | Rp 4.059.008 | Rp 375.000 | **Rp 182.741.889** |
+| Jan 2030 | 605 | Rp 1.210.205.670 | Rp 2.495.280 | Rp 6.051.028 | Rp 5.799.808 | Rp 416.667 | **Rp 1.195.442.887** |
+| Feb 2030 | 647 | Rp 221.320.155 | Rp 1.880.088 | Rp 1.106.601 | Rp 5.799.808 | Rp 416.667 | **Rp 212.116.991** |
+| Mar 2030 | 687 | Rp 236.551.760 | Rp 2.009.479 | Rp 1.182.759 | Rp 5.799.808 | Rp 416.667 | **Rp 227.143.048** |
+| Apr 2030 | 726 | Rp 251.326.418 | Rp 2.134.988 | Rp 1.256.632 | Rp 5.799.808 | Rp 416.667 | **Rp 241.718.323** |
+| Mei 2030 | 764 | Rp 265.657.836 | Rp 2.256.732 | Rp 1.328.289 | Rp 5.799.808 | Rp 416.667 | **Rp 255.856.340** |
+| Jun 2030 | 801 | Rp 279.559.311 | Rp 2.374.823 | Rp 1.397.797 | Rp 5.799.808 | Rp 416.667 | **Rp 269.570.217** |
+| Jul 2030 | 837 | Rp 293.043.742 | Rp 2.489.372 | Rp 1.465.219 | Rp 5.799.808 | Rp 416.667 | **Rp 282.872.677** |
+| Agu 2030 | 871 | Rp 306.123.641 | Rp 2.600.484 | Rp 1.530.618 | Rp 5.799.808 | Rp 416.667 | **Rp 295.776.064** |
+| Sep 2030 | 905 | Rp 318.811.142 | Rp 2.708.263 | Rp 1.594.056 | Rp 5.799.808 | Rp 416.667 | **Rp 308.292.349** |
+| Okt 2030 | 938 | Rp 331.118.018 | Rp 2.812.808 | Rp 1.655.590 | Rp 5.799.808 | Rp 416.667 | **Rp 320.433.145** |
+| Nov 2030 | 969 | Rp 343.055.688 | Rp 2.914.217 | Rp 1.715.278 | Rp 5.799.808 | Rp 416.667 | **Rp 332.209.717** |
+| Des 2030 | 1000 | Rp 354.635.228 | Rp 3.012.584 | Rp 1.773.176 | Rp 5.799.808 | Rp 416.667 | **Rp 343.632.993** |
+
+### Titik kas terendah
+
+Kas terendah hanya **Rp −1.620.608**, di Oktober 2026 — bulan pertama, dan
+itu hampir seluruhnya biaya infrastruktur. Setelah itu margin positif dan
+langsung menutup seluruh kekurangan. **Kebutuhan modal: sekitar Rp 2 juta.**
 
 ---
 
@@ -204,180 +364,52 @@ Tanpa biaya gaji sama sekali. PPh memakai **Rezim A: final 0,5% dari
 peredaran bruto** (PP 20/2026 jo PP 55/2022). Perusahaan tetap PT Perorangan
 yang sudah ada.
 
-Rumus tiap bulan:
-
-```
-margin bersih = omzet
-              - fee Midtrans (Rp 4.440 per invoice)
-              - PPh final 0,5% x omzet
-              - biaya (infrastruktur + legal/admin)
-```
-
-### Target yang diperbarui
-
-| Akhir tahun | Pengrajin aktif | Pertumbuhan | Rekrut per bulan |
-|---|---|---|---|
-| **2026 (Okt–Des)** | **100** | dari nol | **35,4** |
-| 2027 | 178 | ×1,78 | 11,0 |
-| 2028 | 316 | ×1,78 | 19,4 |
-| 2029 | 562 | ×1,78 | 34,6 |
-| 2030 | 1.000 | ×1,78 | 61,6 |
-
-Dua titik yang Anda kunci: akhir 2026 = 100, akhir 2030 = 1.000. Tahun 2027
-sampai 2029 dihitung dengan **interpolasi geometris** di antara keduanya, yaitu
-`(1000/100)^(1/4) = 1,7783` per tahap.
-
-### Ringkasan per bulan
+Rincian omzet, margin, dan biaya per bulan ada di
+[Bagian 2](#2-pendapatan). Ringkasannya:
 
 | Tahun | Bln | **Margin bersih/bln** | Pelanggan akhir tahun |
 |---|---|---|---|
 | 2026 | 3 | **Rp 8.459.543** | 100 |
-| 2027 | 12 | **Rp 41.529.494** | 178 |
-| 2028 | 12 | **Rp 80.573.033** | 316 |
-| 2029 | 12 | **Rp 149.115.331** | 562 |
-| 2030 | 12 | **Rp 280.733.050** | 1.000 |
+| 2027 | 12 | **Rp 53.265.954** | 178 |
+| 2028 | 12 | **Rp 102.508.478** | 316 |
+| 2029 | 12 | **Rp 190.003.985** | 562 |
+| 2030 | 12 | **Rp 357.088.729** | 1.000 |
+| **Total 4,2 th** | | **Rp 8.459.784.389** | |
 
-Januari selalu terlihat paling tinggi di setiap tahun. Itu **bukan
-seasonality** — itu tagihan paket tahunan yang menumpuk di awal tahun. Untuk
-KPI bulanan, rata-rata di tabel ini lebih berguna.
-
-### Total pengrajin selama periode
-
-| Keterangan | Jumlah |
-|---|---|
-| Pernah berlangganan (kumulatif) | **1.626** |
-| Berhenti berlangganan (churned) | 626 |
-| Aktif pada akhir 2030 | 1.000 |
-
-Dari 1.626 yang mendaftar, 626 berhenti sebelum 2030. Churn tertinggi terjadi
-pada 2026–2027, ketika belum ada referensi dari pelanggan lama.
-
-### Rincian 51 bulan
-
-Biaya legal **tidak ada di 2026** — hanya muncul 2027 sampai 2030.
-
-#### 2026
-
-| Bulan | Aktif | Omzet | Fee | PPh 0,5% | Infrastruktur | Legal | **Margin** |
-|---|---|---|---|---|---|---|---|
-| Okt | 34 | Rp 0 | Rp 0 | Rp 0 | Rp 1.620.608 | Rp 0 | **Rp -1.620.608** |
-| Nov | 68 | Rp 10.340.445 | Rp 106.771 | Rp 51.702 | Rp 1.620.608 | Rp 0 | **Rp 8.561.363** |
-| Des | 100 | Rp 20.370.676 | Rp 210.339 | Rp 101.853 | Rp 1.620.608 | Rp 0 | **Rp 18.437.875** |
-
-#### 2027
-
-| Bulan | Aktif | Omzet | Fee | PPh 0,5% | Infrastruktur | Legal | **Margin** |
-|---|---|---|---|---|---|---|---|
-| Jan | 108 | Rp 44.472.750 | Rp 444.000 | Rp 222.364 | Rp 2.235.008 | Rp 291.667 | **Rp 41.279.712** |
-| Feb | 115 | Rp 34.020.609 | Rp 334.555 | Rp 170.103 | Rp 2.235.008 | Rp 291.667 | **Rp 30.989.276** |
-| Mar | 122 | Rp 36.363.749 | Rp 357.597 | Rp 181.819 | Rp 2.235.008 | Rp 291.667 | **Rp 33.297.658** |
-| Apr | 129 | Rp 38.636.595 | Rp 379.948 | Rp 193.183 | Rp 2.235.008 | Rp 291.667 | **Rp 35.536.789** |
-| Mei | 136 | Rp 40.841.256 | Rp 401.628 | Rp 204.206 | Rp 2.235.008 | Rp 291.667 | **Rp 37.708.746** |
-| Jun | 143 | Rp 42.979.776 | Rp 422.658 | Rp 214.899 | Rp 2.235.008 | Rp 291.667 | **Rp 39.815.545** |
-| Jul | 149 | Rp 45.054.142 | Rp 443.057 | Rp 225.271 | Rp 2.235.008 | Rp 291.667 | **Rp 41.859.139** |
-| Agu | 155 | Rp 47.066.276 | Rp 462.844 | Rp 235.331 | Rp 2.235.008 | Rp 291.667 | **Rp 43.841.425** |
-| Sep | 161 | Rp 49.018.046 | Rp 482.038 | Rp 245.090 | Rp 2.235.008 | Rp 291.667 | **Rp 45.764.243** |
-| Okt | 167 | Rp 50.911.263 | Rp 500.656 | Rp 254.556 | Rp 2.235.008 | Rp 291.667 | **Rp 47.629.377** |
-| Nov | 173 | Rp 52.747.684 | Rp 518.715 | Rp 263.738 | Rp 2.235.008 | Rp 291.667 | **Rp 49.438.556** |
-| Des | 178 | Rp 54.529.012 | Rp 536.232 | Rp 272.645 | Rp 2.235.008 | Rp 291.667 | **Rp 51.193.460** |
-
-#### 2028
-
-| Bulan | Aktif | Omzet | Fee | PPh 0,5% | Infrastruktur | Legal | **Margin** |
-|---|---|---|---|---|---|---|---|
-| Jan | 192 | Rp 83.119.570 | Rp 790.320 | Rp 415.598 | Rp 1.381.248 | Rp 291.667 | **Rp 80.240.737** |
-| Feb | 205 | Rp 63.557.202 | Rp 595.252 | Rp 317.786 | Rp 1.381.248 | Rp 291.667 | **Rp 60.971.250** |
-| Mar | 217 | Rp 67.910.036 | Rp 636.019 | Rp 339.550 | Rp 1.381.248 | Rp 291.667 | **Rp 65.261.552** |
-| Apr | 230 | Rp 72.132.285 | Rp 675.563 | Rp 360.661 | Rp 1.381.248 | Rp 291.667 | **Rp 69.423.146** |
-| Mei | 242 | Rp 76.227.866 | Rp 713.920 | Rp 381.139 | Rp 1.381.248 | Rp 291.667 | **Rp 73.459.892** |
-| Jun | 253 | Rp 80.200.580 | Rp 751.127 | Rp 401.003 | Rp 1.381.248 | Rp 291.667 | **Rp 77.375.535** |
-| Jul | 265 | Rp 84.054.112 | Rp 787.218 | Rp 420.271 | Rp 1.381.248 | Rp 291.667 | **Rp 81.173.709** |
-| Agu | 275 | Rp 87.792.038 | Rp 822.226 | Rp 438.960 | Rp 1.381.248 | Rp 291.667 | **Rp 84.857.938** |
-| Sep | 286 | Rp 91.417.827 | Rp 856.183 | Rp 457.089 | Rp 1.381.248 | Rp 291.667 | **Rp 88.431.640** |
-| Okt | 296 | Rp 94.934.842 | Rp 889.122 | Rp 474.674 | Rp 1.381.248 | Rp 291.667 | **Rp 91.898.130** |
-| Nov | 306 | Rp 98.346.346 | Rp 921.073 | Rp 491.732 | Rp 1.381.248 | Rp 291.667 | **Rp 95.260.627** |
-| Des | 316 | Rp 101.655.505 | Rp 952.065 | Rp 508.278 | Rp 1.381.248 | Rp 291.667 | **Rp 98.522.248** |
-
-#### 2029
-
-| Bulan | Aktif | Omzet | Fee | PPh 0,5% | Infrastruktur | Legal | **Margin** |
-|---|---|---|---|---|---|---|---|
-| Jan | 340 | Rp 154.938.614 | Rp 1.403.040 | Rp 774.693 | Rp 4.059.008 | Rp 375.000 | **Rp 148.326.873** |
-| Feb | 363 | Rp 118.508.009 | Rp 1.057.047 | Rp 592.540 | Rp 4.059.008 | Rp 375.000 | **Rp 112.424.414** |
-| Mar | 386 | Rp 126.655.378 | Rp 1.129.719 | Rp 633.277 | Rp 4.059.008 | Rp 375.000 | **Rp 120.458.375** |
-| Apr | 408 | Rp 134.558.326 | Rp 1.200.210 | Rp 672.792 | Rp 4.059.008 | Rp 375.000 | **Rp 128.251.317** |
-| Mei | 430 | Rp 142.224.186 | Rp 1.268.586 | Rp 711.121 | Rp 4.059.008 | Rp 375.000 | **Rp 135.810.470** |
-| Jun | 450 | Rp 149.660.069 | Rp 1.334.912 | Rp 748.300 | Rp 4.059.008 | Rp 375.000 | **Rp 143.142.849** |
-| Jul | 470 | Rp 156.872.877 | Rp 1.399.247 | Rp 784.364 | Rp 4.059.008 | Rp 375.000 | **Rp 150.255.257** |
-| Agu | 490 | Rp 163.869.300 | Rp 1.461.653 | Rp 819.346 | Rp 4.059.008 | Rp 375.000 | **Rp 157.154.292** |
-| Sep | 509 | Rp 170.655.830 | Rp 1.522.186 | Rp 853.279 | Rp 4.059.008 | Rp 375.000 | **Rp 163.846.357** |
-| Okt | 527 | Rp 177.238.764 | Rp 1.580.903 | Rp 886.194 | Rp 4.059.008 | Rp 375.000 | **Rp 170.337.659** |
-| Nov | 545 | Rp 183.624.211 | Rp 1.637.859 | Rp 918.121 | Rp 4.059.008 | Rp 375.000 | **Rp 176.634.223** |
-| Des | 562 | Rp 189.818.094 | Rp 1.693.106 | Rp 949.090 | Rp 4.059.008 | Rp 375.000 | **Rp 182.741.889** |
-
-#### 2030
-
-| Bulan | Aktif | Omzet | Fee | PPh 0,5% | Infrastruktur | Legal | **Margin** |
-|---|---|---|---|---|---|---|---|
-| Jan | 605 | Rp 289.333.152 | Rp 2.495.280 | Rp 1.446.666 | Rp 5.799.808 | Rp 416.667 | **Rp 279.174.731** |
-| Feb | 647 | Rp 221.320.155 | Rp 1.880.088 | Rp 1.106.601 | Rp 5.799.808 | Rp 416.667 | **Rp 212.116.991** |
-| Mar | 687 | Rp 236.551.760 | Rp 2.009.479 | Rp 1.182.759 | Rp 5.799.808 | Rp 416.667 | **Rp 227.143.048** |
-| Apr | 726 | Rp 251.326.418 | Rp 2.134.988 | Rp 1.256.632 | Rp 5.799.808 | Rp 416.667 | **Rp 241.718.323** |
-| Mei | 764 | Rp 265.657.836 | Rp 2.256.732 | Rp 1.328.289 | Rp 5.799.808 | Rp 416.667 | **Rp 255.856.340** |
-| Jun | 801 | Rp 279.559.311 | Rp 2.374.823 | Rp 1.397.797 | Rp 5.799.808 | Rp 416.667 | **Rp 269.570.217** |
-| Jul | 837 | Rp 293.043.742 | Rp 2.489.372 | Rp 1.465.219 | Rp 5.799.808 | Rp 416.667 | **Rp 282.872.677** |
-| Agu | 871 | Rp 306.123.641 | Rp 2.600.484 | Rp 1.530.618 | Rp 5.799.808 | Rp 416.667 | **Rp 295.776.064** |
-| Sep | 905 | Rp 318.811.142 | Rp 2.708.263 | Rp 1.594.056 | Rp 5.799.808 | Rp 416.667 | **Rp 308.292.349** |
-| Okt | 938 | Rp 331.118.018 | Rp 2.812.808 | Rp 1.655.590 | Rp 5.799.808 | Rp 416.667 | **Rp 320.433.145** |
-| Nov | 969 | Rp 343.055.688 | Rp 2.914.217 | Rp 1.715.278 | Rp 5.799.808 | Rp 416.667 | **Rp 332.209.717** |
-| Des | 1000 | Rp 354.635.228 | Rp 3.012.584 | Rp 1.773.176 | Rp 5.799.808 | Rp 416.667 | **Rp 343.632.993** |
-
-### Total 4,2 tahun
-
-| Komponen | Jumlah |
-|---|---|
-| Omzet bruto | Rp 6.927.860.232 |
-| Fee Midtrans | −Rp 61.368.715 |
-| PPh final 0,5% | −Rp 34.639.301 |
-| Infrastruktur | −Rp 166.562.688 |
-| Legal dan admin (2027–2030 saja) | −Rp 16.500.000 |
-| **Margin bersih** | **Rp 6.648.789.528 (95,97% dari omzet)** |
-
-Rata-rata 51 bulan: **Rp 130.368.422 per bulan**.
-
-### Titik kas terendah
-
-Kas terendah hanya **Rp −1.620.608**, di Oktober 2026 — bulan pertama, dan
-itu hampir seluruhnya biaya infrastruktur. Setelah itu margin positif dan
-langsung menutup seluruh kekurangan. **Kebutuhan modal: sekitar Rp 2 juta.**
+Rata-rata 51 bulan: **Rp 165.878.125 per bulan**.
 
 ### Kapan cukup untuk gaji
 
 | Margin/bln | Pelanggan aktif | Setara gaji per orang (bila 50:50) |
 |---|---|---|
 | Rp 8.459.543 (rata-rata 2026) | 100 | Rp 4.229.771 |
-| Rp 41.529.494 (rata-rata 2027) | 178 | Rp 20.764.747 |
-| Rp 80.573.033 (rata-rata 2028) | 316 | Rp 40.286.516 |
-| Rp 149.115.331 (rata-rata 2029) | 562 | Rp 74.557.665 |
-| Rp 280.733.049 (rata-rata 2030) | 1.000 | Rp 140.366.524 |
+| Rp 53.265.954 (rata-rata 2027) | 178 | Rp 26.632.977 |
+| Rp 102.508.478 (rata-rata 2028) | 316 | Rp 51.254.239 |
+| Rp 190.003.985 (rata-rata 2029) | 562 | Rp 95.001.992 |
+| Rp 357.088.729 (rata-rata 2030) | 1.000 | Rp 178.544.364 |
 
-**2026 tidak bisa menanggung gaji apa pun.** Mulai 2027 margin rata-rata Rp 41,5 juta per bulan, jadi gaji
-Rp 20 juta per orang sudah tertutup.
+**2026 tidak bisa menanggung gaji apa pun.** Mulai 2027 margin rata-rata
+Rp 53,3 juta per bulan, jadi gaji Rp 25 juta per orang sudah tertutup.
 
-### Unit economics
+### Unit economics per paket
 
-| Tahun | ARPU | Infrastruktur per pelanggan per bulan | Margin infrastruktur |
+| Paket | ARPU bruto/bln | ARPU tahunan/bln | Infrastruktur per pelanggan/bln |
 |---|---|---|---|
-| 2026 | Rp 430.000 | Rp 2.240 | 92,2% |
-| 2027 | Rp 451.500 | Rp 7.200 | 98,3% |
-| 2028 | Rp 474.075 | Rp 5.293 | 98,9% |
-| 2029 | Rp 497.779 | Rp 8.748 | 97,0% |
-| 2030 | Rp 522.668 | Rp 5.800 | 98,9% |
+| Basic | Rp 300.000 | Rp 285.000 | Rp 2.240 |
+| Pro | Rp 500.000 | Rp 475.000 | Rp 2.240 |
+| Max | Rp 1.000.000 | Rp 950.000 | Rp 2.240 |
 
-Biaya infrastruktur per pelanggan turun seiring skala. Karena tidak ada payroll
-dan tidak ada akuntansi outsourced, **hampir seluruh revenue menjadi margin**:
-95,84% dalam 4,2 tahun. Yang tersisa hanya fee Midtrans (0,89%), PPh Rezim A
-(0,50%), dan biaya operasional (2,77%).
+Biaya infrastruktur per pelanggan **sama untuk ketiga paket** —_rd karena_
+infrastruktur tidak membedakan fitur. Yang membedakan hanya harga. Itu sebabnya
+Max menghasilkan 23,3% omzet dari 10% pelanggan.
+
+Biaya infrastruktur per pelanggan turun seiring skala: Rp 2.240 di 2026
+menjadi sekitar Rp 5.800 di 2030, sementara ARPU naik 21,6% karena inflasi
+harga. Karena tidak ada payroll dan tidak ada akuntansi outsourced, hampir
+seluruh revenue menjadi margin: **96,71%** dalam 4,2 tahun. Yang tersisa hanya
+fee Midtrans (0,70%), PPh Rezim A (0,50%), dan biaya operasional (2,09%).
+
+---
 
 ## 5. Yang tidak ada di dokumen ini
 
@@ -451,10 +483,10 @@ berbeda di kurva retensi.
 
 ### 4. 77% pendapatan datang dari 2029–2030
 
-Rp 5,36 miliar dari Rp 6,93 miliar terjadi pada dua tahun terakhir. Proyeksi
+Rp 6,77 miliar dari Rp 8,75 miliar terjadi pada dua tahun terakhir. Proyeksi
 sangat sensitif terhadap apa pun yang menggagalkan 2029–2030. Sebaliknya,
-2026–2028 hanya menghasilkan Rp 1,57 miliar pendapatan kumulatif, sementara
-biaya legal tiga tahun pertama saja menghabiskan Rp 43 juta dari margin itu.
+2026–2028 hanya menghasilkan Rp 1,98 miliar pendapatan kumulatif, sementara
+biaya legal dua tahun pertama saja menghabiskan Rp 7 juta dari margin itu.
 
 ### 5. Dua orang mungkin tidak cukup di 1.000 pelanggan
 
@@ -493,12 +525,12 @@ lebih kecil.
 
 ### ARPU — kalau bauran paket atau harga bergerak
 
-| ARPU | Omzet 5 tahun |
+| ARPU | Omzet 4,2 tahun |
 |---|---|
-| Rp 301.000 (−30%) | Rp 4.849.502.162 |
-| Rp 365.500 (−15%) | Rp 5.888.681.197 |
-| **Rp 430.000 (dasar)** | **Rp 6.927.860.232** |
-| Rp 494.500 (+15%) | Rp 7.967.039.267 |
+| Rp 301.000 (−30%) | Rp 6.123.568.898 |
+| Rp 365.500 (−15%) | Rp 7.435.762.234 |
+| **Rp 430.000 (dasar)** | **Rp 8.747.955.569** |
+| Rp 494.500 (+15%) | Rp 10.060.148.905 |
 
 ### Target — kalau jumlah pengrajin meleset
 
@@ -508,16 +540,16 @@ berikutnya:
 
 | Skenario | Aktif akhir 2026 | Aktif akhir 2030 | Omzet 5 th | Margin 5 th |
 |---|---|---|---|---|
-| 2026 separuh, 2030 tercapai | 50 | 1.000 | Rp 5.735.598.330 | Rp 5.473.440.794 |
-| **Dasar** | **100** | **1.000** | **Rp 6.927.860.232** | **Rp 6.648.789.528** |
-| 2026 naik 50%, 2030 tercapai | 150 | 1.000 | Rp 7.866.475.190 | Rp 7.574.038.604 |
-| 2026 tercapai, 2030 separuh | 100 | 500 | Rp 4.342.305.309 | Rp 4.098.714.721 |
-| keduanya meleset | 50 | 500 | Rp 3.463.930.116 | Rp 3.232.863.420 |
+| 2026 separuh, 2030 tercapai | 50 | 1.000 | Rp 7.088.511.361 | Rp 6.819.589.260 |
+| **Dasar** | **100** | **1.000** | **Rp 8.747.955.569** | **Rp 8.459.784.389** |
+| 2026 naik 50%, 2030 tercapai | 150 | 1.000 | Rp 10.060.087.211 | Rp 9.756.682.564 |
+| 2026 tercapai, 2030 separuh | 100 | 500 | Rp 5.603.624.586 | Rp 5.353.727.402 |
+| keduanya meleset | 50 | 500 | Rp 4.373.977.785 | Rp 4.138.360.850 |
 
-Rentang margin Rp 3,23 miliar sampai Rp 7,57 miliar. **2030 menentukan
+Rentang margin Rp 4,14 miliar sampai Rp 9,76 miliar. **2030 menentukan
 segala sesuatu:** skenario dengan 2030 = 1.000 selalu menang, apa pun yang
-terjadi di 2026. Tahun 2026 hanya menyumbang Rp 30 juta dari Rp 6,93 miliar —
-kurang dari 0,5%.
+terjadi di 2026. Tahun 2026 hanya menyumbang Rp 30 juta dari Rp 8,75 miliar —
+kurang dari 0,4%.
 
 Artinya 2026 yang paling rapuh secara operasional justru paling tidak
 berdampak secara finansial. Yang harus dijaga bukan 100 pelanggan pertama,
@@ -529,24 +561,26 @@ tapi kemampuan menjaga pertumbuhan menuju 1.000 pada 2030.
 
 1. **Cek agregasi omzet ke konsultan pajak tahun ini.** Batas Rp 4,8 miliar
    menghitung gabungan seluruh Perseroan Perorangan Anda, bukan cuma
-   FurniTech. Omzet FurniTech saja mencapai Rp 3,26 miliar pada 2030; ditambah
-   PT Perorangan yang sudah ada, agregatnya menembus batas. Bedanya PPh
-   Rp 16 juta dengan Rp 694 juta pada 2030 — **42 kali**. Ini satu-satunya
+   FurniTech. Omzet FurniTech saja mencapai Rp 4,41 miliar pada 2030 — sudah
+   92% dari batas itu, dan ditambah PT Perorangan yang sudah ada, agregatnya
+   menembus. Bedanya bagian Anda Rp 4,23 miliar (Rezim A) dengan Rp 3,91
+   miliar (Rezim B) — **Rp 320 juta**. Ini satu-satunya
    hal di dokumen ini yang benar-benar menentukan hasil, dan hanya bisa
    dijawab dengan angka omzet asli Anda.
 2. **Pahami ambang PPN, bukan hanya ambang PPh.** Angka Rp 4,8 miliar itu
    sekaligus ambang PKP. Melewatinya memaksa PPN 11% dari seluruh omzet —
-   Rp 358 juta pada 2030, lebih besar dari PPh seluruhnya. Putuskan harga
-   paket sebelum itu terjadi.
+   **Rp 485 juta pada 2030**, lebih besar dari PPh seluruhnya. Omzet FurniTech
+   sendiri di 2030 sudah Rp 4,41 miliar, jadi **mendekati batas tanpa bantuan
+   apa pun**. Putuskan harga paket sebelum itu terjadi.
 3. **Cek agregasi, dan siapkan diri untuk.status jadi PT biasa kalau perlu.**
    Bila agregat omzet menembus Rp 4,8 miliar, PT Perorangan wajib berstatus
    PT biasa — bukan hanya tarif pajak yang berubah, tapi juga akta notaris,
    RUPS tahunan, dan laporan tahunan. Rencanakan transisinya sekarang, jangan menunggu
    sampai sudah di ambang.
-4. **Jaga margin FurniTech sendiri di bawah batas.** Proyeksi 2030
-   Rp 3,26 miliar, yaitu 68% dari batas Rp 4,8 miliar. Masih aman, tapi
-   kalau 2031–2032 sedikit meleset, FurniTech sendiri sudah menembus batas
-   tanpa bantuan apa pun.
+4. **Omzet 2030 sudah 92% dari batas Rp 4,8 miliar.** Proyeksi Rp 4,41
+   miliar. Tinggi 2027 saja sudah Rp 678 juta, jadi model ini tidak punya
+   ruang untuk melesit di tahun-tahun akhir. Kalau 2031 sedikit meleset,
+   FurniTech menembus batas sendiri.
 5. **Selesaikan jalur pencairan sebelum mengejar 2027.** VA sudah berfungsi
    dan uang pengrajin sudah masuk ke rekening platform, tetapi
    `MIDTRANS_IRIS_API_KEY` masih kosong sehingga belum ada jalan
@@ -555,7 +589,7 @@ tapi kemampuan menjaga pertumbuhan menuju 1.000 pada 2030.
    orang adalah 500 pelanggan per orang, tanpa onboarding otomatis. Beban ini
    tidak terlihat di P&L — hanya sebagai kelelahan.
 7. **Gunakan angka bulanan, bukan tahunan, untuk keputusan.** Rata-rata
-   2027 Rp 41,5 juta dan 2030 Rp 280,7 juta. Melihat total lima tahun
+   2027 Rp 53,3 juta dan 2030 Rp 357,1 juta. Melihat total lima tahun
    membuat 2026–2027 terlihat kecil padahal di situlah target 100 dan
    seluruh kurva ditentukan.
 8. **Dana yang dibutuhkan hanya sekitar Rp 2 juta**, di bulan pertama, dan itu
@@ -596,32 +630,33 @@ PP 20/2026 Pasal 57 ayat (1) huruf e: batas Rp 4,8 miliar menghitung
 Perseroan Perorangan yang Anda dirikan.
 
 Anda sudah punya PT Perorangan dengan omzet Rp 3,2 miliar pada 2020.
-Proyeksi FurniTech mencapai Rp 3,26 miliar pada 2030. Bila keduanya
+Proyeksi FurniTech sudah mencapai Rp 4,41 miliar pada 2030. Bila keduanya
 berjalan bersamaan:
 
 | Tahun | FurniTech | PT Perorangan yang sudah ada | Agregat | Batas 4,8 M? |
 |---|---|---|---|---|
-| 2026 | Rp 3.071.112 | perlu data Anda | — | kemungkinan ya |
-| 2027 | Rp 205.959.013 | perlu data Anda | — | kemungkinan ya |
-| 2028 | Rp 635.452.007 | perlu data Anda | — | kemungkinan ya |
-| 2029 | Rp 1.438.107.528 | Rp 3,2 miliar (asumsi) | Rp 4,64 miliar | masih ya, tipis |
-| 2030 | Rp 3.255.865.743 | Rp 3,2 miliar (asumsi) | Rp 6,46 miliar | **LEWAT** |
+| 2026 | Rp 30.711.120 | perlu data Anda | — | kemungkinan ya |
+| 2027 | Rp 678.186.406 | perlu data Anda | — | kemungkinan ya |
+| 2028 | Rp 1.265.896.280 | perlu data Anda | — | kemungkinan ya |
+| 2029 | Rp 2.361.753.153 | Rp 3,2 miliar (asumsi) | Rp 5,56 miliar | **LEWAT** |
+| 2030 | Rp 4.411.408.609 | Rp 3,2 miliar (asumsi) | Rp 7,61 miliar | **LEWAT** |
 
 Baris 2029 dan 2030 memakai asumsi usaha lama Anda tetap Rp 3,2 miliar.
 Kalau sudah berhenti atau turun, agregatnya lebih rendah dan Rezim A bisa
-bertahan lebih lama. **Ini perlu dicek ke konsultan pajak dengan angka omzet
-sebenarnya** — bukan dengan asumsi saya.
+bertahan lebih lama — dan dalam skenario itu **FurniTech sendiri pun sudah
+Rp 4,41 miliar pada 2030, yaitu 92% dari batas**. **Ini perlu dicek ke
+konsultan pajak dengan angka omzet sebenarnya** — bukan dengan asumsi saya.
 
 ### Hitungan Rezim A — 0,5% dari omzet
 
 | Tahun | Omzet | **PPh final 0,5%** |
 |---|---|---|
 | 2026 | Rp 30.711.120 | Rp 153.556 |
-| 2027 | Rp 536.641.156 | Rp 2.683.206 |
-| 2028 | Rp 1.001.348.208 | Rp 5.006.741 |
-| 2029 | Rp 1.868.623.657 | Rp 9.343.118 |
-| 2030 | Rp 3.490.536.090 | Rp 17.452.680 |
-| **Total 4,2 tahun** | **Rp 6.927.860.232** | **Rp 34.639.301** |
+| 2027 | Rp 678.186.406 | Rp 3.390.932 |
+| 2028 | Rp 1.265.896.280 | Rp 6.329.481 |
+| 2029 | Rp 2.361.753.153 | Rp 11.808.766 |
+| 2030 | Rp 4.411.408.609 | Rp 22.057.043 |
+| **Total 4,2 tahun** | **Rp 8.747.955.569** | **Rp 43.739.778** |
 
 Angka ini sudah termasuk di [Bagian 4](#4-margin-bersih-setiap-bulan) sebagai
 beban, jadi margin bersih di sana **sudah setelah PPh**.
@@ -635,21 +670,21 @@ Rp 3,39 miliar adalah Rp 745 juta. **Selisihnya 43 kali.**
 Kalau agregat omzet menembus Rp 4,8 miliar, tarif badan 22% atas laba. Laba
 di sini memakai **biaya yang sama seperti Bagian 4** (legal nol di 2026):
 
-| Tahun | Laba | PPh badan 22% | Bagian Anda 50% | PPh dividen 10% | **Anda net** |
+| Tahun | Laba | PPh badan 22% | Bagian Anda 50% | PPh dividen 10% | Anda net |
 |---|---|---|---|---|---|
-| 2026 | Rp 25.532.186 | Rp 5.617.081 | Rp 12.766.093 | Rp 1.276.609 | **Rp 11.489.484** |
-| 2027 | Rp 501.037.132 | Rp 110.228.169 | Rp 250.518.566 | Rp 25.051.857 | **Rp 225.466.709** |
-| 2028 | Rp 971.883.144 | Rp 213.814.292 | Rp 485.941.572 | Rp 48.594.157 | **Rp 437.347.415** |
-| 2029 | Rp 1.798.727.092 | Rp 395.719.960 | Rp 899.363.546 | Rp 89.936.355 | **Rp 809.427.191** |
-| 2030 | Rp 3.386.249.275 | Rp 744.974.841 | Rp 1.693.124.638 | Rp 169.312.464 | **Rp 1.523.812.174** |
-| **Total** | **Rp 6.683.428.829** | **Rp 1.470.354.342** | **Rp 3.341.714.415** | **Rp 334.171.441** | **Rp 3.007.542.973** |
+| 2026 | Rp 28.936.957 | Rp 6.366.130 | Rp 14.468.478 | Rp 1.446.848 | Rp 13.021.631 |
+| 2027 | Rp 672.268.800 | Rp 147.899.136 | Rp 336.134.400 | Rp 33.613.440 | Rp 302.520.960 |
+| 2028 | Rp 1.257.893.884 | Rp 276.736.655 | Rp 628.946.942 | Rp 62.894.694 | Rp 566.052.248 |
+| 2029 | Rp 2.345.510.380 | Rp 516.012.283 | Rp 1.172.755.190 | Rp 117.275.519 | Rp 1.055.479.671 |
+| 2030 | Rp 4.383.135.091 | Rp 964.289.720 | Rp 2.191.567.546 | Rp 219.156.755 | Rp 1.972.410.791 |
+| **Total** | **Rp 8.687.745.111** | **Rp 1.911.303.925** | **Rp 4.343.872.556** | **Rp 434.387.256** | **Rp 3.909.485.300** |
 
 Dividen yang diterima WP Orang Pribadi dalam negeri dikenai PPh final 10%
 (PP 55/2022 Pasal 23 huruf m). Karena itu kolom "Anda net" adalah **setelah**
 pajak.
 
-Bandingkan dengan Rezim A: bagian Anda **Rp 3.324.394.764** dari margin
-Rp 6.648.789.528. Selisihnya **Rp 316,9 juta** dalam 4,2 tahun.
+Bandingkan dengan Rezim A: bagian Anda **Rp 4.229.892.195** dari margin
+Rp 8.459.784.389. Selisihnya **Rp 320,4 juta** dalam 4,2 tahun.
 
 ### Catatan singkat soal cara uang keluar dari perusahaan
 
@@ -690,11 +725,11 @@ omzet maupun karena ketentuan lain, PT Perorangan wajib menjadi PT biasa.
 Konsekuensinya bukan cuma tarif pajak: PT biasa butuh akta notaris, RUPS
 tahunan, laporan tahunan, dan pemeliharaan saham yang lebih formal.
 
-**3. PPN 11% masih menunggu di depan.** Omzet Rp 4,8 miliar itu sekaligus
-ambang PKP. Saat FurniTech atau agregatnya menyentuhnya, Anda **wajib
-menjadi PKP** dan memungut PPN 11% dari seluruh omzet. Pada omzet 2030
-sebesar Rp 3,26 miliar, itu **Rp 358 juta PPN per tahun** — lebih besar
-dari PPh manapun di dokumen ini.
+**3. PPN 11% hampir pasti terjadi.** Omzet Rp 4,8 miliar itu sekaligus
+ambang PKP. Proyeksi FurniTech sendiri di 2030 adalah Rp 4,41 miliar — **92%
+dari batas**, tanpa bantuan apa pun. Pada omzet itu, PPN 11% adalah
+**Rp 485 juta per tahun**, lebih besar dari PPh seluruhnya. Dengan asumsi
+bisnis lama tetap Rp 3,2 miliar, batas itu terlampaui sudah di 2029.
 
 Perlu dikonfirmasi ke konsultan pajak: ada pengecualian untuk transaksi
 tertentu, dan transaksi lewat payment gateway atau marketplace punya
@@ -737,7 +772,7 @@ tidak mustahil terjadi.
 | Inflasi harga | 5% per tahun | **asumsi Anda** |
 | Kurs USD | Rp 16.000 | **asumsi saya** |
 | Interpolasi 2027–2029 | geometris ×1,7783 per tahun | hitungan |
-| Legal dan admin | Rp 9 jt (2026) → 3,5–5 jt/tahun | **angka tebakan saya** |
+| Legal dan admin | **Rp 0 (2026)** → 3,5–5 jt/tahun | **angka tebakan saya** |
 | Jam CPU Vercel | 20 → 1.500 jam per bulan | **angka tebakan saya** |
 | PITR Supabase | aktif mulai 2029 | keputusan saya |
 | Fonnte | tidak dipakai | `PRD.md` v1.3 (fakta) |
