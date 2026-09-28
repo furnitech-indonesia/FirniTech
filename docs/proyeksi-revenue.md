@@ -6,52 +6,56 @@ pertumbuhan dan biaya yang dinyatakan terbuka di
 [Bagian 10](#10-asumsi-yang-dapat-diubah). Angka biaya infrastruktur diambil dari
 halaman pricing resmi yang berlaku saat dokumen ini ditulis, bukan dari ingatan.
 
-Ringkasan satu kalimat: **margin bersihnya naik dari −Rp 2,7 juta per bulan
-di 2026 menjadi Rp 261,4 juta per bulan di 2030, total Rp 5,29 miliar dalam
-4,2 tahun (95,53% dari omzet)** — karena tidak ada gaji di P&L, admin
+Ringkasan satu kalimat: **margin bersihnya naik dari Rp 5,5 juta per bulan
+di 2026 menjadi Rp 280,7 juta per bulan di 2030, total Rp 6,64 miliar dalam
+4,2 tahun (95,84% dari omzet)** — karena tidak ada gaji di P&L, admin
 dikerjakan berdua, dan PPh cukup 0,5% dari omzet lewat Rezim A Perseroan
-Perorangan. Dana yang dibutuhkan hanya Rp 8,1 juta. Yang tidak terlihat di
-angka ini: 2 orang tidak mungkin menangani 1.000 pelanggan, dan itu tidak
-akan muncul sebagai rupiah di mana pun.
+Perorangan. Kebutuhan modal hanya Rp 5 juta, di bulan pertama. Yang tidak
+terlihat di angka ini: 106 orang harus mendaftar dalam 3 bulan pertama, dan
+2 orang tidak mungkin menangani 1.000 pelanggan — keduanya tidak akan muncul
+sebagai rupiah di mana pun.
 
 ---
 
 ## 1. Target pengrajin per tahun
 
-Titik awal dan akhir sudah ditetapkan: akhir 2026 = 10 pengrajin, akhir 2027 =
-100, akhir 2030 = 1.000. Tahun 2028 dan 2029 tidak ditetapkan, jadi dihitung
-dengan **interpolasi geometris** — rasio pertumbuhan per tahun konstan di antara
-dua titik yang sudah dikunci, yaitu `(1000/100)^(1/3) = 2,1544`.
+Dua titik sudah ditetapkan: **akhir 2026 = 100 pengrajin aktif** (rilis
+Okt 2026, jadi hanya satu kuartal), dan **akhir 2030 = 1.000 pelanggan**.
+Tahun 2027 sampai 2029 dihitung dengan interpolasi geometris di antara
+keduanya, yaitu `(1000/100)^(1/4) = 1,7783` per tahap.
 
-| Akhir tahun | Pengrajin aktif | Pertumbuhan | Rekrut per bulan |
-|---|---|---|---|
-| 2026 (Okt–Des) | 10 | — | 3,5 |
-| 2027 | 100 | ×10,0 | 9,4 |
-| 2028 | 215 | ×2,15 | 14,7 |
-| 2029 | 464 | ×2,16 | 31,8 |
-| 2030 | 1.000 | ×2,15 | 68,5 |
+| Akhir tahun | Pengrajin aktif | Pertumbuhan | Rekrut per bulan | Rekrut per tahun |
+|---|---|---|---|---|
+| 2026 (Okt–Des) | 100 | dari nol | 35,4 | 106 |
+| 2027 | 178 | ×1,78 | 11,0 | 132 |
+| 2028 | 316 | ×1,78 | 19,4 | 233 |
+| 2029 | 562 | ×1,78 | 34,6 | 415 |
+| 2030 | 1.000 | ×1,78 | 61,6 | 740 |
 
-Angka "rekrut per bulan" adalah angka kerja, bukan angka target. Karena ada
-churn 3% per bulan, FurniTech harus merekrut lebih banyak daripada jumlah
-pelanggan baru agar stok akhir tahun benar. Di 2030: 68,5 rekrut per bulan
-**+** sekitar 30 pelanggan hilang per bulan = **sekitar 100 titik kontak
-penjualan per bulan**. Angka itu yang harus jadi target tim penjualan, bukan
-"1.000 pelanggan".
+Angka "rekrut per bulan" adalah angka kerja, bukan target. Karena churn 3% per
+bulan, FurniTech harus merekrut lebih banyak daripada jumlah pelanggan baru
+agar stok akhir tahun benar.
+
+**Catatan penting soal 2026: 106 orang harus mendaftar dalam 3 bulan,
+dari nol, tanpa reputasi dan tanpa pelanggan lama.** Itu 35,4 pelanggan baru
+per bulan, dan di bulan pertama 34 orang harus mendaftar sebelum produk
+menghasilkan satu rupiah pun. Ini target yang sangat agresif untuk produk yang
+belum pernah dipakai siapa pun — bukan mustahil, tapi tidak ada tempat
+bernaung untuk keajaiban.
 
 ### Total pengrajin selama periode
 
 | Keterangan | Jumlah |
 |---|---|
-| Pernah berlangganan (kumulatif pendaftaran) | **1.504** |
-| Berhenti berlangganan (churned) | 505 |
+| Pernah berlangganan (kumulatif) | **1.626** |
+| Berhenti berlangganan (churned) | 626 |
 | Aktif pada akhir 2030 | 1.000 |
 
-Jawaban langsung untuk "total ada berapa pengrajin": **1.504 orang pernah
-berlangganan, 1.000 masih aktif di akhir 2030.** Angka 1.504 bukan kebetulan;
-itu konsekuensi langsung dari churn 3% per bulan. Lihat
-[Bagian 7](#7-sensitivitas).
-
----
+Lonjakan churn berasal dari 2026: 106 orang mendaftar dalam satu kuartal, dan
+sebagian besar akan berhenti sebelum 2027. Itu konsekuensi langsung
+dari target 100 dalam satu kuartal, bukan cacat perhitungan. Kalau target awal
+turun, churn turun juga — tapi angka ini sengaja dibiarkan apa adanya supaya
+efeknya terlihat.
 
 ## 2. Pendapatan
 
@@ -197,8 +201,8 @@ Dua hal yang tidak hilang hanya karena tidak masuk P&L:
 ## 4. Margin bersih setiap bulan
 
 Tanpa biaya gaji sama sekali. PPh memakai **Rezim A: final 0,5% dari
-peredaran bruto** (PP 20/2026 jo PP 55/2022), sesuai keputusan Anda.
-Perusahaan tetap PT Perorangan yang sudah ada.
+peredaran bruto** (PP 20/2026 jo PP 55/2022). Perusahaan tetap PT Perorangan
+yang sudah ada.
 
 Rumus tiap bulan:
 
@@ -209,131 +213,153 @@ margin bersih = omzet
               - biaya (infrastruktur + legal/admin)
 ```
 
+### Target yang diperbarui
+
+| Akhir tahun | Pengrajin aktif | Pertumbuhan | Rekrut per bulan |
+|---|---|---|---|
+| **2026 (Okt–Des)** | **100** | dari nol | **35,4** |
+| 2027 | 178 | ×1,78 | 11,0 |
+| 2028 | 316 | ×1,78 | 19,4 |
+| 2029 | 562 | ×1,78 | 34,6 |
+| 2030 | 1.000 | ×1,78 | 61,6 |
+
+Dua titik yang Anda kunci: akhir 2026 = 100, akhir 2030 = 1.000. Tahun 2027
+sampai 2029 dihitung dengan **interpolasi geometris** di antara keduanya, yaitu
+`(1000/100)^(1/4) = 1,7783` per tahap.
+
 ### Ringkasan per bulan
 
-| Tahun | Bln | **Omzet/bln** | Fee Midtrans | PPh 0,5% | Biaya | **Margin bersih/bln** |
-|---|---|---|---|---|---|---|
-| 2026 | 3 | Rp 1.023.704 | Rp 10.570 | Rp 5.119 | Rp 3.720.000 | **−Rp 2.711.985** |
-| 2027 | 12 | Rp 17.163.251 | Rp 168.837 | Rp 85.816 | Rp 1.011.667 | **Rp 15.896.931** |
-| 2028 | 12 | Rp 52.954.334 | Rp 496.505 | Rp 264.772 | Rp 1.672.915 | **Rp 50.520.143** |
-| 2029 | 12 | Rp 119.842.294 | Rp 1.070.142 | Rp 599.211 | Rp 4.434.008 | **Rp 113.738.933** |
-| 2030 | 12 | Rp 271.322.145 | Rp 2.307.425 | Rp 1.356.611 | Rp 6.216.475 | **Rp 261.441.635** |
-
-Margin bersih tumbuh dari negatif Rp 2,7 juta per bulan (2026) menjadi
-**Rp 261,4 juta per bulan (2030)** —_literal_ 96,5 kali dalam 4,2 tahun.
-
-### Rincian 51 bulan
+| Tahun | Bln | **Margin bersih/bln** | Pelanggan akhir tahun |
+|---|---|---|---|
+| 2026 | 3 | **Rp 5.459.543** | 100 |
+| 2027 | 12 | **Rp 41.529.494** | 178 |
+| 2028 | 12 | **Rp 80.573.033** | 316 |
+| 2029 | 12 | **Rp 149.115.331** | 562 |
+| 2030 | 12 | **Rp 280.733.049** | 1.000 |
 
 Januari selalu terlihat paling tinggi di setiap tahun. Itu **bukan
 seasonality** — itu tagihan paket tahunan yang menumpuk di awal tahun. Untuk
-KPI bulanan, angka rata-rata di tabel sebelumnya lebih berguna.
+KPI bulanan, rata-rata di tabel ini lebih berguna.
 
-#### 2026 (Okt–Des)
+### Total pengrajin selama periode
 
-| Bulan | Aktif | Omzet | Fee | PPh 0,5% | Biaya | **Margin** |
-|---|---|---|---|---|---|---|
-| Okt | 3 | Rp 0 | Rp 0 | Rp 0 | Rp 3.720.000 | **−Rp 3.720.000** |
-| Nov | 7 | Rp 1.034.044 | Rp 10.677 | Rp 5.170 | Rp 3.720.000 | **−Rp 2.701.803** |
-| Des | 10 | Rp 2.037.068 | Rp 21.034 | Rp 10.185 | Rp 3.720.000 | **−Rp 1.714.152** |
+| Keterangan | Jumlah |
+|---|---|
+| Pernah berlangganan (kumulatif) | **1.626** |
+| Berhenti berlangganan (churned) | 626 |
+| Aktif pada akhir 2030 | 1.000 |
+
+Dari 1.626 yang mendaftar, 626 berhenti sebelum 2030. Churn tertinggi terjadi
+pada 2026–2027, ketika belum ada referensi dari pelanggan lama.
+
+### Rincian 51 bulan
+
+#### 2026
+
+| Bulan | Aktif | Margin bersih |
+|---|---|---|
+| Okt | 34 | Rp -4.620.608 |
+| Nov | 68 | Rp 5.561.363 |
+| Des | 100 | Rp 15.437.875 |
 
 #### 2027
 
-| Bulan | Aktif | Omzet | Fee | PPh 0,5% | Biaya | **Margin** |
-|---|---|---|---|---|---|---|
-| Jan | 19 | Rp 4.447.275 | Rp 44.400 | Rp 22.236 | Rp 1.011.667 | **Rp 3.368.972** |
-| Feb | 27 | Rp 5.947.741 | Rp 58.489 | Rp 29.739 | Rp 1.011.667 | **Rp 4.847.845** |
-| Mar | 36 | Rp 8.651.364 | Rp 85.077 | Rp 43.257 | Rp 1.011.667 | **Rp 7.511.364** |
-| Apr | 44 | Rp 11.273.879 | Rp 110.866 | Rp 56.369 | Rp 1.011.667 | **Rp 10.094.976** |
-| Mei | 52 | Rp 13.817.718 | Rp 135.882 | Rp 69.089 | Rp 1.011.667 | **Rp 12.601.080** |
-| Jun | 59 | Rp 16.285.242 | Rp 160.147 | Rp 81.426 | Rp 1.011.667 | **Rp 15.032.002** |
-| Jul | 66 | Rp 18.678.740 | Rp 183.685 | Rp 93.394 | Rp 1.011.667 | **Rp 17.389.995** |
-| Agu | 74 | Rp 21.000.434 | Rp 206.516 | Rp 105.002 | Rp 1.011.667 | **Rp 19.677.249** |
-| Sep | 80 | Rp 23.252.476 | Rp 228.662 | Rp 116.262 | Rp 1.011.667 | **Rp 21.895.885** |
-| Okt | 87 | Rp 25.436.958 | Rp 250.144 | Rp 127.185 | Rp 1.011.667 | **Rp 24.047.962** |
-| Nov | 94 | Rp 27.555.904 | Rp 270.982 | Rp 137.780 | Rp 1.011.667 | **Rp 26.135.476** |
-| Des | 100 | Rp 29.611.283 | Rp 291.194 | Rp 148.056 | Rp 1.011.667 | **Rp 28.160.365** |
+| Bulan | Aktif | Margin bersih |
+|---|---|---|
+| Jan | 108 | Rp 41.279.711 |
+| Feb | 115 | Rp 30.989.276 |
+| Mar | 122 | Rp 33.297.658 |
+| Apr | 129 | Rp 35.536.789 |
+| Mei | 136 | Rp 37.708.746 |
+| Jun | 143 | Rp 39.815.544 |
+| Jul | 149 | Rp 41.859.139 |
+| Agu | 155 | Rp 43.841.425 |
+| Sep | 161 | Rp 45.764.243 |
+| Okt | 167 | Rp 47.629.376 |
+| Nov | 173 | Rp 49.438.556 |
+| Des | 178 | Rp 51.193.460 |
 
 #### 2028
 
-| Bulan | Aktif | Omzet | Fee | PPh 0,5% | Biaya | **Margin** |
-|---|---|---|---|---|---|---|
-| Jan | 111 | Rp 46.696.387 | Rp 444.000 | Rp 233.482 | Rp 1.672.915 | **Rp 44.345.991** |
-| Feb | 122 | Rp 36.924.798 | Rp 345.823 | Rp 184.624 | Rp 1.672.915 | **Rp 34.721.436** |
-| Mar | 133 | Rp 40.552.159 | Rp 379.796 | Rp 202.761 | Rp 1.672.915 | **Rp 38.296.688** |
-| Apr | 143 | Rp 44.070.700 | Rp 412.749 | Rp 220.353 | Rp 1.672.915 | **Rp 41.764.682** |
-| Mei | 153 | Rp 47.483.684 | Rp 444.714 | Rp 237.418 | Rp 1.672.915 | **Rp 45.128.637** |
-| Jun | 163 | Rp 50.794.279 | Rp 475.719 | Rp 253.971 | Rp 1.672.915 | **Rp 48.391.673** |
-| Jul | 172 | Rp 54.005.556 | Rp 505.795 | Rp 270.028 | Rp 1.672.915 | **Rp 51.556.818** |
-| Agu | 181 | Rp 57.120.494 | Rp 534.968 | Rp 285.602 | Rp 1.672.915 | **Rp 54.627.009** |
-| Sep | 190 | Rp 60.141.985 | Rp 563.266 | Rp 300.710 | Rp 1.672.915 | **Rp 57.605.094** |
-| Okt | 199 | Rp 63.072.831 | Rp 590.715 | Rp 315.364 | Rp 1.672.915 | **Rp 60.493.836** |
-| Nov | 207 | Rp 65.915.751 | Rp 617.341 | Rp 329.579 | Rp 1.672.915 | **Rp 63.295.916** |
-| Des | 215 | Rp 68.673.384 | Rp 643.168 | Rp 343.367 | Rp 1.672.915 | **Rp 66.013.934** |
+| Bulan | Aktif | Margin bersih |
+|---|---|---|
+| Jan | 192 | Rp 80.240.737 |
+| Feb | 205 | Rp 60.971.250 |
+| Mar | 217 | Rp 65.261.552 |
+| Apr | 230 | Rp 69.423.146 |
+| Mei | 242 | Rp 73.459.891 |
+| Jun | 253 | Rp 77.375.535 |
+| Jul | 265 | Rp 81.173.709 |
+| Agu | 275 | Rp 84.857.937 |
+| Sep | 286 | Rp 88.431.639 |
+| Okt | 296 | Rp 91.898.130 |
+| Nov | 306 | Rp 95.260.626 |
+| Des | 316 | Rp 98.522.247 |
 
 #### 2029
 
-| Bulan | Aktif | Omzet | Fee | PPh 0,5% | Biaya | **Margin** |
-|---|---|---|---|---|---|---|
-| Jan | 239 | Rp 105.417.095 | Rp 954.600 | Rp 527.085 | Rp 4.434.008 | **Rp 99.501.401** |
-| Feb | 263 | Rp 83.417.483 | Rp 744.053 | Rp 417.087 | Rp 4.434.008 | **Rp 77.822.334** |
-| Mar | 286 | Rp 91.664.210 | Rp 817.610 | Rp 458.321 | Rp 4.434.008 | **Rp 85.954.270** |
-| Apr | 308 | Rp 99.663.535 | Rp 888.961 | Rp 498.318 | Rp 4.434.008 | **Rp 93.842.248** |
-| Mei | 330 | Rp 107.422.881 | Rp 958.172 | Rp 537.114 | Rp 4.434.008 | **Rp 101.493.586** |
-| Jun | 351 | Rp 114.949.446 | Rp 1.025.306 | Rp 574.747 | Rp 4.434.008 | **Rp 108.915.385** |
-| Jul | 371 | Rp 122.250.214 | Rp 1.090.426 | Rp 611.251 | Rp 4.434.008 | **Rp 116.114.529** |
-| Agu | 391 | Rp 129.331.960 | Rp 1.153.593 | Rp 646.660 | Rp 4.434.008 | **Rp 123.097.699** |
-| Sep | 410 | Rp 136.201.252 | Rp 1.214.864 | Rp 681.006 | Rp 4.434.008 | **Rp 129.871.374** |
-| Okt | 429 | Rp 142.864.467 | Rp 1.274.298 | Rp 714.322 | Rp 4.434.008 | **Rp 136.441.839** |
-| Nov | 447 | Rp 149.327.784 | Rp 1.331.948 | Rp 746.639 | Rp 4.434.008 | **Rp 142.815.189** |
-| Des | 464 | Rp 155.597.202 | Rp 1.387.869 | Rp 777.986 | Rp 4.434.008 | **Rp 148.997.340** |
+| Bulan | Aktif | Margin bersih |
+|---|---|---|
+| Jan | 340 | Rp 148.326.873 |
+| Feb | 363 | Rp 112.424.414 |
+| Mar | 386 | Rp 120.458.375 |
+| Apr | 408 | Rp 128.251.317 |
+| Mei | 430 | Rp 135.810.470 |
+| Jun | 450 | Rp 143.142.849 |
+| Jul | 470 | Rp 150.255.257 |
+| Agu | 490 | Rp 157.154.292 |
+| Sep | 509 | Rp 163.846.357 |
+| Okt | 527 | Rp 170.337.659 |
+| Nov | 545 | Rp 176.634.223 |
+| Des | 562 | Rp 182.741.889 |
 
 #### 2030
 
-| Bulan | Aktif | Omzet | Fee | PPh 0,5% | Biaya | **Margin** |
-|---|---|---|---|---|---|---|
-| Jan | 517 | Rp 238.880.040 | Rp 2.060.160 | Rp 1.194.400 | Rp 6.216.475 | **Rp 229.409.005** |
-| Feb | 567 | Rp 188.978.538 | Rp 1.605.350 | Rp 944.893 | Rp 6.216.475 | **Rp 180.211.820** |
-| Mar | 617 | Rp 207.618.128 | Rp 1.763.691 | Rp 1.038.091 | Rp 6.216.475 | **Rp 198.599.871** |
-| Apr | 665 | Rp 225.698.531 | Rp 1.917.282 | Rp 1.128.493 | Rp 6.216.475 | **Rp 216.436.281** |
-| Mei | 711 | Rp 243.236.522 | Rp 2.066.265 | Rp 1.216.183 | Rp 6.216.475 | **Rp 233.737.599** |
-| Jun | 756 | Rp 260.248.373 | Rp 2.210.779 | Rp 1.301.242 | Rp 6.216.475 | **Rp 250.519.877** |
-| Jul | 800 | Rp 276.749.869 | Rp 2.350.957 | Rp 1.383.749 | Rp 6.216.475 | **Rp 266.798.687** |
-| Agu | 843 | Rp 292.756.320 | Rp 2.486.930 | Rp 1.463.782 | Rp 6.216.475 | **Rp 282.589.133** |
-| Sep | 884 | Rp 308.282.577 | Rp 2.618.824 | Rp 1.541.413 | Rp 6.216.475 | **Rp 297.905.865** |
-| Okt | 924 | Rp 323.343.046 | Rp 2.746.761 | Rp 1.616.715 | Rp 6.216.475 | **Rp 312.763.095** |
-| Nov | 962 | Rp 337.951.702 | Rp 2.870.860 | Rp 1.689.759 | Rp 6.216.475 | **Rp 327.174.609** |
-| Des | 1.000 | Rp 352.122.097 | Rp 2.991.235 | Rp 1.760.610 | Rp 6.216.475 | **Rp 341.153.776** |
+| Bulan | Aktif | Margin bersih |
+|---|---|---|
+| Jan | 605 | Rp 279.174.731 |
+| Feb | 647 | Rp 212.116.990 |
+| Mar | 687 | Rp 227.143.047 |
+| Apr | 726 | Rp 241.718.323 |
+| Mei | 764 | Rp 255.856.340 |
+| Jun | 801 | Rp 269.570.217 |
+| Jul | 837 | Rp 282.872.677 |
+| Agu | 871 | Rp 295.776.063 |
+| Sep | 905 | Rp 308.292.348 |
+| Okt | 938 | Rp 320.433.145 |
+| Nov | 969 | Rp 332.209.717 |
+| Des | 1000 | Rp 343.632.992 |
 
 ### Total 4,2 tahun
 
 | Komponen | Jumlah |
 |---|---|
-| Omzet bruto | Rp 5.538.455.404 |
-| Fee Midtrans | −Rp 48.546.603 |
-| PPh final 0,5% | −Rp 27.692.277 |
-| Biaya infrastruktur + legal/admin | −Rp 171.180.768 |
-| **Margin bersih** | **Rp 5.291.035.743 (95,53% dari omzet)** |
+| Omzet bruto | Rp 6.927.860.232 |
+| Fee Midtrans | −Rp 61.368.715 |
+| PPh final 0,5% | −Rp 34.639.301 |
+| Biaya infrastruktur + legal/admin | −Rp 192.062.700 |
+| **Margin bersih** | **Rp 6.639.789.516 (95,84% dari omzet)** |
 
-Rata-rata 51 bulan: **Rp 103.745.799 per bulan**.
+Rata-rata 51 bulan: **Rp 130.191.951 per bulan**.
+
+### Titik kas terendah
+
+Kas terendah hanya **Rp −4.620.608**, di Oktober 2026 — bulan pertama. Setelah
+itu margin positif dan langsung menutup seluruh kekurangan. Kebutuhan modal
+tidak berubah: **sekitar Rp 5 juta** untuk menyalin 3 bulan pertama.
 
 ### Kapan cukup untuk gaji
 
-Tidak ada tabel gaji di dokumen ini lagi — Anda yang menentukan dari margin.
-Angla berikut menunjukkan kapasitas, bukan jadwal gaji:
-
-| Margin/bln | Pelanggan aktif | Setara gaji per orang (jika 50:50) |
+| Margin/bln | Pelanggan aktif | Setara gaji per orang (bila 50:50) |
 |---|---|---|
-| Rp 15.896.931 (rata-rata 2027) | ~100 | Rp 7.948.465 |
-| Rp 50.520.143 (rata-rata 2028) | ~215 | Rp 25.260.071 |
-| Rp 113.738.933 (rata-rata 2029) | ~464 | Rp 56.869.466 |
-| Rp 261.441.635 (rata-rata 2030) | ~1.000 | Rp 130.720.817 |
+| Rp 5.459.543 (rata-rata 2026) | 100 | Rp 2.729.771 |
+| Rp 41.529.494 (rata-rata 2027) | 178 | Rp 20.764.747 |
+| Rp 80.573.033 (rata-rata 2028) | 316 | Rp 40.286.516 |
+| Rp 149.115.331 (rata-rata 2029) | 562 | Rp 74.557.665 |
+| Rp 280.733.049 (rata-rata 2030) | 1.000 | Rp 140.366.524 |
 
-**2026 dan 2027 adalah dua tahun yang tidak bisa menanggung gaji apa pun.**
-Margin 2026 negatif Rp 8,1 juta, dan rata-rata 2027 Rp 15,9 juta per bulan.
-
-**Dana yang dibutuhkan tetap Rp 8.135.955** — hanya untuk 3 bulan terakhir
-2026, dan hanya karena legal/admin Rp 9 juta (termasuk laporan tahunan
-pertama). Infrastruktur dan pajak nyaris tidak memakai modal.
+**2026 tidak bisa menanggung gaji apa pun.** Mulai 2027 margin rata-rata Rp 41,5 juta per bulan, jadi gaji
+Rp 20 juta per orang sudah tertutup.
 
 ### Kebutuhan modal per skenario
 
@@ -354,15 +380,18 @@ kesalahan optimism.
 
 ### Unit economics
 
-| Tahun | ARPU | Infrastruktur per pelanggan per bulan | Margin infrastructure |
+| Tahun | ARPU | Infrastruktur per pelanggan per bulan | Margin infrastruktur |
 |---|---|---|---|
-| 2026 | Rp 430.000 | Rp 72.000 | 76,3% |
-| 2027 | Rp 451.500 | Rp 7.200 | 99,6% |
-| 2028 | Rp 474.075 | Rp 6.424 | 99,8% |
-| 2029 | Rp 497.779 | Rp 8.748 | 99,7% |
-| 2030 | Rp 522.668 | Rp 5.800 | 99,8% |
+| 2026 | Rp 430.000 | Rp 2.240 | 92,2% |
+| 2027 | Rp 451.500 | Rp 7.200 | 98,3% |
+| 2028 | Rp 474.075 | Rp 5.293 | 98,9% |
+| 2029 | Rp 497.779 | Rp 8.748 | 97,0% |
+| 2030 | Rp 522.668 | Rp 5.800 | 98,9% |
 
----
+Biaya infrastruktur per pelanggan turun seiring skala. Karena tidak ada payroll
+dan tidak ada akuntansi outsourced, **hampir seluruh revenue menjadi margin**:
+95,84% dalam 4,2 tahun. Yang tersisa hanya fee Midtrans (0,89%), PPh Rezim A
+(0,50%), dan biaya operasional (2,77%).
 
 ## 5. Yang tidak ada di dokumen ini
 
@@ -372,8 +401,9 @@ Sengaja dikecualikan, dan sebaiknya tetap dikecualikan:
   Yang belum: PPh Pasal 21 atas gaji sendiri, PPh Pasal 23 rekening bank,
   pajak pengalihan status perseroan, dan dampak PPN ke harga.
 - **Biaya akuisisi (CAC).** Tidak ada anggaran iklan, semuanya diasumsikan
-  organic atau referral. Dengan laba bersih Rp 69 juta, satu kali biaya
-  akuisisi Rp 200 juta sudah menghapus seluruh laba lima tahun.
+  organic atau referral. Ini asumsi yang paling berat: 1.626 orang mendaftar
+  tanpa satu rupiah pun untuk iklan. Dengan margin 2026 hanya Rp 16 juta, satu
+  kali biaya akuisisi Rp 50 juta sudah menghapus laba tahun pertama.
 - **Biaya refund, sengketa, dan klaim.** Keputusan produk: tidak ada refund.
   Kalau berubah, lihat risiko di [Bagian 6](#6-risiko-yang-tidak-terlihat-di-angka).
 - **Pajak global** untuk 1.000 pengrajin di luar Indonesia.
@@ -404,13 +434,28 @@ Ada ironi tambahan: COD dikunci sampai rekening pengrajin berstatus
 `verified`, dan verifikasi hanya bisa lewat Payouts API — jadi keputusan
 "COD lebih dulu" justru terblokir kredensial yang belum ada.
 
-### 2. Kurva 10 menjadi 100 dalam 12 bulan belum pernah diuji
+### 2. 100 pengrajin dalam 3 bulan adalah bagian paling rapuh dari proyeksi
 
-Belum ada pelanggan nyata, jadi churn 3% per bulan adalah angka dari
-literatur SaaS SMB, bukan dari data FurniTech. Kalau churn sebenarnya 5%,
-rekrut yang dibutuhkan naik dari 1.504 menjadi 1.870 orang
-([Bagian 7](#7-sensitivitas)) — artinya sekitar 24% lebih banyak penjualan
-untuk hasil yang sama.
+Target ini jauh lebih agresif dari versi sebelumnya. Yang dipertanyakan bukan
+"bisakah 100 pengrajin tercapai" — itu tidak mustahil — tapi **dari mana
+35,4 pelanggan baru per bulan datang, bulan pertama, tanpa satu pun pelanggan
+sebelumnya dan tanpa reputasi**.
+
+Yang tidak terlihat di tabel margin:
+
+- 100 pelanggan di 2026 berarti 100 orang yang harus **dibantu** satu per satu
+  oleh 2 orang, sebelum ada yang bisa merekomendasikan ke orang lain.
+- Bulannya tidak merata. Hampir seluruh omzet 2026 terjadi pada November dan
+  Desember, karena tagihan hanya masuk setelah pelanggan membayar.
+- Churn 3% per bulan diasumsikan berlaku sejak hari pertama. Untuk produk yang
+  belum pernah dipakai, churn bulan pertama biasanya jauh lebih tinggi. Kalau
+  churn bulan pertama 15% dan seterusnya 3%, rekrutan 2026 naik dari 106
+  menjadi sekitar 190 — dan biaya untuk mendapatkannya tidak ada di P&L
+  karena tidak ada anggaran untuk itu.
+
+Kalau target awal ini tidak tercapai, yang runtuh bukan cuma 2026: seluruh
+kurva 2027–2030 bergantung pada pelanggan yang seharusnya sudah ada di akhir
+2026. Kurva geometris menghitung orang yang belum ada.
 
 ### 3. Harga belum pernah diuji terhadap willingness to pay
 
@@ -418,12 +463,12 @@ Rp 300.000 per bulan adalah tebakan. Belum ada satu pun pelanggan yang
 membayar sepenuhnya. Kampanye yang berhasil memberi umumnya terlihat sangat
 berbeda di kurva retensi.
 
-### 4. 85% pendapatan datang dari 2029–2030
+### 4. 77% pendapatan datang dari 2029–2030
 
-Rp 4,65 miliar dari Rp 5,49 miliar terjadi pada dua tahun terakhir. Proyeksi
+Rp 5,36 miliar dari Rp 6,93 miliar terjadi pada dua tahun terakhir. Proyeksi
 sangat sensitif terhadap apa pun yang menggagalkan 2029–2030. Sebaliknya,
-2026–2028 hanya menghasilkan Rp 836 juta pendapatan kumulatif — cukup untuk
-menggaji 2 orang selama 3 bulan, tidak lebih.
+2026–2028 hanya menghasilkan Rp 1,57 miliar pendapatan kumulatif, sementara
+biaya legal tiga tahun pertama saja menghabiskan Rp 43 juta dari margin itu.
 
 ### 5. Dua orang mungkin tidak cukup di 1.000 pelanggan
 
@@ -471,14 +516,26 @@ lebih kecil.
 
 ### Target — kalau jumlah pengrajin meleset
 
-| Skenario | Aktif akhir 2030 | Total terdaftar | Pendapatan 5 tahun |
-|---|---|---|---|
-| Konservatif 5-50-150-300-500 | 500 | 793 | Rp 3.222.020.550 |
-| **Dasar 10-100-215-464-1.000** | **1.000** | **1.504** | **Rp 5.489.908.800** |
-| Optimis 20-150-400-700-1.500 | 1.500 | 2.287 | Rp 8.588.734.667 |
+Target baru mengubah kesimpulan. Kalau 2026 hanya mencapai 50, dan 2030 tetap
+ditahan di 1.000, kurvanya harus mengejar lebih cepat di empat tahun
+berikutnya:
 
-Rentang pendapatan Rp 3,2 miliar sampai Rp 8,6 miliar hanya berasal dari
-ketidakpastian jumlah pelanggan — bukan dari harga, bukan dari infrastruktur.
+| Skenario | Aktif akhir 2026 | Aktif akhir 2030 | Omzet 5 th | Margin 5 th |
+|---|---|---|---|---|
+| 2026 separuh, 2030 tercapai | 50 | 1.000 | Rp 5.735.598.330 | Rp 5.464.440.782 |
+| **Dasar** | **100** | **1.000** | **Rp 6.927.860.232** | **Rp 6.639.789.516** |
+| 2026 naik 50%, 2030 tercapai | 150 | 1.000 | Rp 7.866.475.190 | Rp 7.565.038.592 |
+| 2026 tercapai, 2030 separuh | 100 | 500 | Rp 4.342.305.309 | Rp 4.089.714.709 |
+| keduanya meleset | 50 | 500 | Rp 3.463.930.116 | Rp 3.223.863.408 |
+
+Rentang margin Rp 3,22 miliar sampai Rp 7,57 miliar. **2030 menentukan
+segala sesuatu:** skenario dengan 2030 = 1.000 selalu menang, apa pun yang
+terjadi di 2026. Tahun 2026 hanya menyumbang Rp 30 juta dari Rp 6,93 miliar —
+kurang dari 0,5%.
+
+Artinya 2026 yang paling rapuh secara operasional justru paling tidak
+berdampak secara finansial. Yang harus dijaga bukan 100 pelanggan pertama,
+tapi kemampuan menjaga pertumbuhan menuju 1.000 pada 2030.
 
 ---
 
@@ -512,12 +569,12 @@ ketidakpastian jumlah pelanggan — bukan dari harga, bukan dari infrastruktur.
    orang adalah 500 pelanggan per orang, tanpa onboarding otomatis. Beban ini
    tidak terlihat di P&L — hanya sebagai kelelahan.
 7. **Gunakan angka bulanan, bukan tahunan, untuk keputusan.** Rata-rata
-   2027 Rp 15,9 juta dan 2030 Rp 261,4 juta. Melihat total lima tahun
-   membuat 2027–2028 terlihat besar padahal dua tahun pertama itu hampir
-   tidak menghasilkan apa-apa.
-8. **Dana yang dibutuhkan hanya Rp 8,1 juta.** Tidak perlu modal ventura.
-   Tidak ada modal yang memaksa tumbuh cepat, jadi pertumbuhan harus datang
-   dari prioritas, bukan tekanan pendanaan.
+   2027 Rp 41,5 juta dan 2030 Rp 280,7 juta. Melihat total lima tahun
+   membuat 2026–2027 terlihat kecil padahal di situlah target 100 dan
+   seluruh kurva ditentukan.
+8. **Dana yang dibutuhkan hanya sekitar Rp 5 juta**, di bulan pertama. Tidak
+   perlu modal ventura. Tidak ada modal yang memaksa tumbuh cepat, jadi
+   pertumbuhan harus datang dari prioritas, bukan tekanan pendanaan.
 9. **Hitung ulang dokumen ini setiap kali asumsi berubah.** Seluruh asumsi
    terkumpul di [Bagian 10](#10-asumsi-yang-dapat-diubah).
 
@@ -686,7 +743,7 @@ tidak mustahil terjadi.
 | Churn | 3% per bulan | **asumsi Anda** |
 | Inflasi harga | 5% per tahun | **asumsi Anda** |
 | Kurs USD | Rp 16.000 | **asumsi saya** |
-| Interpolasi 2028–2029 | geometris ×2,1544 per tahun | hitungan |
+| Interpolasi 2027–2029 | geometris ×1,7783 per tahun | hitungan |
 | Legal dan admin | Rp 9 jt (2026) → 3,5–5 jt/tahun | **angka tebakan saya** |
 | Jam CPU Vercel | 20 → 1.500 jam per bulan | **angka tebakan saya** |
 | PITR Supabase | aktif mulai 2029 | keputusan saya |
@@ -701,3 +758,9 @@ beban gaji penuh dengan BPJS, THR, dan gaji 13 — asumsi yang tidak sesuai
 model 2 orang ini. Kedua, versi sebelumnya menyimpulkan bahwa "semakin lambat
 tumbuh, semakin besar modal yang dibutuhkan"; kesimpulan itu **artefak dari
 asumsi gaji** dan tidak lagi berlaku setelah gaji dikeluarkan dari P&L.
+
+Target pelanggan sendiri bukan asumsi: 100 akhir 2026 dan 1.000 akhir 2030
+adalah keputusan Anda. Yang tidak diketahui adalah apakah kurva geometris di
+tengahnya realistis, dan apakah 106 rekrutan dalam 3 bulan pertama bisa
+dilakukan oleh 2 orang tanpa anggaran iklan.
+
