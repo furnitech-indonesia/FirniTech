@@ -7,10 +7,11 @@ pertumbuhan dan biaya yang dinyatakan terbuka di
 halaman pricing resmi yang berlaku saat dokumen ini ditulis, bukan dari ingatan.
 
 Ringkasan satu kalimat: **1.000 pengrajin aktif di akhir 2030 menghasilkan
-pendapatan kotor Rp 5,54 miliar dalam 4,2 tahun — tetapi setelah biaya orang,
-laba bersihnya hanya Rp 69 juta, dan kas terendah ada di angka minus
-Rp 1,03 miliar pada akhir 2029.** Infrastruktur cuma 2,65% dari pendapatan.
-Yang menentukan bukan server, tapi orang — 95% dari seluruh biaya.
+revenue Rp 5,49 miliar dalam 4,2 tahun, dengan margin bersih Rp 5,23 miliar
+(95,3%) — karena tidak ada beban gaji di P&L.** Dana yang dibutuhkan hanya
+Rp 14,1 juta pada 2026. Yang tidak terlihat di angka ini: 2 orang tidak
+mungkin menangani 1.000 pelanggan, dan itu tidak akan muncul sebagai rupiah
+di mana pun.
 
 ---
 
@@ -140,45 +141,10 @@ memakai nomor telepon terhubung. Nomor itu bisa diblokir atau melanggar
 kebijakan layanan, dan notifikasi pesanan ikut mati. Itu alasan sebenarnya
 keputusan v1.3 diambil.
 
-### 3c. Orang, legal, dan administrasi
+### 3c. Legal dan administrasi
 
-Ini bagian yang benar-benar menentukan — 95% dari seluruh biaya. **Angka-angka
-di bawah adalah tebakan saya, bukan data payroll Anda**, dan saya menandainya
-begitu karena asumsi yang tidak ditandai akan terbaca sebagai fakta.
-
-#### Susunan tim (angka tebakan, perlu Anda ganti)
-
-| Peran | 2026 | 2027 | 2028 | 2029 | 2030 |
-|---|---|---|---|---|---|
-| Founder / tech lead | 20 jt | 22 jt | 24 jt | 26 jt | 28 jt |
-| Developer | — | — | 18 jt | 36 jt (×2) | 56 jt (×3) |
-| Customer support | 6 jt (paruh waktu) | 7 jt | 14 jt (×2) | 15 jt (×2) | 24 jt (×3) |
-| Admin & keuangan | — | 6 jt | 7 jt | 8 jt | 10 jt |
-| Operasional | — | — | — | 8 jt | 9 jt |
-| **Total gaji pokok** | **26 jt** | **35 jt** | **63 jt** | **93 jt** | **127 jt** |
-| BPJS Termination 14% | 3,64 jt | 4,90 jt | 8,82 jt | 13,02 jt | 17,78 jt |
-| **Beban per bulan** | **29,64 jt** | **39,90 jt** | **71,82 jt** | **106,02 jt** | **144,78 jt** |
-
-BPJS Termination dari pengusaha pengusaha: JKK 0,24–1,74% + JHT 3,7% + JKM 3,7% +
-JP 5% = 12,64–14,14%, ditambah BPJS Kesehatan 1% = sekitar 14%. Angka 14%
-adalah pembulatan, bukan angka pasti.
-
-#### THR dan gaji 13
-
-Keduanya **wajib** di Indonesia dan masing-masing setara satu bulan gaji, jadi
-dua bulan tambahan per tahun penuh:
-
-| | 2026 | 2027 | 2028 | 2029 | 2030 |
-|---|---|---|---|---|---|
-| Gaji × jumlah bulan | 88,92 jt | 478,80 jt | 861,84 jt | 1.272,24 jt | 1.737,36 jt |
-| THR + gaji 13 | — | 79,80 jt | 143,64 jt | 212,04 jt | 289,56 jt |
-| **Total tim** | **88,92 jt** | **558,60 jt** | **1.005,48 jt** | **1.484,28 jt** | **2.026,92 jt** |
-| **Total 5 tahun** | | | **Rp 5.164.200.000** | | |
-
-Versi pertama dokumen ini **tidak menghitung THR dan gaji 13**, sehingga biaya
-tim kurang Rp 784 juta dalam 4 tahun. Itu kesalahan, bukan pilihan.
-
-#### Legal & admin
+Beban ini **tidak termasuk gaji**, sesuai asumsi bahwa aplikasi ini dioperasikan
+oleh 2 orang yang gajinya diambil dari margin bersih, bukan dibebankan ke P&L.
 
 2026, sekali bayar Rp 15.000.000:
 
@@ -193,90 +159,122 @@ tim kurang Rp 784 juta dalam 4 tahun. Itu kesalahan, bukan pilihan.
 | Dana tak terduga | Rp 6.000.000 |
 | **Total** | **Rp 15.000.000** |
 
-2027, Rp 18.000.000 per tahun:
+2027 dan 2028, Rp 18.000.000 per tahun: pembukuan outsourced Rp 1 jt/bulan
+(Rp 12 jt), laporan tahunan dan RUPS Rp 4 jt, renewal domain .com Rp 167.000,
+konsultasi pajak Rp 1.833.000. 2029 dan 2030 dinaikkan menjadi Rp 24 juta dan
+Rp 36 juta seiring skala. **Pajak penghasilan belum dihitung** — perusahaan belum
+PKP sehingga PPN output belum ada.
 
-| Item | Biaya |
-|---|---|
-| Akuntansi dan pembukuan outsourced (Rp 1 jt/bulan) | Rp 12.000.000 |
-| Laporan tahunan dan RUPS | Rp 4.000.000 |
-| Renewal domain .com | Rp 167.000 |
-| Konsultasi pajak | Rp 1.833.000 |
-| **Total** | **Rp 18.000.000** |
+### 3d. Gaji: nol di P&L, tapi bukan nol di kenyataan
 
-2028 sama dengan 2027. 2029 dan 2030 dinaikkan menjadi Rp 24 juta dan
-Rp 36 juta seiring skala. **Belum termasuk pajak penghasilan** — perusahaan
-belum PKP sehingga PPN output belum ada, tetapi PPh atas laba tetap berlaku
-dan belum dihitung di sini.
+Bagian ini sengaja ditulis eksplisit karena tabel margin di atas bisa salah
+dibaca.
 
----
+Tidak ada satu pun rupiah gaji yang masuk ke tabel di atas. Angka Rp 5,23 miliar
+adalah **uang yang masuk ke perusahaan sebelum kedua orang menggambarnya**. Yang
+benar-benar diterima setelah digaji ada di [Bagian 4](#4-revenue-dan-margin-bersih-setiap-tahun).
 
-## 4. Ringkasan laba dan kebutuhan kas
+Dua hal yang tidak hilang hanya karena tidak masuk P&L:
 
-| Tahun | Aktif | Pendapatan bersih | Total biaya | Laba / Rugi | **Kas kumulatif** |
+- **THR dan gaji 13 tetap wajib** bila orang kedua berstatus karyawan. Keduanya
+  setara satu bulan gaji, jadi dua bulan per tahun penuh. Yang bisa dihindari
+  hanya bilastatusnya kontraktor, dan itu berbeda secara hukum ketenagakerjaan.
+- **Tidak menggaji berarti menunda penghasilan, bukan menghemat.** Kalau Anda
+  dan satu orang lain menarik Rp 30 juta per bulan, total Rp 60 juta per bulan
+  keluar dari angka margin bersih tersebut, sepadat dengan cost base Rp 26.640.000
+  per tahun yang terlihat di tabel biaya. Angka gajinya ada di
+  [Bagian 4](#4-revenue-dan-margin-bersih-setiap-tahun).
+
+## 4. Revenue dan margin bersih setiap tahun
+
+### Biaya yang dipotong dari revenue
+
+| Tahun | Infrastruktur | Legal & admin | **Total biaya** |
+|---|---|---|---|
+| 2026 (3 bln) | Rp 2.160.000 | Rp 15.000.000 | **Rp 17.160.000** |
+| 2027 | Rp 8.640.000 | Rp 18.000.000 | **Rp 26.640.000** |
+| 2028 | Rp 16.574.976 | Rp 18.000.000 | **Rp 34.574.976** |
+| 2029 | Rp 48.708.096 | Rp 24.000.000 | **Rp 72.708.096** |
+| 2030 | Rp 69.597.696 | Rp 36.000.000 | **Rp 105.597.696** |
+| **Total** | **Rp 145.680.768** | **Rp 111.000.000** | **Rp 256.680.768** |
+
+Total biaya 4,2 tahun hanya **Rp 256.680.768**, yaitu 4,7% dari total revenue.
+
+### Revenue dan margin bersih
+
+| Tahun | Pelanggan aktif | **Revenue** | **Margin bersih** | Margin % | Kas kumulatif |
 |---|---|---|---|---|---|
-| 2026 | 10 | Rp 3.039.401 | Rp 106.080.000 | −Rp 103.040.599 | −Rp 103.040.599 |
-| 2027 | 100 | Rp 203.932.969 | Rp 585.240.000 | −Rp 381.307.031 | −Rp 484.347.630 |
-| 2028 | 215 | Rp 629.493.953 | Rp 1.040.054.976 | −Rp 410.561.023 | −Rp 894.908.652 |
-| 2029 | 464 | Rp 1.425.265.829 | Rp 1.556.988.096 | −Rp 131.722.267 | **−Rp 1.026.630.919** |
-| 2030 | 1.000 | Rp 3.228.176.648 | Rp 2.132.517.696 | +Rp 1.095.658.952 | +Rp 69.028.032 |
+| 2026 | 10 | Rp 3.039.401 | **−Rp 14.120.599** | −464,6% | −Rp 14.120.599 |
+| 2027 | 100 | Rp 203.932.969 | **Rp 177.292.969** | 86,9% | Rp 163.172.370 |
+| 2028 | 215 | Rp 629.493.953 | **Rp 594.918.977** | 94,5% | Rp 758.091.348 |
+| 2029 | 464 | Rp 1.425.265.829 | **Rp 1.352.557.733** | 94,9% | Rp 2.110.649.081 |
+| 2030 | 1.000 | Rp 3.228.176.648 | **Rp 3.122.578.952** | 96,7% | Rp 5.233.228.032 |
+| **Total** | | **Rp 5.489.908.800** | **Rp 5.233.228.032** | **95,3%** | |
 
-**Total 4,2 tahun: pendapatan Rp 5.489.908.800, biaya Rp 5.420.880.768, laba
-bersih Rp 69.028.032.**
+Kas kumulatif **positif sejak 2027**. Hanya ada dua tahun yang perlu dana:
+Okt–Des 2026 hanya butuh Rp 14,1 juta.
 
-Laba Rp 69 juta atas pendapatan Rp 5,49 miliar adalah margin 1,26%. Setelah
-THR dan gaji 13 diperhitungkan, 2029 tidak lagi impas — dan kas kumulatif
-hanya pernah menyentuh positif sebesar Rp 69 juta, di akhir 2030.
+### Setelah digaji 2 orang
+
+Margin bersih di atas adalah uang yang masuk ke perusahaan. Berikut yang tersisa
+setelah kedua orang menggaji diri, dengan beberapa skenarionya:
+
+| Gaji per orang per bulan | 2026 | 2027 | 2028 | 2029 | 2030 |
+|---|---|---|---|---|---|
+| | −4,7 jt/bln | 14,8 jt/bln | 49,6 jt/bln | 112,7 jt/bln | 260,2 jt/bln |
+| **20 jt (40 jt/bln)** | kurang 44,7 jt | kurang 25,2 jt | sisa 9,6 jt | sisa 72,7 jt | sisa 220,2 jt |
+| **25 jt (50 jt/bln)** | kurang 54,7 jt | kurang 35,2 jt | kurang 0,4 jt | sisa 62,7 jt | sisa 210,2 jt |
+| **30 jt (60 jt/bln)** | kurang 64,7 jt | kurang 45,2 jt | kurang 10,4 jt | sisa 52,7 jt | sisa 200,2 jt |
+| **40 jt (80 jt/bln)** | kurang 84,7 jt | kurang 65,2 jt | kurang 30,4 jt | sisa 32,7 jt | sisa 180,2 jt |
+
+**Pelanggan aktif yang dibutuhkan untuk menggaji 2 orang**, dari ARPU bersih
+Rp 420.331 per pelanggan per bulan:
+
+| Gaji per orang | Pelanggan aktif yang dibutuhkan |
+|---|---|
+| Rp 20 juta | 96 |
+| Rp 25 juta | 119 |
+| Rp 30 juta | 143 |
+
+2028 adalah tahun paling ketat: margin Rp 49,6 juta per bulan hampir persis
+tidak cukup untuk 2 orang bergaji Rp 25 juta. **2029 adalah tahun pertama kedua
+orang bisa bergaji penuh tanpa menarik kas.**
 
 ### Tiga angka yang harus dibaca
 
-1. **Kebutuhan kas puncak: Rp 1,03 miliar** (akhir 2029). Ini angka yang harus
-   disiapkan sekarang, bukan laba 2030. Kas kumulatif nyaris tidak pernah
-   positif: hanya Rp 69 juta, dan itu di akhir 2030 — 4,2 tahun setelah rilis.
-2. **Titik impas naik terus: 423 pelanggan rata-rata aktif per bulan di 2030.**
-   Jumlah pelanggan yang harus dibiayai terus bertambah karena tim ikut
-   tumbuh — dari 85 pelanggan (2026) menjadi 423 (2030).
-3. **Infrastruktur hanya 2,65% dari pendapatan.** Margin infrastruktur
-   99,6–99,8% sejak 2027. Server bukan variabel yang perlu dioptimalkan;
-   memangkas tagihan Vercel tidak akan menyelamatkan bisnis ini.
+1. **Margin bersih total Rp 5,23 miliar dalam 4,2 tahun**, dengan margin 95,3%.
+   Hampir semua revenue menjadi margin karena tidak ada beban payroll.
+2. **Dana yang dibutuhkan hanya Rp 14,1 juta** — untuk 3 bulan terakhir 2026,
+   sebagian besar untuk pendirian PT. Tidak perlu modal ventura.
+3. **Kedua orang baru bisa bergaji penuh pada 2029** pada gaji Rp 30 juta per
+   orang. 2026 dan 2027 harus ditanggung dari sumber lain.
 
-### Kebutuhan modal per skenario — dan mengapa urutannya terbalik
+### Kebutuhan modal per skenario
 
-Tabel biaya tim di Bagian 3c **tidak ikut menyesuaikan** dengan jumlah
-pelanggan: diasumsikan tetap apa pun yang terjadi di pasar. Akibatnya ada
-konsekuensi yang berlawanan dengan intuisi:
+Tanpa beban gaji, kesimpulan berubah total. Versi dokumen sebelumnya
+mengclaiming bahwa "semakin lambat tumbuh, semakin besar modal yang dibutuhkan"
+— itu **artefak dari asumsi gaji yang tidak relevan dengan model ini**, dan
+sekarang tidak berlaku. Ketiga skenario profitable:
 
-| Skenario | Aktif akhir 2030 | Kebutuhan modal puncak | Kapan |
-|---|---|---|---|
-| Optimis 20-150-400-700-1.500 | 1.500 | **Rp 369 juta** | 2027 |
-| **Dasar 10-100-215-464-1.000** | **1.000** | **Rp 1,027 miliar** | **2029** |
-| Konservatif 5-50-150-300-500 | 500 | **Rp 2,199 miliar** | 2030, belum impas |
+| Skenario | Aktif akhir 2030 | Revenue 5 th | Biaya 5 th | Margin 5 th | Margin % |
+|---|---|---|---|---|---|
+| Konservatif 5-50-150-300-500 | 500 | Rp 3.222.020.550 | Rp 256.680.768 | Rp 2.965.339.782 | 92,0% |
+| **Dasar 10-100-215-464-1.000** | **1.000** | **Rp 5.489.908.800** | **Rp 256.680.768** | **Rp 5.233.228.032** | **95,3%** |
+| Optimis 20-150-400-700-1.500 | 1.500 | Rp 8.588.734.667 | Rp 256.680.768 | Rp 8.332.053.899 | 97,0% |
 
-**Semakin lambat tumbuh, semakin besar modal yang dibutuhkan.** Ini bukan
-aneh: biaya tim itu tetap, jadi di skenario konservatif ia tidak pernah
-teramortisasi — 500 pelanggan di 2030 masih rugi, sedangkan 1.500 pelanggan
-di 2030 sudah menutup seluruh biaya lima tahun.
-
-Konsekuensi praktis: **jangan siapkan modal berdasarkan skenario yang paling
-optimis.** Yang benar adalah menyiapkan Rp 2,2 miliar untuk skenario
-konservatif, karena itu skenario yang paling mungkin terjadi dan belum impas
-sama sekali pada 2030. Angka Rp 1,03 miliar hanya berlaku kalau target
-1.000 pelanggan benar-benar tercapai.
+Rentang margin Rp 2,97 miliar sampai Rp 8,33 miliar. Bahkan skenario konservatif
+sudah sangat profitable — yang membuat model ini tahan terhadap kesalahan
+optimisme.
 
 ### Unit economics
 
-| Tahun | ARPU | Infrastruktur per pelanggan per bulan | Margin infrastruktur |
+| Tahun | ARPU | Infrastruktur per pelanggan per bulan | Margin infrastructure |
 |---|---|---|---|
 | 2026 | Rp 430.000 | Rp 72.000 | 76,3% |
 | 2027 | Rp 451.500 | Rp 7.200 | 99,6% |
 | 2028 | Rp 474.075 | Rp 6.424 | 99,8% |
 | 2029 | Rp 497.779 | Rp 8.748 | 99,7% |
 | 2030 | Rp 522.668 | Rp 5.800 | 99,8% |
-
-Biaya infrastruktur per pelanggan **turun** seiring skala — dari Rp 7.200 ke
-Rp 5.800 per bulan. Model ini tidak akan mendapat manfaat berarti dari
-economies of scale, karena revenue per pelanggan naik 21,6% dalam 4 tahun
-sedangkan infrastruktur per pelanggan nyaris datar. Yang menentukan
-profitabilitas adalah **pertumbuhan jumlah pelanggan**, bukan efisiensi biaya.
 
 ---
 
@@ -335,35 +333,31 @@ berbeda di kurva retensi.
 ### 4. 85% pendapatan datang dari 2029–2030
 
 Rp 4,65 miliar dari Rp 5,49 miliar terjadi pada dua tahun terakhir. Proyeksi
-ini sangat sensitif terhadap apa pun yang menggagalkan 2029–2030. Sebaliknya,
-2026–2028 hampir tidak menghasilkan apa-apa: Rp 836 juta pendapatan kumulatif
-melawan Rp 1,73 miliar biaya.
+sangat sensitif terhadap apa pun yang menggagalkan 2029–2030. Sebaliknya,
+2026–2028 hanya menghasilkan Rp 836 juta pendapatan kumulatif — cukup untuk
+menggaji 2 orang selama 3 bulan, tidak lebih.
 
-### 5. Beban tim adalah asumsi, dan proyeksi ini tidak punya margin aman
+### 5. Dua orang mungkin tidak cukup di 1.000 pelanggan
 
-Biaya orang (Rp 5,16 miliar) adalah 95% dari total biaya, dan angka gaji di
-dokumen ini adalah tebakan saya, bukan data payroll Anda. Kalau ternyata keliru
-20% — hal yang sangat mungkin, karena saya tidak punya datanya:
+Ini risiko operasional yang sama sekali tidak terlihat di P&L. Dengan 2 orang
+dan 1.000 pelanggan, setiap orang menangani 500 pelanggan. Yang otomatis
+datang per pelanggan: onboarding, pertanyaan tagihan, masalah pengiriman,
+permintaan bantuan ekspor, dan pengaduan. Aplikasi sekarang tidak punya
+onboarding otomatis maupun self-service, jadi semuanya masuk ke 2 orang.
 
-| Gaji | Biaya tim 5 th | Laba 5 th | Modal puncak |
-|---|---|---|---|
-| ×0,8 | Rp 4.131.360.000 | +Rp 1.101.868.032 | Rp 564 juta |
-| **×1,0 (dasar)** | **Rp 5.164.200.000** | **+Rp 69.028.032** | **Rp 1.027 miliar** |
-| ×1,2 | Rp 6.197.040.000 | **−Rp 963.811.968** | Rp 1.654 miliar |
-| ×1,5 | Rp 7.746.300.000 | −Rp 2.513.071.968 | Rp 2.595 miliar |
-| ×2,0 | Rp 10.328.400.000 | −Rp 5.095.171.968 | Rp 5.095 miliar |
-
-**Gaji 20% lebih tinggi mengubah laba lima tahun dari positif Rp 69 juta
-menjadi negatif Rp 964 juta.** Proyeksi ini tidak punya ruang untuk kesalahan
-gaji 20% — dan angka gajinya adalah tebakan, bukan data. Ini kelemahan
-terbesar dokumen ini, jauh lebih besar daripada ketidakpastian jumlah
-pelanggan.
+Beban waktu nyata ini tidak muncul sebagai rupiah di mana pun. Kalau
+1.000 pelanggan menulis satu pesan sebulan dan setiap pesan butuh 15 menit,
+itu **250 jam per bulan** — lebih dari yang bisa dicatat dua orang. Karena
+biaya waktu tidak masuk P&L, beban ini **tidak terlihat sama sekali** di
+margin 95,3% yang tampak sangat sehat. Ini kelemahan model ini yang paling
+menyembunyikan: angka marginnya bagus, tapi tidak ada yang mengukur jam
+yang terpakai.
 
 ---
 
 ## 7. Sensitivitas
 
-### Churn — dampaknya ke rekrut, bukan ke revenue
+### Churn — berdampak ke rekrut, hampir tidak ke margin
 
 | Churn per bulan | Rekrut total | Churned | Aktif akhir 2030 |
 |---|---|---|---|
@@ -372,10 +366,11 @@ pelanggan.
 | 5% | 1.870 | 870 | 1.000 |
 | 8% | 2.469 | 1.469 | 1.000 |
 
-Revenue **tidak berubah sama sekali**, karena target akhir tahun dikunci.
-Churn tidak mengubah berapa banyak uang yang masuk; ia hanya mengubah berapa
-banyak orang yang harus dicari untuk mengisinya. Inilah yang sering terbalik di
-model bisnis: churn adalah **biaya akuisisi**, bukan variabel pendapatan.
+Margin hampir tidak bergerak (selisih antar churn di bawah 5%), karena target
+akhir tahun dikunci sehingga revenue hampir sama. Churn menentukan berapa
+banyak orang yang harus dicari untuk mengisi posisi yang kosong. Dengan 2
+orang, itu berarti waktu penjualan yang lebih banyak — bukan margin yang
+lebih kecil.
 
 ### ARPU — kalau bauran paket atau harga bergerak
 
@@ -396,68 +391,62 @@ model bisnis: churn adalah **biaya akuisisi**, bukan variabel pendapatan.
 
 Rentang pendapatan Rp 3,2 miliar sampai Rp 8,6 miliar hanya berasal dari
 ketidakpastian jumlah pelanggan — bukan dari harga, bukan dari infrastruktur.
-Rencana kas harus disusun terhadap skenario konservatif.
 
 ---
 
 ## 8. Rekomendasi
 
-1. **Ganti angka gaji di Bagian 3c dengan angka payroll Anda yang sebenarnya.**
-   Proyeksi ini tidak bertahan pada kesalahan 20%, dan angka gajinya saat ini
-   murni tebakan. Ini satu hal yang paling perlu Anda lakukan sebelum dokumen
-   ini dipakai untuk memutuskan apa pun.
-2. **Selesaikan jalur pencairan sebelum mengejar 2027.** Ini prasyarat
-   hukum, bukan prioritas teknis akhir. Tanpa itu, setiap pelanggan baru hanya
-   menambah paparan.
-3. **Siapkan Rp 2,2 miliar**, bukan Rp 1,03 miliar. Angka Rp 1,03 miliar
-   hanya berlaku bila target 1.000 pelanggan benar-benar tercapai; skenario
-   konservatif — yang paling mungkin terjadi — membutuhkan Rp 2,20 miliar dan
-   belum impas sama sekali pada 2030.
-4. **Validasi churn pada 100 pelanggan pertama** sebelum mempercayai kurva
-   2028–2030. Angka itu akan menopang atau menjatuhkan seluruh proyeksi.
-5. **Jangan susun anggaran infrastruktur.** Total Rp 145 juta dalam 4,2
-   tahun. Semua energi harus ke rekrut dan retensi.
-6. **Uji harga lebih awal.** Satu perubahan ARPU 15% bernilai Rp 823 juta
-   dalam 4 tahun — jauh lebih besar daripada penghematan infrastruktur yang
-   mungkin dilakukan. Karena margin bersihnya hanya 1,26%, kenaikan harga
-   10% lebih dari menutup seluruh kekurangan kas.
-7. **Hitung ulang dokumen ini setiap kali asumsi berubah.** Seluruh asumsi
+1. **Gaji tidak masuk P&L, tapi masuk ke keputusan.** Angka margin Rp 5,23
+   miliar di atas harus dibaca sebagai "uang yang masuk perusahaan sebelum
+   menggaji 2 orang". Kalau kedua orang menarik Rp 30 juta per bulan,
+   total pengeluarannya Rp 720 juta per tahun — lebih besar daripada
+   seluruh biaya legal dan infrastruktur. Ambang awalnya jelas: butuh
+   143 pelanggan aktif.
+2. **Selesaikan jalur pencairan sebelum mengejar 2027.** Ini prasyarat hukum,
+   bukan prioritas teknis akhir. VA sudah berfungsi dan uang pengrajin sudah
+   masuk ke rekening platform, tetapi belum ada jalan mengembalikannya.
+   Dengan 2 orang, masalah operasional seperti ini jauh lebih lambat ditangani.
+3. **Siapkan Rp 14,1 juta, bukan miliaran.** Ini perubahan terbesar dari
+   versi dokumen sebelumnya. Dengan model 2 orang, kebutuhan modal justru
+   turun drastis karena tidak ada payroll yang menelan revenue.
+4. **Siapkan proses dukungan sebelum 2029, bukan sesudah.** 1.000 pelanggan
+   di tangan 2 orang adalah 500 pelanggan per orang. Beban ini tidak terlihat
+   di P&L, jadi tidak akan muncul sebagai angka — hanya sebagai kelelahan.
+5. **Pastikan statusnya kontraktor, atau siap menghitung THR dan gaji 13.**
+   Kalau orang kedua adalah karyawan, dua bulan gaji per tahun wajib ada.
+   Angka itu keluar dari margin, bukan dari biaya.
+6. **Hitung pajak pengambilan dana.** Mengambil uang dari PT untuk keperluan
+   pribadi diperlakukan sebagai dividen dan dikenai pajak. Perhitungannya perlu
+   dikerjakan terpisah, karena itu menentukan berapa yang benar-benar
+   diterima.
+7. **Validasi churn pada 100 pelanggan pertama** sebelum mempercayai kurva
+   2028–2030.
+8. **Hitung ulang dokumen ini setiap kali asumsi berubah.** Seluruh asumsi
    terkumpul di [Bagian 9](#9-asumsi-yang-dapat-diubah).
-
----
 
 ## 9. Asumsi yang dapat diubah
 
-Semua angka dokumen ini diturunkan dari tabel berikut. Mengubah satu baris
-mengubah seluruh dokumen.
-
 | Asumsi | Nilai | Sumber |
 |---|---|---|
-| Harga paket | 300rb / 500rb / 1jt | `src/lib/plans.ts` (fakta) |
-| Diskon tahunan | 5% | `src/lib/plans.ts` (fakta) |
-| Fee Midtrans per invoice | Rp 4.440 | `PRD.md` (fakta) |
+| Jumlah pengoper | 2 orang | **keputusan Anda** |
+| Gaji masuk P&L | tidak ada | **keputusan Anda** |
+| HRESULT | Rp 430.000 per pelanggan per bulan | hitungan dari `src/lib/plans.ts` |
 | Bauran paket | 60 / 30 / 10 | **asumsi Anda** |
 | Porsi bayar tahunan | 30% | **asumsi saya** |
 | Churn | 3% per bulan | **asumsi Anda** |
 | Inflasi harga | 5% per tahun | **asumsi Anda** |
 | Kurs USD | Rp 16.000 | **asumsi saya** |
 | Interpolasi 2028–2029 | geometris ×2,1544 per tahun | hitungan |
-| Susunan tim dan gaji | Rp 26 jt → 127 jt pokok/bulan | **angka tebakan saya** |
-| BPJS Termination | 14% dari gaji pokok |Hitungan |
-| THR + gaji 13 | 2 bulan per tahun penuh | fakta hukum |
 | Legal dan admin | Rp 15 jt → 36 jt per tahun | **angka tebakan saya** |
-| Jam CPU Vercel | 20 → 1.500 jam per bulan | **asumsi saya** |
+| Jam CPU Vercel | 20 → 1.500 jam per bulan | **angka tebakan saya** |
 | PITR Supabase | aktif mulai 2029 | keputusan saya |
 | Fonnte | tidak dipakai | `PRD.md` v1.3 (fakta) |
 | Biaya CAC | nol, diasumsikan organic | **asumsi saya** |
 | Pajak (PPh) | belum dihitung | **di luar lingkup** |
+| Gaji 2 orang | tidak masuk P&L, lihat Bagian 4 | **keputusan Anda** |
 
-Baris bertanda **asumsi** adalah titik paling lemah dokumen ini, dan baris
-biaya tim adalah yang paling menentukan: ia 95% dari total biaya, sementara
-seluruh angka pertumbuhan hanya bergantung pada jumlah pelanggan. Angka gaji
-di atas **saya tebak** karena tidak ada data payroll Anda — menggantinya dengan
-angka sebenarnya mungkin mengubah kebutuhan modal ratusan juta rupiah.
-
-Satu koreksi yang sudah masuk ke versi ini: versi pertama tidak menghitung THR
-dan gaji 13, yang keduanya wajib di Indonesia. Kekurangannya Rp 784 juta dalam
-4 tahun.
+Dua koreksi yang sudah masuk ke versi ini. Pertama, versi sebelumnya menghitung
+beban gaji penuh dengan BPJS, THR, dan gaji 13 — asumsi yang tidak sesuai
+model 2 orang ini. Kedua, versi sebelumnya menyimpulkan bahwa "semakin lambat
+tumbuh, semakin besar modal yang dibutuhkan"; kesimpulan itu **artefak dari
+asumsi gaji** dan tidak lagi berlaku setelah gaji dikeluarkan dari P&L.
