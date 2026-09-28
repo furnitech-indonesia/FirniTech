@@ -129,6 +129,37 @@ async function checkManifest(): Promise<void> {
       res.ok && (res.headers.get("content-type") ?? "").includes("image/png"),
       `HTTP ${res.status} ${res.headers.get("content-type") ?? ""}`,
     );
+
+    /*
+     * UKURAN SEBENARNYA HARUS SAMA DENGAN YANG DI NYATAIN.
+     *
+     * Pemeriksaan "ada ikon 192px dan 512px" di atas hanya membaca string
+     * `sizes` di manifest. Ia tidak tahu bahwa file-nya ternyata 200px —
+     * dan regenerate ikon dengan ukuran yang salah akan tetap membuat
+     * manifest terlihat benar, sementara Chrome memakai ukuran yang salah
+     * untuk menentukan allowable sizes.
+     *
+     * Header PNG menyimpan lebar dan tinggi di byte 16..24, jadi ukurannya
+     * bisa dibaca tanpa pustaka gambar. Tinggi 8 byte dan magic number
+     * `\x89PNG` diperiksa lebih dulu supaya file yang bukan PNG tidak dibaca
+     * sebagai ukuran yang benar.
+     */
+    if (res.ok) {
+      const bytes = new Uint8Array(await res.arrayBuffer());
+      const isPng =
+        bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+      if (!isPng) {
+        check(`ikon ${icon.src} benar-benar PNG`, false, "magic number tidak cocok");
+        continue;
+      }
+      const view = new DataView(bytes.buffer);
+      const actual = `${view.getUint32(16)}x${view.getUint32(20)}`;
+      check(
+        `ikon ${icon.src} berukuran sesuai yang dideklarasikan`,
+        actual === icon.sizes,
+        `manifest ${icon.sizes} vs file ${actual}`,
+      );
+    }
   }
 
   check(

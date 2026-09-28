@@ -65,6 +65,7 @@ npm run test:payout   # 22 pemeriksaan mesin payout: kelayakan, fee, keunikan
 npm run test:cod      # 13 pemeriksaan COD: apa yang boleh & tidak terlihat pembeli
 npm run test:settings # 22 pemeriksaan pengaturan platform & invoice lock
 npm run db:buckets    # pastikan bucket Storage ada & privat
+npm run make:icons    # generate 5 ikon PWA dari public/icon.svg
 npm run test:alamat    # 25 pemeriksaan form alamat & peta (butuh server)
 npm run test:ongkir    # 13 pengujian tarif ongkir & lookup
 npm run test:lacak     # 17 pengujian privasi halaman lacak
@@ -442,6 +443,36 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   gagal menyisakan fikstur yang membuat eksekusi berikutnya gagal dengan
   pelanggaran `tenant_slug_idx` — jadi tes yang gagal dua kali akan terasa
   seperti tes yang rusak, bukan seperti tes yang menemukan masalah.
+
+## Ikon PWA
+
+- **`public/icon.svg` milik tim desain dan tidak boleh diubah skrip.**
+  `npm run make:icons` memotong mark (rumah + kursi) dari file itu lalu
+  merender lima PNG. Wordmark "FurniTech" sengaja TIDAK dipakai untuk ikon:
+  di layar utama Android ukurannya 48px, dan wordmark + tagline pada 48px
+  berubah jadi noda abu-abu. Wordmark tetap dipakai di header dan halaman
+  login, di mana ukurannya jauh lebih besar.
+- **PNG tetap wajib meski sumbernya SVG.** iOS tidak membaca `icons` di
+  manifest sama sekali — hanya `<link rel="apple-touch-icon">`, dan itu PNG.
+  `purpose: "maskable"` juga harus raster, karena Android memotong ke
+  bentuk apa saja lalu memakai bitmap hasil rasterisasi.
+- **`apple-touch-icon` dan ikon maskable HARUS persegi penuh.** Platform itu
+  membulatkan sendiri; kalau ikut dibulatkan, sudutnya tergigit dua kali.
+- **Safe zone maskable adalah LINGKARAN diameter 80%, bukan persegi 80%.**
+  Isi 78% lebar masih keluar dari lingkaran di atas dan bawah, dan yang
+  terpotong adalah kaki kursi serta dasar dinding. Batasnya `fill ≈ 0,59`
+  untuk mark rasio 1,04 — dipakai 0,58. Nilai 0,78 sudah dicoba dan gagal;
+  buktinya di `screenshots/safe-zone-maskable.png`.
+- **`CROP` di `make-icons.ts` diukur dari file, bukan dari desain.** Kalau logo
+  diekspor ulang dan posisinya bergeser, jalankan `npm run make:icons:measure`
+  dan salin ulang angkanya. Kalau tidak, ikon diam-diam berisi potongan
+  wordmark — dan itu baru terlihat setelah dirender.
+- **`clipPath` harus DI LUAR transform `<g>`.** Clip memakai koordinat kanvas
+  asli; kalau ikut berada di dalam `<g>`, ia ikut tergeser dan memotong
+  bagian yang salah.
+- **`test:pwa` memeriksa ukuran SEBENARNYA file ikon**, bukan hanya string
+  `sizes` di manifest. Tanpa itu, regenerate dengan ukuran salah tetap
+  membuat manifest terlihat benar.
 
 ## PWA & luring (Sprint 6)
 
