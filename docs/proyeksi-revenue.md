@@ -336,8 +336,8 @@ berbeda di kurva retensi.
 
 Rp 4,65 miliar dari Rp 5,49 miliar terjadi pada dua tahun terakhir. Proyeksi
 ini sangat sensitif terhadap apa pun yang menggagalkan 2029–2030. Sebaliknya,
-2026–2028 hampir tidak menghasilkan apa-apa: Rp 835 juta pendapatan kumulatif
-melawan Rp 1,6 miliar biaya.
+2026–2028 hampir tidak menghasilkan apa-apa: Rp 836 juta pendapatan kumulatif
+melawan Rp 1,73 miliar biaya.
 
 ### 5. Beban tim adalah asumsi, dan proyeksi ini tidak punya margin aman
 
