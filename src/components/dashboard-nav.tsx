@@ -118,7 +118,7 @@ export function DashboardNav({
               href={home}
               className="flex min-w-0 items-center gap-2"
             >
-              <BrandMark className="size-7 rounded-lg" />
+              <BrandMark className="size-7" />
               <span className="truncate text-base font-semibold text-foreground sm:text-lg">
                 FurniTech
               </span>

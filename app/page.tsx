@@ -558,7 +558,7 @@ export default function Home() {
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <p className="flex items-center gap-2 text-title-md text-foreground">
-                  <BrandMark className="size-7 rounded-lg" />
+                  <BrandMark className="size-7" />
                   FurniTech
                 </p>
                 <p className="mt-2 max-w-xs text-body-sm text-muted-foreground">

@@ -37,10 +37,23 @@ export function BrandMark({ className }: { className?: string }) {
       width={32}
       height={32}
       decoding="async"
-      className={cn(
-        "size-8 shrink-0 rounded-xl border border-border bg-card object-cover",
-        className,
-      )}
+      // TANPA `border`, TANPA `rounded-*`, TANPA `bg-*`.
+      //
+      // Ketiganya pernah dipasang di sini, dan ketiganya salah: `brand-mark.png`
+      // sudah punya sudut membulat sendiri (dirender `rx: 0.18` oleh
+      // `make-icons`), jadi `rounded-xl` di atasnya tidak menambah apa pun —
+      // hanya membuat logo terlihat seperti lingkaran. Dan `border border-border`
+      // menggambar garis abu-abu di sekeliling lempeng yang sebenarnya sudah
+      // bersih, karena yangFarthing dibutuhkan: logonya sudah berkonten sendiri.
+      //
+      // Latar putih di dalam PNG juga tidak perlu dipaksa agar terlihat: di
+      // header terang, putih menyatu dengan putih dan yang tersisa hanya
+      // mark-nya — yang persis seperti logo pada umumnya terlihat.
+      //
+      // `object-contain`, bukan `object-cover`: gambar dan kotaknya sama-sama
+      // persegi, jadi sekarang tidak ada yang terpotong, tapi `cover` akan
+      // memotong begitu `brand-mark.png` diperbarui dengan rasio berbeda.
+      className={cn("size-8 shrink-0 object-contain", className)}
     />
   );
 }
