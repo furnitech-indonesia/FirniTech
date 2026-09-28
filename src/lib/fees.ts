@@ -57,10 +57,24 @@ export const FEE_PENCAIRAN_PPNJ = 5_000;
  * berasal dari langganan, dan pengrajin menanggung fee gateway sendiri lewat
  * harga jual yang ia tetapkan.
  *
- * Nilai ini BUKAN konstanta mati. Super admin dapat mengubahnya kapan saja,
- * jadi pembacaanharus selalu lewat fungsi, bukan mengalikan sendiri.
+ * INI DEFAULT, BUKAN NILAI YANG SELALU BERLAKU. Super admin dapat mengubahnya
+ * dari panel admin (Sprint 6), dan perubahan itu tersimpan di
+ * `platform_settings`. Nilai di sini tetap dipakai sebagai:
+ *   - fallback kalau override belum pernah disimpan, dan
+ * dan default di form pengaturan, supaya super admin melihat angka yang
+ *     berlaku saat membuka halaman — bukan nol karena override dihapus.
+ *
+ * Pembacaan runtime lewat `src/lib/platform-settings.ts`, yang memanggil
+ * `platformFeeForWithRate` dengan tarif dari database. KEDUA jalur memakai
+ * rumus yang sama di bawah; `test:settings` memverifikasi hasilnya identik.
+ *
+ * Jangan pernah menggandakan rumus ini. Dua implementasi yang sama pasti
+ * menyimpang, dan yang menyimpang adalah tagihan.
  */
 export const PLATFORM_FEE_RATE = 0;
+
+/** Alias yang lebih jujur dipakai modul lain: ini DEFAULT, bukan nilai hidup. */
+export const PLATFORM_FEE_RATE_DEFAULT = PLATFORM_FEE_RATE;
 
 /** Kanal pembayaran yang boleh diaktifkan. Hanya Virtual Account, hanya ini. */
 export const ALLOWED_PAYMENT_CHANNELS = [
@@ -109,15 +123,29 @@ export const REJECTED_PAYMENT_CHANNELS: Record<string, string> = {
 };
 
 /**
- * Fee platform untuk satu total pesanan, rupiah penuh.
+ * Fee platform untuk satu total pesanan, rupiah penuh, dengan tarif yang
+ * DIBERIKAN.
  *
  * Pembulatan ke bawah (floor) disengaja: kalau 1,5% dibulatkan ke atas,
  * platform dapat sedikit lebih dari 1,5% GMV dalam ribuan transaksi kecil,
- * dan selisihnya terlihat sebagai.platform yang mengambil keuntungan
+ * dan selisihnya terlihat sebagai platform yang mengambil keuntungan
  * pengrajin di rincian biaya.
+ *
+ * `rate` adalah FRACTION, bukan persen dan bukan basis points. Konversi basis
+ * points ke fraction terjadi di satu tempat saja
+ * (`platformFeeRateFromBps` di `platform-settings.ts`), jadi tidak ada yang
+ * bisa salah mengalikan sepuluh ribu.
  */
+export function platformFeeForWithRate(
+  totalAmount: number,
+  rate: number,
+): number {
+  return Math.floor(totalAmount * rate);
+}
+
+/** Fee platform memakai tarif DEFAULT di berkas ini. */
 export function platformFeeFor(totalAmount: number): number {
-  return Math.floor(totalAmount * PLATFORM_FEE_RATE);
+  return platformFeeForWithRate(totalAmount, PLATFORM_FEE_RATE);
 }
 
 /**
@@ -125,11 +153,19 @@ export function platformFeeFor(totalAmount: number): number {
  *
  * `totalAmount` dikurangi fee platform dan fee masuk. Fee pencairan TIDAK
  * masuk di sini karena itu baru dipotong saat uang benar-benar keluar —
- * satu pencairan bisa mencakup beberapa pesanan sekaligus, jadi
- * menghitungnya per order akanilatudistanceMpstabil.
+ * satu pencairan bisa mencakup beberapa pesanan sekaligus, jadi menghitungnya
+ * per order akan menghitung fee yang sama berulang kali.
  */
 export function craftsmanCreditFor(totalAmount: number): number {
-  return totalAmount - platformFeeFor(totalAmount) - FEE_MASUK;
+  return craftsmanCreditForWithRate(totalAmount, PLATFORM_FEE_RATE);
+}
+
+/** Saldo pengrajin dengan tarif yang diberikan, bukan tarif default. */
+export function craftsmanCreditForWithRate(
+  totalAmount: number,
+  rate: number,
+): number {
+  return totalAmount - platformFeeForWithRate(totalAmount, rate) - FEE_MASUK;
 }
 
 /**

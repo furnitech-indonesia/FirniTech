@@ -55,6 +55,23 @@ export const PLANS = {
   },
 } as const;
 
+/**
+ * Harga tahunan dari harga bulanan, dengan diskon 5%.
+ *
+ * DIHITUNG, tidak pernah ditulis manual — dan ini berlaku untuk harga dari
+ * override di database juga. Kalau harga tahunan boleh diisi bebas, diskon 5%
+ * yang berlaku untuk semua paket berhenti berlaku tanpa ada yang menyadarinya,
+ * dan yang mengetahuinya adalah pengrajin yang membayar terlalu banyak selama
+ * setahun.
+ *
+ * `Math.round`, bukan `Math.floor`: pembulatan ke bawah pada harga yang sudah
+ * diskon terlihat seperti kesalahan hitung, dan selisihnya paling banyak
+ * beberapa ribu rupiah per tahun.
+ */
+export function priceYearly(priceMonthly: number): number {
+  return Math.round(priceMonthly * 12 * 0.95);
+}
+
 export type PlanId = keyof typeof PLANS;
 
 /**

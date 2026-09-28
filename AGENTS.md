@@ -63,6 +63,7 @@ npm run test:kurir-ui # 24 pemeriksaan halaman kurir di 375px (butuh server)
 npm run test:rekening # 21 pemeriksaan rekening, idempotency key, & RLS
 npm run test:payout   # 22 pemeriksaan mesin payout: kelayakan, fee, keunikan
 npm run test:cod      # 13 pemeriksaan COD: apa yang boleh & tidak terlihat pembeli
+npm run test:settings # 22 pemeriksaan pengaturan platform & invoice lock
 npm run db:buckets    # pastikan bucket Storage ada & privat
 npm run test:alamat    # 25 pemeriksaan form alamat & peta (butuh server)
 npm run test:ongkir    # 13 pengujian tarif ongkir & lookup
@@ -328,6 +329,41 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   sudah lengkap lalu gagal di langkah terakhir. Kode yang salah akan DITOLAK,
   bukan menyebabkan transfer ke bank keliru, dan kode tidak pernah
   ditampilkan ke siapa pun.
+
+## Pengaturan platform (Sprint 6)
+
+- **`src/lib/fees.ts` tetap sumber kebenaran; `platform_settings` cuma
+  PENIMPIS.** Kalau baris `id = 1` tidak ada, semua pembacaan jatuh ke
+  konstanta. Itu wajib, bukan-mouth: `fees.ts` sengaja tidak memakai
+  `server-only` supaya modal kalkulator di browser dan server membaca angka
+  yang sama. Kalau tarifnya hanya ada di database, modal kalkulator
+  menampilkan angka berbeda dari yang dipakai saat checkout.
+- **SATU RUMUS, DUA SUMBER TARIF.** `platformFeeForWithRate` dan
+  `craftsmanCreditForWithRate` di `fees.ts` dipakai kedua jalur. Jangan pernah
+  menulis ulang `totalAmount - fee - FEE_MASUK` di tempat lain. Versi
+  pertama `craftsmanCreditForRuntime` hanya mengurangi fee platform, sehingga
+  saldo pengrajin bertambah Rp 4.440 lebih banyak per pesanan.
+  `test:settings` membandingkan keduanya di 7 nilai.
+- **Tarif dalam BASIS POINTS** (150 = 1,5%), bukan persen desimal.
+  `0.015` tidak bisa direpresentasikan persis di floating point. Konversi ke
+  fraction hanya di `platformFeeRateFromBps`.
+- **Override harga paket PARSIAL dan hanya bulanan.** Paket yang tidak disebut
+  memakai `plans.ts`. Harga tahunan selalu dihitung ulang dengan `priceYearly`
+  (diskon 5%) — kalau boleh diisi bebas, diskon berhenti berlaku diam-diam dan
+  yang mengetahuinya adalah pengrajin yang membayar terlalu banyak setahun.
+- **`FEE_MASUK` dan `FEE_PENCAIRAN` TIDAK bisa diubah dari panel.** Sudah
+  dikonfirmasi ke Midtrans. They ditampilkan terkunci beserta alasannya.
+- **Kolom harga dibiarkan kosong saat masih memakai harga bawaan,** bukan diisi
+  angka default — supaya "sudah disesuaikan" bisa dibedakan dari "belum pernah
+  diubah".
+- **CHECK database (bukan hanya zod) yang menahan tarif di luar 0..10000 dan
+  baris kedua.** Setiap jalur penulisan lain bisa dilewati; satu-satunya tempat
+  yang tidak bisa adalah database.
+- **`saas_invoices.amount` sudah snapshot,** jadi "invoice mengunci harga saat
+  dibuat" terpenuhi secara struktural. `test:settings` membuktikannya: tulis
+  invoice, ubah harga paket, baca lagi.
+- **`db:generate` butuh TTY sejak migrasi 0020/0021 ditulis manual.** Kalau
+  perlu migrasi baru, jalankan di terminal sungguhan; jangan menebak-nebak SQL.
 
 ## COD (Sprint 6)
 

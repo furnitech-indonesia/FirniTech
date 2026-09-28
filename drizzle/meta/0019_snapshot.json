@@ -3030,7 +3030,8 @@
         "queued",
         "processing",
         "success",
-        "failed"
+        "failed",
+        "blocked"
       ]
     },
     "public.progress_stage": {
@@ -3073,6 +3074,14 @@
         "admin_penjualan",
         "tukang",
         "kurir"
+      ]
+    },
+    "public.payment_method": {
+      "name": "payment_method",
+      "schema": "public",
+      "values": [
+        "va",
+        "cod"
       ]
     }
   },

@@ -23,6 +23,7 @@
     "test:rekening": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-rekening.ts",
     "test:payout": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-payout.ts",
     "test:cod": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-cod.ts",
+    "test:settings": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-settings.ts",
     "test:kurir-ui": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-kurir-ui.ts",
     "db:apply": "tsx scripts/apply-migrations.ts",
     "db:buckets": "NODE_OPTIONS='--conditions=react-server' tsx scripts/ensure-buckets.ts",

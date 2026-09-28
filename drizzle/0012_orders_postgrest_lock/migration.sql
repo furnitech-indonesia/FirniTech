@@ -25,13 +25,13 @@
 -- Jadi mencabut `select` di sini tidak menyentuh apa pun yang berjalan.
 --
 -- Dan mencabut seluruh tabel lebih aman daripada grant per kolom, karena
--- daftar kolom yang "boleh dibaca" itu sendiri bisa관을 berubah:
+-- daftar kolom yang "boleh dibaca" itu sendiri berubah:
 -- `net_tenant_amount` hari ini adalah margin, tapi `total_amount` besok bisa
 -- ikut disisipkan. Grant eksplisit memaksa penEMUAN kolom baru untuk
 -- ditambahkan satu per satu; cabut utuh tidak bisa diloloskan oleh kolom
 -- yang tidak disangka.
 --
--- Yang dip宣传部 balik: anonymous tetap boleh MENYISIPKAN ke `orders`? Tidak.
+-- Sebagai pembanding: anonymous tetap boleh MENYISIPKAN ke `orders`? Tidak.
 -- `test:kurir` dan `db:test-rls` sama-sama menguji penolakan INSERT
 -- anonim, dan itu berasal dari RLS (`orders` tidak punya policy INSERT untuk
 -- anon), bukan dari hak akses tabel. Dicabut atau tidak, hasilnya sama.

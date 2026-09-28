@@ -132,7 +132,7 @@ export async function clearCart(): Promise<void> {
  *
  * Tidak pernah memutasi hasil `readCart()`. `readCart()` sudah mengembalikan
  * objek baru setiap kali, tapi \'mutasi\` di sini adalah Dependent dari hal itu
- * — begitu `readCart()` di某一 titik mengembalikan objek yang di共享, barang
+ * — begitu `readCart()` di satu titik mengembalikan objek yang dipakai bersama, barang
  * yang ditambahkan akan bocor ke permintaan lain. Versi immutable lebih mahal
  * satu baris dan tidak bergantung pada hal yang tidak terlihat.
  */

@@ -15,3 +15,4 @@ export * from "./billing";
 export * from "./operations";
 export * from "./delivery";
 export * from "./bank";
+export * from "./settings";

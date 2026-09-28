@@ -1017,9 +1017,64 @@ TEMUAN DARI CEK VISUAL
   dan itu declaration yang salah di halaman pembayaran, tempat orang paling
   serius saat menyerahkan uang. Sekarang keduanya mengikuti metode yang dipilih.
 
-YANG MASIH HARUS DIKERJAKAN
-  6. Pengaturan fee platform & harga paket di panel super admin, dengan
-     aturan: invoice yang sudah terbit mengunci harga saat dibuat.
+━━━ Sprint 6 — Pengaturan platform (selesai 2026-09-28) ━━━
+
+SEMUA 6 POIN ROADMAP SELESAI.
+
+YANG DIKERJAKAN
+  - Tabel `platform_settings` (migrasi 0022): SATU BARIS (`id = 1` + CHECK
+    `id = 1`), tarif fee platform dalam **basis points**, dan override harga
+    paket per paket. RLS hanya super admin, dan `revoke select, insert, update,
+    delete` untuk `anon` + `authenticated` — tiga lapis untuk satu baris,
+    karena isinya memengaruhi uang semua orang.
+  - Basis points (150 = 1,5%), bukan persen desimal. `0.015` tidak bisa
+    direpresentasikan persis di floating point, dan pembulatan yang muncul dari
+    sana terlihat sebagai selisih rupiah pada tagihan yang jauh lebih besar
+    dari selisihnya. Konversi ke fraction terjadi di satu tempat
+    (`platformFeeRateFromBps`).
+  - **Satu rumus, dua sumber tarif.** `fees.ts` gaining
+    `platformFeeForWithRate` + `craftsmanCreditForWithRate`; jalur runtime
+    memanggilnya dengan tarif dari database, jalur lama memanggilnya dengan
+    tarif default. `test:settings` membandingkan keduanya di 7 nilai berbeda.
+  - Override **partial** dan **hanya bulanan**. Harga tahunan selalu dihitung
+    ulang dari bulanan yang berlaku dengan diskon 5% (`priceYearly`), jadi
+    diskon tidak pernah berhenti berlaku diam-diam.
+  - `/admin/pengaturan`: tarif + harga per paket, dengan fee masuk (Rp 4.440)
+    dan fee pencairan (Rp 5.550) **ditampilkan terkunci** beserta alasan.
+    Sembunyikannya membuat orang wondered bisa diubah di mana; menampilkannya
+    menjawabnya sekali.
+  - Kolom harga paket dikosongkan kalau masih memakai harga `plans.ts`, bukan
+    diisi angka default — supaya super admin bisa membedakan "sudah
+    disesuaikan" dari "belum pernah diubah".
+  - Audit log setiap perubahan tarif: nilai sebelum & sesudah, tanpa menyalin
+    data lain. `tenantId` null karena pengaturan ini memang tidak milik tenant.
+  - `test:settings` — 22 pemeriksaan.
+
+BUG UANG YANG TERTANGKAP
+  `craftsmanCreditForRuntime` versi pertama hanya mengurangi fee platform;
+  **fee masuk Rp 4.440 terlewat**. Itu menambah saldo pengrajin Rp 4.440 per
+  pesanan — baru ketahuan saat pencairan pertama benar-benar dikirim, dan yang
+  menanggung selisihnya adalah pengrajin. Tidak ada yang bisa melihatnya dari
+  kode: secara visual keduanya terlihat benar; hanya angkanya yang meleset
+  4.440. Perbaikannya: sekarang memanggil `craftsmanCreditForWithRate` dari
+  `fees.ts`, bukan menghitung ulang sendiri — dan tes membandingkan keduanya di 7
+  nilai termasuk yang kecil, tempat selisih Rp 4.440 tidak bisa hilang di
+  pembulatan.
+
+ATURAN INVOICE YANG DIMINTA
+  `saas_invoices.amount` sudah snapshot sejak awal, jadi aturan "invoice yang
+  sudah terbit mengunci harga saat dibuat" sebenarnya sudah terpenuhi secara
+  struktural. Yang belum ada adalah pembuktiannya, dan `test:settings` sekarang
+  membuktikannya: menulis invoice dengan harga lama, mengubah harga paket jadi
+  Rp 999.000.000, lalu membaca invoice lagi — nominalnya tetap.
+
+CATATAN TOOLING
+  `db:generate` membuka prompt interaktif sejak migrasi 0020 (RLS) dan 0021
+  (enum) ditulis manual — tidak bisa dijawab di shell non-TTY. Migrasi
+  berikutnya ditulis manual, dan snapshot `0019_snapshot.json` sudah dikejar
+  secukupnya supaya enum resolver tidak lagi meminta nama enum. Kolom resolver
+  masih akan meminta konfirmasi; jalankan `npx drizzle-kit generate` di terminal
+  sungguhan kalau perlu membuat migrasi baru.
 
 CATATAN: `POST /payouts` belum pernah dipanggil sungguhan
 (`MIDTRANS_IRIS_API_KEY` kosong). Bentuk respons dibaca defensif, dan

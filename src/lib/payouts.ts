@@ -10,7 +10,8 @@ import {
   payoutLogs,
   tenantBankAccounts,
 } from "@/db/schema";
-import { FEE_PENCAIRAN, craftsmanCreditFor } from "@/lib/fees";
+import { FEE_PENCAIRAN, craftsmanCreditForWithRate } from "@/lib/fees";
+import { effectivePlatformFeeRate } from "@/lib/platform-settings";
 import {
   isPayoutsConfigured,
   PayoutsNotConfiguredError,
@@ -104,6 +105,16 @@ export type PayoutOutcome =
  *     tidak ikut tercairkan dua kali.
  */
 async function findCandidates(tenantId: string): Promise<PayoutCandidate[]> {
+  /*
+   * Tarifnya dibaca SEKALI per panggilan, bukan per pesanan.
+   *
+   * `effectivePlatformFeeRate()` melakukan satu query, dan mengulanginya di dalam
+   * loop berarti N query untuk hasil yang sama — dan, lebih buruk,
+   * kalau tarifnya diubah di tengah iterasi, pesanan dalam satu payout bisa
+   * dapat tarif yang berbeda. Satu batch, satu tarif.
+   */
+  const rate = await effectivePlatformFeeRate();
+
   const rows = await db
     .select({
       orderId: orders.id,
@@ -134,7 +145,7 @@ async function findCandidates(tenantId: string): Promise<PayoutCandidate[]> {
   return rows.map((row) => ({
     orderId: row.orderId,
     orderCode: row.orderCode,
-    credit: craftsmanCreditFor(Number(row.totalAmount)),
+    credit: craftsmanCreditForWithRate(Number(row.totalAmount), rate),
     deliveryProofId: row.deliveryProofId,
   }));
 }

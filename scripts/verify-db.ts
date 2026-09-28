@@ -29,6 +29,7 @@ const EXPECTED_TABLES = [
   "notification_usage",
   "delivery_proofs",
   "tenant_bank_accounts",
+  "platform_settings",
 ];
 
 async function main() {
