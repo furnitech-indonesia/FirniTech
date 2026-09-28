@@ -886,6 +886,53 @@ YANG BELUM DIKERJAKAN (urutan)
      terlalu murah untuk dipakai sebagai patokan; kalau 30 menit, terlalu
      mahal. Ukur dulu di 10 order pertama, baru tetapkan.
 
+━━━ Konsistensi dokumen proyeksi (2026-09-28) ━━━
+
+MASALAH YANG DISELESAIKAN
+
+  docs/proyeksi-revenue.md disusun manual di banyak bagian. Setiap kali
+  add-on atau asumsi berubah, satu klausul diperbarui dan beberapa lainnya
+  tertinggal. Semuanya tetap terlihat benar karena selisihnya kecil ATAU
+  karena angkanya "masuk akal" - dan tidak ada yang saling membandingkan.
+
+  `scripts/check-projection.mjs` (`npm run check:proyeksi`, 56 pemeriksaan)
+  mereplikasi modelnya lalu membandingkannya dengan angka yang TERTULIS di
+  dokumen. Yang diuji bukan modelnya benar, tapi dokumennya masih cocok
+  dengan model itu.
+
+BUG YANG TERKUNCI (semua angka salah, semua terlihat masuk akal)
+
+  - Rekrut total 1.626 vs 2.599 vs 162. Yang benar 1.626. Dua versi rumus
+    pernah dipakai: menghitung dari nol tiap tahun (menghasilkan 2.599, yang
+    mustahil karena lebih besar dari jumlah orang yang pernah hilang) dan
+    menghitung sekali untuk seluruh masa aktif (162). Yang benar mewarisi
+    pelanggan akhir tahun sebelumnya.
+  - PPh hanya dihitung dari omzet langganan (Rp 43,7 jt), padahal add-on
+    juga menambah omzet. Seharusnya Rp 46,6 jt.
+  - "Kas terendah Rp -1.543.011" - benar SEBELUM add-on legalitas. Sesudahnya
+    kas tidak pernah negatif, dan kebutuhan modal jadi nol.
+  - Rezim A vs B dibandingkan dengan dasar yang berbeda: margin SEBELUM
+    pajak pribadi vs bagian SETELAH pajak. Selisih sebenarnya Rp 5,68 miliar.
+  - Tabel margin per paket: kolom PPh berisi 0,1% (jumlah omzet) bukan 0,5%,
+    dan "biaya proporsional" hanya infrastruktur padahal harus semua beban.
+  - Sensitivitas domain 60% ke 30% Management said Rp 116 juta; sebenarnya
+    Rp 51 juta.
+  - Tabel infrastructures dan tabel margin memakai definisi "aktif" berbeda,
+    sehingga Okt 2026 tampil 0 di satu tabel dan 34 di yang lain.
+
+JEBRAKAN PENGUJIAN YANG PERNAH TERJADI DI SINI
+
+  Versi pertama skrip bertanya "apakah string ini ADA di dokumen". Itu
+  salah: selama angka model yang salah pun tertulis di dokumen, jawabannya
+  tetap "lulus" - jadi modelnya boleh benar atau salah tanpa pernah
+  ketahuan. Skrip sempat hijau dengan model yang salah di 17 baris.
+  Perbandingan harus BILANGAN: model harus menghasilkan angka yang sama
+  dengan yang tertulis.
+
+  Pemeriksaan "angka lama tidak boleh muncul" juga perlu pengecualian: angka
+  yang sedang dijelaskan koreksinya di dokumen tetap boleh muncul, maksimal
+  sekali. Tanpa itu, dokumentasi tentang kesalahan tidak bisa ditulis.
+
 ━━━ Model Biaya & Payout (keputusan pemilik produk, 2026-09-27) ━━━
 
 STATUS: model final (PRD v1.7) + rumus di `src/lib/fees.ts` + modal kalkulator

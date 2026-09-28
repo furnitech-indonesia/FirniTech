@@ -38,7 +38,8 @@
     "test:ongkir": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-ongkir.ts",
     "test:checkout": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-checkout.ts",
     "test:pwa": "tsx scripts/test-pwa.ts",
-    "test:lacak": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-lacak.ts"
+    "test:lacak": "NODE_OPTIONS='--conditions=react-server' tsx scripts/test-lacak.ts",
+    "check:proyeksi": "node scripts/check-projection.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",

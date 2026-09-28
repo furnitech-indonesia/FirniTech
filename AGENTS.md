@@ -74,6 +74,7 @@ npm run test:pwa      # 20 pemeriksaan PWA & luring (menyalakan servernya sendir
 npm run test:webhook   # 46 uji: skema, signature, gerbang tenant, e2e webhook
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
+npm run check:proyeksi  # 56 pemeriksaan konsistensi docs/proyeksi-revenue.md
 ```
 
 **`test:visual` satu-satunya alat yang bisa melihat halaman.** Semua test lain
@@ -731,6 +732,36 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   tidak ada satu pun nominal rupiah. Data keuangan tidak relevan di bengkel,
   dan `test:carpenter` mengunci "tidak ada nominal" itu — yang mustahil
   dibuktikan dari source code.
+
+## Dokumen proyeksi revenue
+
+- **`docs/proyeksi-revenue.md` wajib lolos `npm run check:proyeksi` sebelum
+  commit.** Dokumen itu disusun manual di banyak bagian: ringkasan, tabel 51
+  bulan, tabel infrastruktur, bagian PPh, bagian sensitivitas. Semuanya
+  harus berasal dari satu model.
+- **Bug yang berulang di dokumen ini: satu klausul diperbarui, yang lain
+  tertinggal.** Semua kla-klausul terlihat "benar" karena selisihnya kecil
+  atau karena angkanya masuk akal. Skrip `scripts/check-projection.mjs` yang
+  membandingkan; tanpa itu tidak ada yang tahu.
+- **Angka lama yang pernah salah DAN terlihat masuk akal:**
+  - Rekrut total 1.626 vs 2.599 vs 162. Yang benar 1.626, dihitung dengan
+    binary search per tahun yang **mewarisi pelanggan akhir tahun sebelumnya**.
+    Mengulang dari nol tiap tahun membuat total kumulatif lebih besar dari
+    jumlah orang yang hilang — mustahil.
+  - PPh hanya dari langganan (Rp 43,7 juta) vs semua omzet (Rp 46,6 juta).
+    Add-on menambah omzet, jadi PPh ikut naik.
+  - "Kas terendah Rp -1.543.011" benar sebelum add-on legalitas. Sesudahnya
+    kas tidak pernah negatif, dan kebutuhan modal jadi nol.
+  - Rezim A vs B dibandingkan salah: margin SEBELUM pajak pribadi dengan
+    bagian SETELAH pajak. Selisih sebenarnya Rp 5,68 miliar, bukan
+    "Rp 320 juta".
+- **Omzet memakai pelanggan AWAL bulan; infrastructures memakai pelanggan
+  AKHIR bulan.** Pelanggan membayar tagihan yang sudah terbit di awal bulan,
+  tapi mereka sudah memakai server sampai akhir bulan. Menyamakan keduanya
+  menggeser seluruh omzet — itu bukan perbaikan bug, itu model baru.
+- **Jumlah rekrutan, bukan pelanggan aktif, yang jadi penyorong add-on
+  bertiket.** Paket Pendirian PT hanya diambil yang baru mendaftar, jadi ia
+  ikut turun kalau rekrut melambat, sementara langganan dan domain jalan.
 
 ## Back-office Sprint 3
 
