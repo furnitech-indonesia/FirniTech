@@ -3,7 +3,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { ArrowLeftIcon } from "@phosphor-icons/react/dist/ssr";
 
 import { db } from "@/db";
-import { products } from "@/db/schema";
+import { products, tenantBankAccounts } from "@/db/schema";
 import { CheckoutClient } from "@/components/checkout-client";
 import { CartView } from "@/components/cart-view";
 import { readCart } from "@/lib/cart";
@@ -39,10 +39,26 @@ export async function CheckoutView({
   // Tarif diambil di sini, satu query, lalu dikirim ke klien untuk
   // ditampilkan. Query-nya terjadi di server, jadi ini bukan membuka
   // endpoint tarif ke publik.
-  const [rates, midtransReady] = await Promise.all([
+  const [rates, midtransReady, bank] = await Promise.all([
     listShippingRates(tenantId),
     Promise.resolve(isMidtransConfigured()),
+    db
+      .select({ status: tenantBankAccounts.status })
+      .from(tenantBankAccounts)
+      .where(eq(tenantBankAccounts.tenantId, tenantId))
+      .limit(1),
   ]);
+
+  /*
+   * COD hanya ditawarkan kalau rekening pengrajinnya TERVERIFIKASI, dan itu
+   * diperiksa di server.
+   *
+   * Bukan supaya pembeli tidak melihat pilihan yang ditolak — `createCheckoutOrder`
+   * akan menolaknya juga — tapi supaya tidak ada tombol yang dijanjikan lalu
+   * tidak bisa dipakai. Menawarkan COD ke toko yang rekeningnya belum dicek
+   * berarti menampilkan pilihan pembayaran yang tidak bisa diselesaikan.
+   */
+  const codReady = bank[0]?.status === "verified";
 
   const slugs = cart.lines.map((line) => line.slug);
   const productRows =
@@ -68,7 +84,7 @@ export async function CheckoutView({
   /*
    * Subtotal dihitung dengan satu `reduce`, bukan akumulator yang ditulis
    * di dalam callback `map`. Alasannya teknis: `itemsSubtotal += ...` di
-   * dalam callback adalah penulisan variabel yang蛟eta lint React Compiler
+   * akan menolak juga — tapi supaya tidak ada pilihan yang ditawarkan lalu
    * (`react-hooks/immutability`) tandai sebagai "reassign after render" —
    * memang benar untuk hook, tapi di sini hasil finally-nya sama persis.
    */
@@ -145,6 +161,7 @@ export async function CheckoutView({
             rateAmount: rate.rateAmount,
           }))}
           midtransReady={midtransReady}
+          codReady={codReady}
         />
       </div>
     </main>

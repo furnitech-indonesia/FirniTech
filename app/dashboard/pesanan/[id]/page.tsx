@@ -353,29 +353,62 @@ export default async function OrderDetailPage({
                 />
               </SectionCard>
 
-              <SectionCard
-                title="Catat pembayaran"
-                description={`Sisa tagihan ${formatRupiah(remaining)}.`}
-              >
-                <RecordPaymentForm orderId={order.id} remaining={remaining} />
+              {/*
+                `recordPayment` menolak pesanan COD, jadi formnya TIDAK
+                dirender untuk COD. Menampilkannya lalu ditolak membuang satu
+                klik dan membuat pengrajin berpikir ada form yang tidak bisa
+                dipakai — padahal jawabannya sudah ada di bagian bukti
+                penerimaan di atas.
+              */}
+              {order.paymentMethod === "cod" ? (
+                <SectionCard
+                  title="Pembayaran"
+                  description="Pesanan COD: pembayarannya dicatat dari bukti penerimaan yang diunggah kurir, bukan dari sini."
+                >
+                  <p className="text-body-md text-muted-foreground">
+                    {proof && proof.codAmount !== null ? (
+                      <>
+                        Kurir mencatat{" "}
+                        <span className="text-code-tabular text-foreground">
+                          {formatRupiah(proof.codAmount)}
+                        </span>{" "}
+                        diterima pada {formatDateID(proof.receivedAt)}.
+                      </>
+                    ) : proof ? (
+                      "Bukti sudah diterima, tapi tidak ada nominal COD yang dicatat."
+                    ) : (
+                      "Belum ada bukti penerimaan, jadi belum ada yang bisa dicatat."
+                    )}
+                  </p>
+                </SectionCard>
+              ) : (
+                <SectionCard
+                  title="Catat pembayaran"
+                  description={`Sisa tagihan ${formatRupiah(remaining)}.`}
+                >
+                  <RecordPaymentForm
+                    orderId={order.id}
+                    remaining={remaining}
+                  />
 
-                {remaining > 0 ? (
-                  <div className="mt-3 border-t border-border pt-3">
-                    {/* Aksi tanpa input -> tetap ActionForm, bukan ZodForm. */}
-                    <ActionForm
-                      action={recordPayment}
-                      hidden={{ orderId: order.id, mode: "lunas" }}
-                      submitLabel={`Lunasi sisa ${formatRupiah(remaining)}`}
-                      tone="ghost"
-                      className="grid"
-                    >
-                      <p className="text-sm text-secondary">
-                        Mencatat pelunasan tidak mengubah status produksi.
-                      </p>
-                    </ActionForm>
-                  </div>
-                ) : null}
-              </SectionCard>
+                  {remaining > 0 ? (
+                    <div className="mt-3 border-t border-border pt-3">
+                      {/* Aksi tanpa input -> tetap ActionForm, bukan ZodForm. */}
+                      <ActionForm
+                        action={recordPayment}
+                        hidden={{ orderId: order.id, mode: "lunas" }}
+                        submitLabel={`Lunasi sisa ${formatRupiah(remaining)}`}
+                        tone="ghost"
+                        className="grid"
+                      >
+                        <p className="text-sm text-secondary">
+                          Mencatat pelunasan tidak mengubah status produksi.
+                        </p>
+                      </ActionForm>
+                    </div>
+                  ) : null}
+                </SectionCard>
+              )}
             </>
           ) : null}
 

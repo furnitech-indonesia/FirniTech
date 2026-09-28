@@ -58,6 +58,18 @@ export type CourierDelivery = {
    * bukti kedua ditolak unique index di database. Jadi tugas server hanya
    * menahan agar form yang pasti gagal tidak ikut tampil.
    */
+  /**
+   * Pesanan COD atau bukan, dan sisa tagihannya.
+   *
+   * `remaining` dikirim ke form kurir supaya nominal yang boleh diterima
+   * terlihat di layar, bukan hanya aturan di server. Aturannya tetap
+   * ditegakkan di `submitDeliveryProof` — angka dari klien tidak pernah
+   * dipercaya — tapi menampilkan sisa tagihan membuat kurir tidak perlu
+   * menghitung sendiri dari nota.
+   */
+  isCod: boolean;
+  remaining: number;
+
   hasProof: boolean;
   createdAt: Date;
 };
@@ -86,6 +98,9 @@ export async function loadCourierQueue(
       destinationCity: orders.destinationCity,
       cargoName: orders.cargoName,
       trackingNumber: orders.trackingNumber,
+      totalAmount: orders.totalAmount,
+      dpAmount: orders.dpAmount,
+      paymentMethod: orders.paymentMethod,
       createdAt: orders.createdAt,
       proofId: deliveryProofs.id,
     })
@@ -138,6 +153,8 @@ export async function loadCourierQueue(
     cargoName: row.cargoName,
     trackingNumber: row.trackingNumber,
     lastStage: lastStage.get(row.id) ?? null,
+    isCod: row.paymentMethod === "cod",
+    remaining: Math.max(0, row.totalAmount - row.dpAmount),
     hasProof: row.proofId !== null,
     createdAt: row.createdAt,
   }));

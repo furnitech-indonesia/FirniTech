@@ -62,6 +62,7 @@ npm run test:kurir    # 25 pemeriksaan RLS kurir & bukti, JWT sungguhan
 npm run test:kurir-ui # 24 pemeriksaan halaman kurir di 375px (butuh server)
 npm run test:rekening # 21 pemeriksaan rekening, idempotency key, & RLS
 npm run test:payout   # 22 pemeriksaan mesin payout: kelayakan, fee, keunikan
+npm run test:cod      # 13 pemeriksaan COD: apa yang boleh & tidak terlihat pembeli
 npm run db:buckets    # pastikan bucket Storage ada & privat
 npm run test:alamat    # 25 pemeriksaan form alamat & peta (butuh server)
 npm run test:ongkir    # 13 pengujian tarif ongkir & lookup
@@ -327,6 +328,40 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   sudah lengkap lalu gagal di langkah terakhir. Kode yang salah akan DITOLAK,
   bukan menyebabkan transfer ke bank keliru, dan kode tidak pernah
   ditampilkan ke siapa pun.
+
+## COD (Sprint 6)
+
+- **`codBank` di halaman lacak hanya untuk pesanan COD yang BELUM lunas dan
+  rekeningnya terverifikasi.** Query terpisah, bukan `leftJoin`, supaya syaratnya
+  terlihat dalam tiga baris. `test:cod` mengunci keempat batasnya: COD belum
+  lunas tampil, COD lunas tidak, VA tidak sama sekali, rekening belum
+  terverifikasi tidak.
+- **COD hanya ditawarkan kalau rekening pengrajin terverifikasi** — dicek di
+  `checkout-view.tsx` supaya tidak ditawarkan, DAN di `createCheckoutOrder`
+  supaya tetap menolak kalau dipaksa. Nomor rekeningnya ditampilkan ke
+  pembeli, jadi menampilkan yang belum dicek berarti mengarahkan orang
+  mengirim uang ke nomor yang bisa jadi salah.
+- **`dpAmount = 0` untuk pesanan COD.** Kalau diisi `totalAmount`, pesanan COD
+  terlihat LUNAS di semua layar padahal belum ada uang masuk. COD juga tidak
+  menyimpan `midtrans_order_id` — tagihan yang tidak pernah dibayar muncul di
+  rekonsiliasi sebagai transaksi menggantung.
+- **Catatan COD adalah `delivery_proofs.cod_amount`, bukan
+  `orders.payment_status`.** `recordPayment` menolak pesanan COD dan tombolnya
+  tidak dirender. Dua sumber kebenaran untuk hal yang sama, dan pencairan tidak
+  pernah membaca `cod_amount`, berarti tidak ada yang akan menemukan
+  ketidakkonsistenannya.
+- **Nominal COD ditolak pada pesanan VA dan wajib pada pesanan COD.** Dua
+  arah, karena hanya satu arah yang biasanya dipikirkan — dan arah yang
+  terlewat berarti kurir bisa mencatat COD pada pesanan yang pembayarannya
+  sudah masuk lewat virtual account.
+- **Teks checkout harus mengikuti metode yang dipilih.** "Pembayaran ditangani
+  Midtrans" dan keterangan field email tetap tampil untuk COD kalau tidak
+  diperiksa — dan itu pernyataan yang salah di halaman pembayaran, tempat
+  orang paling serius saat menyerahkan uang.
+- **Nomor rekening COD ditampilkan UTUH di halaman lacak**, berbeda dari
+  halaman pencairan. Yang membaca di halaman lacak adalah orang yang harus
+  MEMBAYAR ke rekening itu, jadi menyembunyikan sebagian justru membuat ia
+  salah transfer — dan yang menanggung adalah pengrajin.
 
 ## Mesin payout (Sprint 6)
 

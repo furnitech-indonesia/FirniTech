@@ -99,7 +99,12 @@ export function CourierDeliveryCard({ item }: { item: CourierDelivery }) {
             Bukti sudah terkirim, pencairan sudah dipicu.
           </p>
         ) : open ? (
-          <DeliveryProofForm orderId={item.id} onDone={() => setOpen(false)} />
+          <DeliveryProofForm
+            orderId={item.id}
+            isCod={item.isCod}
+            remaining={item.remaining}
+            onDone={() => setOpen(false)}
+          />
         ) : (
           <Button type="button" size="touch" onClick={() => setOpen(true)}>
             <TruckIcon size={18} weight="bold" aria-hidden />

@@ -84,6 +84,7 @@ export async function submitDeliveryProof(
       }
       const codAmount = cod.data;
 
+
       // Penugasan diverifikasi di server, bukan dari halaman.
       const [order] = await db
         .select({
@@ -92,6 +93,7 @@ export async function submitDeliveryProof(
           totalAmount: orders.totalAmount,
           dpAmount: orders.dpAmount,
           orderStatus: orders.orderStatus,
+          paymentMethod: orders.paymentMethod,
         })
         .from(orders)
         .where(
@@ -110,6 +112,37 @@ export async function submitDeliveryProof(
       }
 
       /*
+       * COD harus diminta PADA pesanan COD, dan TIDAK boleh diminta pada
+       * pesanan VA.
+       *
+       * Dua arahnya sama pentingnya. Tanpa pemeriksaan ini, kurir bisa
+       * mencatat "COD diterima Rp1.000.000" pada pesanan yang pembayarannya
+       * sudah masuk lewat virtual account. Datanya akan terlihat benar di
+       * daftar COD dan salah di mana-mana — dan pencairan tidak pernah
+       * membaca `cod_amount`, jadi tidak ada yang akan menemukan
+       * ketidakkonsistenan itu.
+       *
+       * Sebaliknya, pesanan COD tanpa nominal COD berarti kurir gagal
+       * mencatat apa yang ia terima, dan itu ditolak di sini supaya tidak
+       * tersimpan diam-diam sebagai "tidak ada COD".
+       */
+      if (order.paymentMethod === "cod") {
+        if (codAmount === null) {
+          return {
+            error:
+              "Pesanan COD: catat nominal uang yang diterima, atau tulis 0 kalau memang tidak ada uang masuk.",
+            fieldErrors: { codAmount: "Wajib diisi untuk pesanan COD." },
+          };
+        }
+      } else if (codAmount !== null) {
+        return {
+          error:
+            "Pesanan ini dibayar lewat virtual account, bukan COD. Nominal COD tidak boleh diisi.",
+          fieldErrors: { codAmount: "Tidak berlaku untuk pesanan non-COD." },
+        };
+      }
+
+      /*
        * COD harus cocok dengan sisa tagihan.
        *
        * Dicek di server karena angka dari kurir tidak boleh dipercaya, tapi
@@ -119,7 +152,9 @@ export async function submitDeliveryProof(
        * salah.
        *
        * Sisa tagihan dihitung dari nilai server, tidak pernah dari angka yang
-       * dikirim klien.
+       * dikirim klien. Untuk pesanan VA, `dpAmount` sudah `totalAmount`, jadi
+       * sisanya nol — dan pesanan VA sudah ditolak di atas, sebelum sampai
+       * sini.
        */
       if (codAmount !== null) {
         const remaining = Math.max(0, order.totalAmount - order.dpAmount);

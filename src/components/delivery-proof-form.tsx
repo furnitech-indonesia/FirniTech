@@ -1,6 +1,7 @@
 "use client";
 
 import { FileField, TextAreaField, TextField } from "@/components/rhf-fields";
+import { formatRupiah } from "@/lib/format";
 import { SignaturePad } from "@/components/signature-pad";
 import { ZodForm } from "@/components/zod-form";
 import { submitDeliveryProof } from "@/lib/actions/delivery";
@@ -27,9 +28,21 @@ import { deliveryProofFormSchema } from "@/lib/schemas/delivery";
  */
 export function DeliveryProofForm({
   orderId,
+  isCod,
+  remaining,
   onDone,
 }: {
   orderId: string;
+  /**
+   * Pesanan COD atau bukan. Menentukan apakah field nominal COD dirender.
+   *
+   * `isCod` datang dari server, dan `submitDeliveryProof` memverifikasinya
+   * ULANG dari database. Field yang tidak cocok dengan pesanannya akan
+   * ditolak, jadi parameter ini hanya untuk tampilan, bukan untuk kebenaran.
+   */
+  isCod: boolean;
+  /** Sisa tagihan untuk COD, dari server. */
+  remaining: number;
   /** Dipanggil setelah server menyatakan berhasil, untuk menutup panel. */
   onDone?: () => void;
 }) {
@@ -37,7 +50,7 @@ export function DeliveryProofForm({
     <ZodForm
       schema={deliveryProofFormSchema}
       action={submitDeliveryProof}
-      hidden={{ orderId }}
+      hidden={{ orderId, codAmount: isCod ? undefined : "" }}
       defaultValues={{ signerName: "", notes: "" }}
       submitLabel="Kirim bukti & picu pencairan"
       onSuccess={onDone}
@@ -45,6 +58,45 @@ export function DeliveryProofForm({
     >
       {(ctx) => (
         <>
+          {isCod ? (
+            <>
+              <div className="rounded-xl border border-border bg-surface-sunken p-3 text-body-sm text-muted-foreground">
+                Pesanan COD. Uang diterima di tempat, jadi tidak ada yang
+                masuk ke saldo pengrajin. Catat nominalnya supaya pengrajin
+                tahu apa yang sudah tertagih.
+                {remaining > 0 ? (
+                  <>
+                    {" "}Sisa tagihan{" "}
+                    <span className="text-code-tabular text-foreground">
+                      {formatRupiah(remaining)}
+                    </span>
+                    .
+                  </>
+                ) : null}
+              </div>
+
+              <TextField
+                ctx={ctx}
+                label="Uang COD yang diterima (Rp)"
+                name="codAmount"
+                required
+                inputMode="numeric"
+                placeholder="0"
+                hint={
+                  remaining > 0
+                    ? `Tidak boleh melebihi ${formatRupiah(remaining)}. Tulis 0 kalau memang tidak ada uang masuk.`
+                    : "Tulis 0 kalau memang tidak ada uang masuk."
+                }
+              />
+
+              <FileField
+                label="Bukti transfer COD (opsional)"
+                name="codProof"
+                hint="Foto struk atau screenshot mutasi rekening. Untuk uang tunai tidak perlu."
+              />
+            </>
+          ) : null}
+
           <FileField
             label="Foto barang diterima"
             name="photo"

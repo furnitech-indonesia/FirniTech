@@ -3,7 +3,12 @@ import "server-only";
 import { asc, eq } from "drizzle-orm";
 
 import { db } from "@/db";
-import { orderItems, orders, productionProgress } from "@/db/schema";
+import {
+  orderItems,
+  orders,
+  productionProgress,
+  tenantBankAccounts,
+} from "@/db/schema";
 import { createSignedUrls } from "@/lib/storage";
 import { PROGRESS_STAGE_ORDER, type ProgressStage } from "@/lib/order-status";
 import { PROGRESS_STAGE_LABELS } from "@/lib/labels";
@@ -62,6 +67,29 @@ export type TrackingOrder = {
   stages: TrackingStage[];
   /** Tahap terakhir yang reached, atau 0 kalau belum ada. */
   reachedStage: number;
+
+  /** Metode pembayaran yang dipilih pembeli. */
+  paymentMethod: "va" | "cod";
+
+  /**
+   * Rekening pengrajin untuk pembayaran COD. HANYA diisi untuk pesanan COD
+   * yang belum lunas; `null` untuk pesanan VA.
+   *
+   * INI SATU-SATUNYA kolom rekening yang boleh keluar ke halaman publik,
+   * dan hanya karena memang dibutuhkan: pada COD transfer bank, pembeli
+   * harus tahu nomor dan atas nama rekening tujuan, atau ia tidak bisa
+   * membayar.
+   *
+   * Yang TIDAK ikut: saldo, margin, fee, dan nomor rekening untuk pesanan
+   * yang sudah lunas. Setelah uang masuk, tidak ada alasan menampilkan
+   * rekening itu lagi di halaman yang bisa dibuka siapa pun yang tahu kode
+   * pesanan dan nomor HP.
+   */
+  codBank: {
+    bankName: string;
+    accountNumber: string;
+    accountName: string;
+  } | null;
 };
 
 /**
@@ -97,6 +125,8 @@ export async function findOrderForTracking(
       cityName: orders.destinationCity,
       cargoName: orders.cargoName,
       trackingNumber: orders.trackingNumber,
+      paymentMethod: orders.paymentMethod,
+      tenantId: orders.tenantId,
       id: orders.id,
     })
     .from(orders)
@@ -164,6 +194,41 @@ export async function findOrderForTracking(
     ? PROGRESS_STAGE_ORDER.indexOf(lastStage) + 1
     : 0;
 
+  /*
+   * Rekening COD diambil TERPISAH, dan hanya untuk pesanan COD yang belum
+   * lunas.
+   *
+   * Query terpisah, bukan `leftJoin` di query utama, karena syaratnya
+   * bergantung pada `paymentStatus`. Menyaringnya di dalam join akan
+   * menyebarkan aturan bisnis ke query — dan aturan yang tersebar adalah
+   * aturan yang bisa terlewat. Di sini aturannya terlihat dalam tiga
+   * baris dan tidak bisa lolos tanpa terlihat.
+   */
+  let codBank: TrackingOrder["codBank"] = null;
+  if (order.paymentMethod === "cod" && order.paymentStatus !== "fully_paid") {
+    const [bank] = await db
+      .select({
+        bankName: tenantBankAccounts.bankName,
+        accountNumber: tenantBankAccounts.accountNumber,
+        accountName: tenantBankAccounts.accountName,
+        status: tenantBankAccounts.status,
+      })
+      .from(tenantBankAccounts)
+      .where(eq(tenantBankAccounts.tenantId, order.tenantId))
+      .limit(1);
+
+    // Rekening yang BELUM terverifikasi TIDAK ditampilkan. Menampilkannya
+    // berarti memberi pembeli nomor yang belum diketahui benar — persis
+    // risiko yang membuat COD hanya tersedia kalau rekening terverifikasi.
+    if (bank?.status === "verified") {
+      codBank = {
+        bankName: bank.bankName,
+        accountNumber: bank.accountNumber,
+        accountName: bank.accountName,
+      };
+    }
+  }
+
   return {
     orderCode: order.orderCode,
     orderStatus: order.orderStatus,
@@ -178,5 +243,7 @@ export async function findOrderForTracking(
     items,
     stages,
     reachedStage,
+    paymentMethod: order.paymentMethod,
+    codBank,
   };
 }

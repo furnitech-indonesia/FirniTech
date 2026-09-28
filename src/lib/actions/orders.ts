@@ -384,6 +384,7 @@ export async function recordPayment(
           totalAmount: orders.totalAmount,
           dpAmount: orders.dpAmount,
           paymentStatus: orders.paymentStatus,
+          paymentMethod: orders.paymentMethod,
         })
         .from(orders)
         .where(
@@ -391,6 +392,27 @@ export async function recordPayment(
         )
         .limit(1);
       if (!order) return { error: "Pesanan tidak ditemukan." };
+
+      /*
+       * PESANAN COD TIDAK BISA DICATAT DI SINI.
+       *
+       * Catat pembayaran manual untuk pesanan COD akan membuat DUA sumber
+       * kebenaran untuk hal yang sama: `orders.payment_status` dan
+       * `delivery_proofs.cod_amount`. keduanya bisa berbeda, tidak ada yang
+       * bisa menemukan yang mana benar, dan uang yang benar-benar diterima
+       * di tempat adalah yang tercatat di bukti — bukan yang diketik di
+       * panel.
+       *
+       * Jadi untuk COD, catatannya adalah bukti penerimaan. Tombol
+       * "Catat pembayaran" juga tidak dirender untuk pesanan COD, supaya
+       * tidak ada jalan_manual yang tersedia di UI tapi ditolak server.
+       */
+      if (order.paymentMethod === "cod") {
+        return {
+          error:
+            "Pembayaran pesanan COD dicatat dari bukti penerimaan yang diunggah kurir, bukan dari sini.",
+        };
+      }
 
       if (order.paymentStatus === "refunded") {
         return { error: "Pesanan yang sudah refund tidak bisa dicatat bayar." };

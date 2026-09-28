@@ -1,4 +1,4 @@
-import { TruckIcon } from "@phosphor-icons/react/dist/ssr";
+import { BankIcon, TruckIcon } from "@phosphor-icons/react/dist/ssr";
 
 import { Badge } from "@/components/ui/badge";
 import { formatRupiah, formatDateID, formatNumber } from "@/lib/format";
@@ -51,6 +51,8 @@ export function OrderTrackingView({ order }: { order: TrackingOrder }) {
       </header>
 
       <StageTimeline order={order} />
+
+      {order.codBank ? <CodPaymentPanel order={order} /> : null}
 
       {order.cargoName || order.trackingNumber ? (
         <section className="grid gap-2 rounded-2xl border border-border bg-card p-4">
@@ -176,6 +178,72 @@ function StageTimeline({ order }: { order: TrackingOrder }) {
           );
         })}
       </ol>
+    </section>
+  );
+}
+
+/**
+ * Panel pembayaran COD (Sprint 6).
+ *
+ * Halaman lacak adalah tempat pembeli melihat Detail pesanannya, dan COD
+ * adalah satu-satunya metode yang perlu dijelaskan di sini: pembayarannya terjadi
+ * di luar sistem — uang tunai ke kurir, atau transfer ke rekening
+ * pengrajin. Tanpa rekeningnya di halaman ini, pembeli tidak punya tempat
+ * untuk mencari nomor tujuan.
+ *
+ * `order.codBank` hanya terisi untuk pesanan COD yang belum lunas dan yang
+ * rekening pengrajinnya sudah terverifikasi (lihat `orders-public.ts`), jadi
+ * komponen ini tidak punya kondisi yang perlu dicek ulang.
+ *
+ * NOMOR REKENINGNYA DITAMPILKAN UTUH, bukan disamarkan, dan ini disengaja.
+ * Bedanya dengan halaman pencairan: di sini yang membaca adalah orang yang
+ * harus MEMBAYAR ke rekening itu, jadi menyembunyikan sebagian justru
+ * membuat ia salah transfer — dan orang yang menanggung salah transfer COD
+ * adalah pengrajin.
+ */
+function CodPaymentPanel({ order }: { order: TrackingOrder }) {
+  return (
+    <section className="grid gap-3 rounded-2xl border border-border bg-card p-4">
+      <h2 className="flex items-center gap-2 text-title-md text-foreground">
+        <BankIcon size={18} weight="light" aria-hidden />
+        Cara pembayaran
+      </h2>
+
+      <p className="text-body-md text-muted-foreground">
+        Pesanan ini dibayar di tempat. Ada dua cara: serahkan uang tunai ke
+        kurir saat barang diterima, atau transfer ke rekening di bawah lalu
+        sebutkan kode pesanan <span className="text-code-tabular">{order.orderCode}</span>{" "}
+        sebagai keterangan.
+      </p>
+
+      <dl className="grid gap-1">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 border-t border-border pt-3">
+          <dt className="text-body-sm text-muted-foreground">
+            {order.codBank!.bankName}
+          </dt>
+          <dd className="text-code-tabular text-title-md text-foreground">
+            {order.codBank!.accountNumber}
+          </dd>
+        </div>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <dt className="text-body-sm text-muted-foreground">Atas nama</dt>
+          <dd className="text-body-md text-foreground">
+            {order.codBank!.accountName}
+          </dd>
+        </div>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <dt className="text-body-sm text-muted-foreground">Total</dt>
+          <dd className="text-code-tabular text-body-md text-foreground">
+            {formatRupiah(order.totalAmount)}
+          </dd>
+        </div>
+      </dl>
+
+      <p className="text-body-sm text-muted-foreground">
+        Rekening ini milik pengrajin dan sudah diperiksa. Pastikan nama dan
+        nomornya sama saat transfer — kalau ada yang berbeda, jangan transfer
+        ke sana.
+      </p>
     </section>
   );
 }

@@ -30,12 +30,14 @@ export function CheckoutClient({
   itemCount,
   rates,
   midtransReady,
+  codReady,
 }: {
   tenantSlug: string;
   itemsSubtotal: number;
   itemCount: number;
   rates: RateForDisplay[];
   midtransReady: boolean;
+  codReady: boolean;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [addresses, setAddresses] = useState<CheckoutAddressLite[]>([]);
@@ -66,6 +68,7 @@ export function CheckoutClient({
         itemCount={itemCount}
         rates={rates}
         midtransReady={midtransReady}
+        codReady={codReady}
       />
     </div>
   );

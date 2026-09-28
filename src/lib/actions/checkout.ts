@@ -4,7 +4,13 @@ import { headers } from "next/headers";
 import { and, eq, inArray } from "drizzle-orm";
 
 import { db } from "@/db";
-import { customerAddresses, orderItems, orders, products } from "@/db/schema";
+import {
+  customerAddresses,
+  orderItems,
+  orders,
+  products,
+  tenantBankAccounts,
+} from "@/db/schema";
 import { getTenantBySlug } from "@/lib/tenants";
 import { findShippingRate } from "@/lib/shipping";
 import { readCart } from "@/lib/cart";
@@ -41,6 +47,25 @@ const checkoutSchema = z.object({
    * sisi mereka, jauh lebih sulit dibaca daripada pesan di form).
    */
   email: z.email("Email wajib diisi untuk menerima bukti pembayaran."),
+
+  /**
+   * Metode pembayaran yang dipilih pembeli (Sprint 6).
+   *
+   * Nilai ini DITERIMA dari klien, tapi hanya sebagai PILIHAN metode — bukan
+   * sebagai penentu nominal. Nominal selalu dihitung ulang dari `products`
+   * dan `shipping_rates` seperti biasa, dan kedua metode menagih nominal
+   * yang sama. Perbedaannya bukan di uang, tapi di kapan dan bagaimana uang
+   * itu sampai.
+   *
+   * Default `va` kalau field-nya kosong, supaya form yang belum pernah
+   * disentuh tidak gagal validasi. Sengaja TIDAK default ke COD: COD butuh
+   * rekening pengrajin yang terverifikasi, jadi butuh pemeriksaan tersendiri
+   * di bawah — bukan sekadar diasumsikan tersedia.
+   */
+  paymentMethod: z
+    .enum(["va", "cod"])
+    .optional()
+    .default("va"),
 });
 
 export type CheckoutState = FormState & {
@@ -69,15 +94,41 @@ export async function createCheckoutOrder(
   }
   const input = parsed.data;
 
-  if (!isMidtransConfigured()) {
+  const tenant = await getTenantBySlug(input.tenantSlug);
+  if (!tenant) return { error: "Toko tidak tersedia." };
+
+  /*
+   * COD HANYA tersedia kalau rekening pengrajinnya TERVERIFIKASI.
+   *
+   * Ini bukan syarat teknis, tapi syarat yang berakar pada kenyataan: pada COD
+   * transfer bank, nomor dan atas nama rekening itu DITAMPILKAN kepada
+   * pembeli supaya ia tahu ke mana harus transfer. Kalau rekeningnya belum
+   * dicek, FurniTech sedang menampilkan nomor yang bisa jadi salah kepada
+   * orang yang akan mengirim uang. Menolak di sini lebih baik daripada
+   * orang yang mengirim ke rekening yang salah dan pengrajin yang menanggung.
+   *
+   * Perhatikan juga bahwa COD TIDAK butuh Midtrans sama sekali — tidak ada
+   * tagihan yang dibuat, tidak ada MDR, tidak ada fee masuk. Uang langsung
+   * masuk ke tangan kurir atau ke rekening pengrajin.
+   */
+  if (input.paymentMethod === "cod") {
+    const [bank] = await db
+      .select({ status: tenantBankAccounts.status })
+      .from(tenantBankAccounts)
+      .where(eq(tenantBankAccounts.tenantId, tenant.id))
+      .limit(1);
+    if (bank?.status !== "verified") {
+      return {
+        error:
+          "Toko ini belum menerima pembayaran di tempat. Pilih virtual account atau hubungi toko.",
+      };
+    }
+  } else if (!isMidtransConfigured()) {
     return {
       error:
         "Pembayaran belum dikonfigurasi di server ini. Hubungi toko untuk memesan lewat WhatsApp.",
     };
   }
-
-  const tenant = await getTenantBySlug(input.tenantSlug);
-  if (!tenant) return { error: "Toko tidak tersedia." };
 
   /* ---- 1. Keranjang dari cookie, BUKAN dari FormData ---- */
   const cart = await readCart();
@@ -184,7 +235,11 @@ export async function createCheckoutOrder(
 
   /* ---- 6. Tulis pesanan ---- */
   const orderCode = generateOrderCode();
-  const midtransOrderId = `ord-${crypto.randomUUID().slice(0, 12)}`;
+  // Tagihan Midtrans hanya dibuat untuk pesanan VA. Pesanan COD TIDAK
+  // perlu — dan menyimpannya berarti ada `order_id` yang tidak pernah
+  // dibayar, yang akan muncul di rekonsiliasi sebagai transaksi menggantung.
+  const midtransOrderId =
+    input.paymentMethod === "cod" ? null : `ord-${crypto.randomUUID().slice(0, 12)}`;
   const periodStart = new Date();
   const periodEnd = new Date(periodStart);
   periodEnd.setDate(periodEnd.getDate() + 30);
@@ -208,7 +263,11 @@ export async function createCheckoutOrder(
       itemsSubtotal,
       shippingFee,
       totalAmount,
-      dpAmount: totalAmount,
+      // COD tidak punya DP: tidak ada uang yang masuk di muka, jadi `dpAmount`
+      // harus nol. Kalau diisi `totalAmount` di sini, order COD akan terlihat
+      // LUNAS di semua layar padahal belum ada satu rupiah pun yang diterima.
+      dpAmount: input.paymentMethod === "cod" ? 0 : totalAmount,
+      paymentMethod: input.paymentMethod,
       orderStatus: "pending_dp",
       paymentStatus: "unpaid",
     })
@@ -224,38 +283,53 @@ export async function createCheckoutOrder(
     })),
   );
 
-  /* ---- 7. Tagihan Midtrans ---- */
+  /* ---- 7. Tagihan Midtrans (hanya untuk pesanan VA) ---- */
   let redirectTo: string;
-  try {
-    const charge = await createOrderCharge({
-      orderId: midtransOrderId,
-      amount: totalAmount,
-      customerName: address.recipientName,
-      customerEmail: input.email,
-      customerPhone: address.customerPhone,
-      orderCode,
-      itemSummary: `${itemCount} barang${shippingFee > 0 ? " + ongkir" : ""}`,
-      finishUrl: `${await appUrl()}/lacak?kode=${orderCode}`,
-    });
-    redirectTo = charge.redirectUrl;
 
-    await db
-      .update(orders)
-      .set({ snapToken: charge.token })
-      .where(eq(orders.id, order.id));
-  } catch (error) {
+  if (input.paymentMethod === "cod") {
     /*
-     * Tagihan gagal dibuat. Pesanan TIDAK dihapus: sudah tercatat, lengkap
-     * dengan alamat dan barang, dan masih bisa dibayar dari panel toko.
-     * Menghapusnya akan membuang bukti bahwa pembeli memang sudahCHFcheckout.
-     * Yang diubah hanya statusnya supaya tidak terhitung sebagai "menunggu
-     * pembayaran" yang tak terselesaikan.
+     * COD: tidak ada tagihan sama sekali.
+     *
+     * Pembeli diarahkan ke halaman lacak dengan kode pesannya — halaman yang
+     * sama dengan pesanan VA, dan yang sudah menampilkan nomor + atas nama
+     * rekening pengrajin untuk pesanan COD. Alasan memakai halaman yang sama,
+     * bukan membuat halaman instruksi baru: pembeli sering tidak ingat nama
+     * toko tempat ia memesan, tapi ia ingat kodenya. Halaman yang sudah
+     * dikenal adalah yang akan ia buka.
      */
-    console.error("Gagal membuat tagihan Midtrans untuk pesanan:", error);
-    return {
-      error:
-        "Pesanan sudah tercatat, tetapi tagihan pembayarannya gagal dibuat. Coba lagi sebentar; kalau tetap gagal, hubungi toko dengan menyebut kode pesanan.",
-    };
+    redirectTo = `${await appUrl()}/lacak?kode=${orderCode}`;
+  } else {
+    try {
+      const charge = await createOrderCharge({
+        orderId: midtransOrderId as string,
+        amount: totalAmount,
+        customerName: address.recipientName,
+        customerEmail: input.email,
+        customerPhone: address.customerPhone,
+        orderCode,
+        itemSummary: `${itemCount} barang${shippingFee > 0 ? " + ongkir" : ""}`,
+        finishUrl: `${await appUrl()}/lacak?kode=${orderCode}`,
+      });
+      redirectTo = charge.redirectUrl;
+
+      await db
+        .update(orders)
+        .set({ snapToken: charge.token })
+        .where(eq(orders.id, order.id));
+    } catch (error) {
+      /*
+       * Tagihan gagal dibuat. Pesanan TIDAK dihapus: sudah tercatat, lengkap
+       * dengan alamat dan barang, dan masih bisa dibayar dari panel toko.
+       * Menghapusnya akan membuang bukti bahwa pembeli memang sudah checkout.
+       * Yang diubah hanya statusnya supaya tidak terhitung sebagai "menunggu
+       * pembayaran" yang tak terselesaikan.
+       */
+      console.error("Gagal membuat tagihan Midtrans untuk pesanan:", error);
+      return {
+        error:
+          "Pesanan sudah tercatat, tetapi tagihan pembayarannya gagal dibuat. Coba lagi sebentar; kalau tetap gagal, hubungi toko dengan menyebut kode pesanan.",
+      };
+    }
   }
 
   return {

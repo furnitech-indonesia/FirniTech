@@ -54,6 +54,7 @@ export function CheckoutPaymentStep({
   itemCount,
   rates,
   midtransReady,
+  codReady,
 }: {
   tenantSlug: string;
   addresses: CheckoutAddressLite[];
@@ -63,8 +64,13 @@ export function CheckoutPaymentStep({
   rates: RateForDisplay[];
   /** Server key Midtrans sudah terisi? Kalau tidak, jangan janji bisa bayar. */
   midtransReady: boolean;
+  /** Rekening pengrajin sudah terverifikasi, jadi COD boleh ditawarkan. */
+  codReady: boolean;
 }) {
   const [email, setEmail] = useState("");
+  // Default `va`: pembeli yang tidak memilih apa-apa mendapat metode yang
+  // tidak butuh rekening pengrajin terverifikasi.
+  const [method, setMethod] = useState<"va" | "cod">("va");
   const [state, formAction, pending] = useActionState(createCheckoutOrder, {});
   const redirected = useRef(false);
 
@@ -105,15 +111,62 @@ export function CheckoutPaymentStep({
     })();
   }, [state.redirectTo]);
 
+  /*
+   * Ketersediaan metode.
+   *
+   * `codReady` datang dari server (halaman checkout sudah tahu apakah
+   * rekening pengrajin terverifikasi), BUKAN dari penentuan di klien. Kalau
+   * ditentukan di sini, pembeli akan melihat pilihan COD yang menolaknya
+   * padahal tidak ada masalah — dan "tidak bisa bayar di tempat" dari toko
+   * yang Systemic menawarkannya adalah kebohongan.
+   */
+  const methodReady = method === "cod" ? codReady : midtransReady;
   const blocked =
-    !midtransReady || !selectedAddressId || shippingFee === null || itemCount === 0;
+    !methodReady || !selectedAddressId || shippingFee === null || itemCount === 0;
 
   return (
     <Card>
       <CardContent className="grid gap-4">
         <h2 className="text-title-md text-foreground">4. Pembayaran</h2>
 
-        {!midtransReady ? (
+        {/*
+          Metode pembayaran — dua pilihan, satu harga.
+
+          "Satu harga" itu penting dan bukan kebetulan: total di atas tidak
+          berubah saat metode diganti, karena kedua metode menagih nominal
+          yang sama. Yang berbeda adalah KAPAN dan BAGAIMANA uangnya sampai,
+          dan itu yang dijelaskan di setiap pilihan.
+        */}
+        <fieldset className="grid gap-2">
+          <legend className="text-label-lg text-foreground">
+            Cara pembayaran
+          </legend>
+
+          <MethodOption
+            name="paymentMethod"
+            value="va"
+            checked={method === "va"}
+            onChange={setMethod}
+            disabled={!midtransReady}
+            title="Virtual account"
+            description="Bayar lewat BCA, BNI, BRI, BSI, Danamon, atau Permata sekarang. Bukti pembayaran otomatis masuk ke halaman lacak."
+          />
+          <MethodOption
+            name="paymentMethod"
+            value="cod"
+            checked={method === "cod"}
+            onChange={setMethod}
+            disabled={!codReady}
+            title="Bayar di tempat (COD)"
+            description={
+              codReady
+                ? "Serahkan uang tunai ke kurir saat barang diterima, atau transfer ke rekening pengrajin. Nomor rekeningnya muncul di halaman lacak."
+                : "Toko ini belum menerima pembayaran di tempat."
+            }
+          />
+        </fieldset>
+
+        {!midtransReady && !codReady ? (
           <Alert variant="destructive">
             <AlertDescription>
               Pembayaran belum dikonfigurasi di server ini. Hubungi toko untuk
@@ -174,8 +227,9 @@ export function CheckoutPaymentStep({
               className="min-h-11 w-full rounded-lg border border-border bg-card px-3 text-body-md text-foreground"
             />
             <span className="text-body-sm text-muted-foreground">
-              Midtrans mengirim pengingat dan bukti ke alamat ini. Satu
-              email per pesanan, tidak dipakai untuk hal lain.
+              {method === "va"
+                ? "Midtrans mengirim pengingat dan bukti ke alamat ini. Satu email per pesanan, tidak dipakai untuk hal lain."
+                : "Bukti COD diunggah kurir, jadi email ini dipakai untuk pengingat status pesanan saja. Satu email per pesanan, tidak dipakai untuk hal lain."}
             </span>
           </label>
 
@@ -195,23 +249,42 @@ export function CheckoutPaymentStep({
             size="touch"
             disabled={blocked || pending || email.trim() === ""}
           >
-            {pending ? "Memproses…" : `Bayar ${formatRupiah(total)}`}
+            {pending
+              ? "Memproses…"
+              : method === "cod"
+                ? `Pesan & bayar di tempat · ${formatRupiah(total)}`
+                : `Bayar ${formatRupiah(total)}`}
           </Button>
 
           {/*
-            Label "bayar" tidakGMP ada yang menebak pupil. Yang ditampilkan
-            hanya fakta: pembayaran ditangani Midtrans, dan kami tidak pernah
-            meminta nomor kartu.
+            Dua catatan di bawah ini BERUBAH sesuai metode yang dipilih.
+            Menampilkan "Pembayaran ditangani Midtrans" sementara yang
+            dipilih COD, atau sebaliknya, berarti FurniTech menyatakan
+            sesuatu yang tidak benar di halaman pembayaran — dan itu tempat
+            orang paling serius saat menyerahkan uang.
           */}
-          <p className="flex items-start gap-2 text-body-sm text-muted-foreground">
-            <LockIcon size={16} weight="light" className="mt-0.5 shrink-0" aria-hidden />
-            Pembayaran ditangani Midtrans. FurniTech tidak pernah meminta
-            nomor kartu, PIN, atau OTP Anda.
-          </p>
-          <p className="flex items-start gap-2 text-body-sm text-muted-foreground">
-            <CreditCardIcon size={16} weight="light" className="mt-0.5 shrink-0" aria-hidden />
-            VA semua bank, QRIS, dan e-wallet tersedia di halaman pembayaran.
-          </p>
+
+          {method === "va" ? (
+            <>
+              <p className="flex items-start gap-2 text-body-sm text-muted-foreground">
+                <LockIcon size={16} weight="light" className="mt-0.5 shrink-0" aria-hidden />
+                Pembayaran ditangani Midtrans. FurniTech tidak pernah meminta
+                nomor kartu, PIN, atau OTP Anda.
+              </p>
+              <p className="flex items-start gap-2 text-body-sm text-muted-foreground">
+                <CreditCardIcon size={16} weight="light" className="mt-0.5 shrink-0" aria-hidden />
+                Bayar lewat virtual account yang Anda pilih di halaman
+                pembayaran.
+              </p>
+            </>
+          ) : (
+            <p className="flex items-start gap-2 text-body-sm text-muted-foreground">
+              <LockIcon size={16} weight="light" className="mt-0.5 shrink-0" aria-hidden />
+              Pembayaran di tempat tidak lewat layanan pembayaran mana pun.
+              FurniTech tidak pernah meminta nomor kartu, PIN, atau OTP Anda,
+              dan tidak memotong biaya apa pun dari COD.
+            </p>
+          )}
 
           {/*
             Jalur cadangan kalau pengalihan otomatis tidak terjadi — peramban
@@ -230,5 +303,58 @@ export function CheckoutPaymentStep({
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * Satu pilihan metode pembayaran.
+ *
+ * Radioinput asli, bukan tombol dengan `onClick` — jadi bisa dipakai dengan
+ * keyboard, dibaca screen reader sebagai bagian dari `fieldset`, dan
+ * `--min-h-11`-nya otomatis karena style-nya di sini.
+ */
+function MethodOption({
+  name,
+  value,
+  checked,
+  onChange,
+  disabled,
+  title,
+  description,
+}: {
+  name: string;
+  value: "va" | "cod";
+  checked: boolean;
+  onChange: (next: "va" | "cod") => void;
+  disabled: boolean;
+  title: string;
+  description: string;
+}) {
+  return (
+    <label
+      className={`flex min-h-11 items-start gap-3 rounded-xl border p-3 ${
+        checked
+          ? "border-primary bg-accent"
+          : "border-border bg-card"
+      } ${disabled ? "opacity-60" : ""}`}
+    >
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={checked}
+        disabled={disabled}
+        onChange={() => onChange(value)}
+        className="mt-1 h-5 w-5 shrink-0 accent-primary"
+      />
+      <span className="grid gap-0.5">
+        <span className="text-body-md font-medium text-foreground">
+          {title}
+        </span>
+        <span className="text-body-sm text-muted-foreground">
+          {description}
+        </span>
+      </span>
+    </label>
   );
 }

@@ -977,15 +977,47 @@ DUA TEMUAN
      melaporkan "tidak ditolak" untuk pelanggaran yang benar-benar terjadi.
      Persis jenis tes yang hijau sambil salah.
 
+━━━ Sprint 6 — COD di checkout (selesai 2026-09-28) ━━━
+
+YANG DIKERJAKAN
+  - `orders.payment_method` dipakai sungguhan. `dpAmount = 0` untuk COD — kalau
+    diisi `totalAmount`, pesanan COD terlihat LUNAS di semua layar padahal
+    belum ada satu rupiah pun yang diterima. Tidak ada `midtrans_order_id` dan
+    tidak ada tagihan: COD tidak lewat Midtrans sama sekali, dan menyimpan
+    `order_id` yang tidak pernah dibayar akan muncul di rekonsiliasi sebagai
+    transaksi menggantung.
+  - COD hanya ditawarkan kalau rekening pengrajin **terverifikasi** — dicek di
+    server, di `checkout-view.tsx` (untuk tidak menawarkan) DAN di
+    `createCheckoutOrder` (tetap menolak meski dipaksa). Alasannya: nomor
+    rekening COD ditampilkan ke pembeli, jadi menampilkan yang belum dicek
+    berarti FurniTech mengarahkan orang mengirim uang ke nomor yang bisa
+    jadi salah.
+  - Panel COD di halaman lacak (`CodPaymentPanel`): cara bayar (tunai ke
+    kurir / transfer), nama bank, nomor, atas nama, total. Nomor ditampilkan
+    **utuh** — berbeda dari halaman pencairan, karena yang membaca di sini
+    adalah orang yang harus MEMBAYAR ke rekening itu.
+  - `codBank` hanya terisi untuk pesanan COD yang BELUM lunas dan rekeningnya
+    terverifikasi. Query terpisah, bukan `leftJoin`, supaya syaratnya terlihat
+    dalam tiga baris dan tidak bisa lolos tanpa terlihat.
+  - Field COD di form kurir (nominal + bukti transfer opsional), dan
+    `submitDeliveryProof` menolak nominal COD **pada pesanan VA** serta
+    mewajibkannya **pada pesanan COD** — dua arah, karena hanya satu arah
+    yang biasanya dip Thinking.
+  - `recordPayment` DITOLAK untuk pesanan COD, dan tombolnya tidak dirender.
+    Catatan COD adalah `delivery_proofs.cod_amount`; membiarkan juga
+    `orders.payment_status` bisa diisi manual berarti dua sumber kebenaran
+    untuk hal yang sama, dan pencairan tidak pernah membaca `cod_amount` jadi
+    tidak ada yang akan menemukan ketidakkonsistenannya.
+  - `test:cod` — 13 pemeriksaan, hampir semuanya soal TIDAK bocor.
+
+TEMUAN DARI CEK VISUAL
+  Dua catatan di bawah tombol bayar ("Pembayaran ditangani Midtrans…",
+  "VA semua bank, QRIS, dan e-wallet tersedia…") serta keterangan field email
+  tetap tampil saat COD dipilih. Semuanya benar untuk VA dan SALAH untuk COD —
+  dan itu declaration yang salah di halaman pembayaran, tempat orang paling
+  serius saat menyerahkan uang. Sekarang keduanya mengikuti metode yang dipilih.
+
 YANG MASIH HARUS DIKERJAKAN
-  5. COD di checkout: metode bayar baru (`payment_method = 'cod'` sudah ada),
-     tanpa Midtrans, dengan bukti yang diunggah kurir — `cod_amount` dan
-     `cod_proof_path` di `delivery_proofs` sudah ada dan sudah diisi lewat
-     `submitDeliveryProof`, tapi field-nya belum dirender karena belum ada
-     metode COD untuk diverifikasi terhadapnya. Halaman COD transfer bank
-     yang menampilkan nomor + atas nama rekening mengikuti di sini, karena
-     baru ada artinya setelah metode pembayarannya ada. Payout sudah aman
-     terhadap COD: pesanan COD tidak pernah jadi kandidat payout.
   6. Pengaturan fee platform & harga paket di panel super admin, dengan
      aturan: invoice yang sudah terbit mengunci harga saat dibuat.
 
