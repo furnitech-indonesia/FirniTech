@@ -3,7 +3,7 @@
 Status: proyeksi, bukan ramalan. Semua angka dihitung dari `src/lib/plans.ts`
 (harga paket) dan `PRD.md` bagian Biaya (pembagian fee), dengan asumsi
 pertumbuhan dan biaya yang dinyatakan terbuka di
-[Bagian 9](#9-asumsi-yang-dapat-diubah). Angka biaya infrastruktur diambil dari
+[Bagian 10](#10-asumsi-yang-dapat-diubah). Angka biaya infrastruktur diambil dari
 halaman pricing resmi yang berlaku saat dokumen ini ditulis, bukan dari ingatan.
 
 Ringkasan satu kalimat: **1.000 pengrajin aktif di akhir 2030 menghasilkan
@@ -284,7 +284,9 @@ kesalahan optimism.
 
 Sengaja dikecualikan, dan sebaiknya tetap dikecualikan:
 
-- **Pajak.** PPh atas laba belum dihitung; perusahaan belum PKP.
+- **Pajak.** Sudah dihitung di [Bagian 9](#9-pajak-pph) dalam dua rezim.
+  Yang belum: PPh Pasal 21 atas gaji sendiri, PPh Pasal 23 rekening bank,
+  pajak pengalihan status perseroan, dan dampak PPN ke harga.
 - **Biaya akuisisi (CAC).** Tidak ada anggaran iklan, semuanya diasumsikan
   organic atau referral. Dengan laba bersih Rp 69 juta, satu kali biaya
   akuisisi Rp 200 juta sudah menghapus seluruh laba lima tahun.
@@ -398,40 +400,209 @@ ketidakpastian jumlah pelanggan — bukan dari harga, bukan dari infrastruktur.
 
 ## 8. Rekomendasi
 
-1. **Tetapkan kepemilikan saham 50:50 di akta pendirian, bukan setelahnya.**
-   Ini urutan yang paling penting di dokumen ini. Pembagian dividen mengikuti
-   **kepemilikan saham**, bukan jabatan. Komisaris dengan 0% saham tidak
-   menerima apa pun. Kalau PT didirikan sekarang dengan 100% saham untuk Anda
-   dan pembagian 50:50 hanya kesepakatan lisan, pembagian itu tidak sah dan
-   tidak bisa dipaksakan. Karena Midtrans butuh badan hukum, PT bukan
-   opsional.
-2. **Pastikan jenis badan hukumnya PT, bukan CV.** "Komisaris" hanya ada di PT.
-   Di CV tidak ada board of commissioners — posisinya adalah pemilik modal,
-   dan pembagiannya mengikuti Surat Pernyataan, yang lebih mudah diubah sepihak
-   kapan saja.
-3. **Selesaikan jalur pencairan sebelum mengejar 2027.** Ini prasyarat hukum,
-   bukan prioritas teknis akhir. VA sudah berfungsi dan uang pengrajin sudah
-   masuk ke rekening platform, tetapi belum ada jalan mengembalikannya.
-4. **Hitung pajak dividen sebelum menghitung penghasilan Anda.** Angka Rp 2,66
-   miliar di Bagian 4 adalah dividen **sebelum pajak**. Setiap pemilik
-   perseroan dikenai PPh atas bagian dividennya, dan tarifnya perlu
-   dikonfirmasi ke konsultan pajak — belum dihitung di dokumen ini karena
-   aturan pajak berubah dan saya tidak mau menuliskan angka yang belum
-   diverifikasi.
-5. **2029 adalah tahun pertama Anda bisa bergaji Rp 30 juta.** 2026–2028 harus
-   ditanggung dari sumber lain. Rencanakan itu sekarang, jangan nanti.
-6. **Siapkan proses dukungan sebelum 2029, bukan sesudah.** 1.000 pelanggan
-   di tangan 2 orang adalah 500 pelanggan per orang, tanpa onboarding
-   otomatis. Beban ini tidak terlihat di P&L — tidak akan muncul sebagai
-   angka, hanya sebagai kelelahan.
-7. **Dana yang dibutuhkan hanya Rp 8,1 juta.** Tidak perlu modal ventura.
-   Ini kabar baik dan sekaligus peringatan: tidak ada modal yang memaksa
-   Anda untuk tumbuh cepat, jadi pertumbuhan harus datang dari
-   prioritas, bukan dari tekanan pendanaan.
-6. **Hitung ulang dokumen ini setiap kali asumsi berubah.** Seluruh asumsi
-   terkumpul di [Bagian 9](#9-asumsi-yang-dapat-diubah).
+1. **Putuskan sekarang: PT Perorangan atau PT biasa.** Perseroan Perorangan
+   tidak bisa punya 2 pemegang saham dan tidak punya komisaris, jadi rencana
+   50:50 dengan teman Anda **tidak bisa dijalankan** pada badan hukum itu.
+   Kalau pembagian 50:50 itu penting, badan hukumnya harus PT biasa — dan itu
+   keputusan hukum yang mengikat cara pencatatan, pajak, dan RUPS sejak sekarang.
+2. **Cek agregasi omzet ke konsultan pajak tahun ini.** Batas Rp 4,8 miliar
+   menghitung gabungan seluruh Perseroan Perorangan Anda. Omzet FurniTech saja
+   mencapai Rp 3,26 miliar pada 2030; ditambah PT Perorangan yang sudah ada,
+   agregatnya menembus batas. Bedanya PPh Rp 16 juta dengan Rp 694 juta pada
+   2030 — **42 kali**.
+3. **Pahami ambang PPN, bukan hanya ambang PPh.** Angka Rp 4,8 miliar itu
+   sekaligus ambang PKP. Melewatinya memaksa PPN 11% dari seluruh omzet —
+   Rp 358 juta pada 2030, lebih besar dari semua PPh di dokumen ini. Putuskan
+   harga paket sebelum itu terjadi, bukan sesudah.
+4. **Ambil uangnya sebagai gaji, bukan dividen.** Dividen dikenai pajak dua
+   kali dan menguras Rp 464 juta lebih banyak dalam 4,2 tahun. Polanya juga
+   menyisakan Rp 3,46 miliar di perusahaan yang tetap milik Anda.
+5. **Selesaikan jalur pencairan sebelum mengejar 2027.** VA sudah berfungsi dan
+   uang pengrajin sudah masuk ke rekening platform, tetapi
+   `MIDTRANS_IRIS_API_KEY` masih kosong sehingga belum ada jalan
+   mengembalikannya. Ini prasyarat hukum, bukan prioritas teknis akhir.
+6. **Atur jadwal gaji secara tertulis** karena hanya 2026 yang tidak mampu
+   membayar Rp 5 juta per orang.
+7. **Siapkan proses dukungan sebelum 2029.** 1.000 pelanggan di tangan 2
+   orang adalah 500 pelanggan per orang, tanpa onboarding otomatis. Beban ini
+   tidak terlihat di P&L — hanya sebagai kelelahan.
+8. **Dana yang dibutuhkan hanya Rp 8,1 juta.** Tidak perlu modal ventura.
+   Tidak ada modal yang memaksa tumbuh cepat, jadi pertumbuhan harus datang
+   dari prioritas, bukan tekanan pendanaan.
+9. **Hitung ulang dokumen ini setiap kali asumsi berubah.** Seluruh asumsi
+   terkumpul di [Bagian 10](#10-asumsi-yang-dapat-diubah).
 
-## 9. Asumsi yang dapat diubah
+---
+
+## 9. Pajak (PPh)
+
+### Dasar hukum
+
+Status Anda: **Perseroan Perorangan**, pemilik tunggal, omzet tahun 2020
+Rp 3,2 miliar, sehingga **belum PKP** (ambang PKP Rp 4,8 miliar per tahun).
+Benar, tanpa PPN 11%.
+
+Ada dua rezim PPh yang mungkin berlaku, dan yang mana ditentukan oleh satu
+angka: **omzet agregat per tahun pajak**.
+
+| | **Rezim A** | **Rezim B** |
+|---|---|---|
+| Dasar hukum | PP 20/2026 jo PP 55/2022 | UU PPh, tarif badan 22% |
+| Pemakai | WP Orang Pribadi dan **Perseroan Perorangan** | badan usaha pada umumnya |
+| Syarat | omzet agregat **tidak melebihi Rp 4,8 miliar** per tahun | di atas itu, atau setelah wajib menjadi PT |
+| Cara hitung | **0,5% dari omzet** | 22% dari laba kena pajak |
+| PPN | tidak PKP, tidak PPN | **wajib PKP, PPN 11%** |
+
+Perseroan Perorangan **berhak** memakai Rezim A. PP 20/2026 menghapus batas
+waktu 4 tahun yang dulu ada, jadi tidak ada kedaluwarsa — selama omzetnya
+tidak melewati Rp 4,8 miliar.
+
+### Kata "agregat" itu penting
+
+PP 20/2026 Pasal 57 ayat (1) huruf e: batas Rp 4,8 miliar menghitung
+**gabungan** omzet Anda sebagai WP Orang Pribadi dengan **seluruh**
+Perseroan Perorangan yang Anda dirikan.
+
+Anda sudah punya PT Perorangan dengan omzet Rp 3,2 miliar pada 2020.
+Proyeksi FurniTech mencapai Rp 3,26 miliar pada 2030. Bila keduanya
+berjalan bersamaan:
+
+| Tahun | FurniTech | PT Perorangan yang sudah ada | Agregat | Batas 4,8 M? |
+|---|---|---|---|---|
+| 2026 | Rp 3.071.112 | perlu data Anda | — | kemungkinan ya |
+| 2027 | Rp 205.959.013 | perlu data Anda | — | kemungkinan ya |
+| 2028 | Rp 635.452.007 | perlu data Anda | — | kemungkinan ya |
+| 2029 | Rp 1.438.107.528 | Rp 3,2 miliar (asumsi) | Rp 4,64 miliar | masih ya, tipis |
+| 2030 | Rp 3.255.865.743 | Rp 3,2 miliar (asumsi) | Rp 6,46 miliar | **LEWAT** |
+
+Baris 2029 dan 2030 memakai asumsi usaha lama Anda tetap Rp 3,2 miliar.
+Kalau sudah berhenti atau turun, agregatnya lebih rendah dan Rezim A bisa
+bertahan lebih lama. **Ini perlu dicek ke konsultan pajak dengan angka omzet
+sebenarnya** — bukan dengan asumsi saya.
+
+### Hitungan Rezim A — 0,5% dari omzet
+
+| Tahun | Omzet | **PPh final 0,5%** |
+|---|---|---|
+| 2026 | Rp 3.071.112 | Rp 15.356 |
+| 2027 | Rp 205.959.013 | Rp 1.029.795 |
+| 2028 | Rp 635.452.007 | Rp 3.177.260 |
+| 2029 | Rp 1.438.107.528 | Rp 7.190.538 |
+| 2030 | Rp 3.255.865.743 | Rp 16.279.329 |
+| **Total 4,2 tahun** | **Rp 5.538.455.404** | **Rp 27.692.277** |
+
+Sekitar Rp 27,7 juta selama 4,2 tahun. Itulah nilai terbesar Rezim A: pada 2030, PPh Rezim A hanya Rp 16,3 juta, sedangkan PPh badan 22%
+atas laba Rp 3,15 miliar adalah Rp 694 juta. **Selisihnya 42 kali.**
+
+### Hitungan Rezim B — badan 22%, lalu dividen 10%
+
+| Tahun | Laba (belum gaji) | PPh badan 22% | Bagian Anda 50% | PPh dividen 10% | **Anda net** |
+|---|---|---|---|---|---|
+| 2026 | -Rp 8.120.599 | Rp 0 | -Rp 4.060.299 | Rp 0 | -Rp 4.060.299 |
+| 2027 | Rp 191.792.969 | Rp 42.194.453 | Rp 95.896.485 | Rp 9.589.648 | Rp 86.306.836 |
+| 2028 | Rp 609.418.977 | Rp 134.072.175 | Rp 304.709.489 | Rp 30.470.949 | Rp 274.238.540 |
+| 2029 | Rp 1.372.057.733 | Rp 301.852.701 | Rp 686.028.866 | Rp 68.602.887 | Rp 617.425.980 |
+| 2030 | Rp 3.153.578.952 | Rp 693.787.369 | Rp 1.576.789.476 | Rp 157.678.948 | Rp 1.419.110.528 |
+| **Total** | **Rp 5.318.728.032** | **Rp 1.171.906.699** | **Rp 2.659.364.016** | **Rp 265.936.402** | **Rp 2.393.427.615** |
+
+Dividen yang diterima WP Orang Pribadi dalam negeri dikenai PPh final 10%
+(PP 55/2022 Pasal 23 huruf m). Karena itu kolom "Anda net" adalah
+**setelah** pajak.
+
+### Gaji atau dividen — bedanya besar, dan bukan soal pajak semata
+
+Cara Anda mendeskripsikan pembagiannya — gaji diambil dari profit bersih,
+sisanya untuk perusahaan — secara akuntansi itu **dividen**, bukan gaji.
+Gaji adalah biaya yang mengurangi laba; dividen adalah pembagian laba
+sesudah pajak.
+
+| | Pola dividen 50:50 | Pola gaji 2 orang |
+|---|---|---|
+| Laba kena pajak | Rp 5.318.728.032 | Rp 4.388.728.032 |
+| PPh badan 22% | Rp 1.171.906.699 | Rp 973.906.699 |
+| PPh dividen 10% | Rp 265.936.402 | Rp 0 |
+| **Total pajak** | **Rp 1.437.843.101** | **Rp 973.906.699** |
+| Diterima langsung oleh Anda | Rp 2.393.427.615 | Rp 465.000.000 |
+| Tertahan di perusahaan | Rp 0 | Rp 3.458.728.032 |
+
+**Pola dividen dikenai pajak dua kali**: 22% di badan, lalu 10% lagi saat
+dibagikan. Total pajaknya Rp 464 juta lebih besar.
+
+Perhatikan baris terakhir. Pola gaji menyisakan **Rp 3,46 miliar di
+perusahaan** — uang yang 100% milik Anda, karena Anda pemegang saham tunggal.
+Itu bukan pengorbanan; itu uang yang belum ditarik dan belum dikenai pajak
+dividen. Kalau dimin intimidatedkan/dibayar sebagai dividen di kemudian hari,
+barulah PPh 10% itu menimpa.
+
+Jadwal gaji yang saya pakai (asumsi, perlu Anda tetapkan):
+
+| Tahun | Gaji per orang per bulan | Gaji 2 orang per tahun |
+|---|---|---|
+| 2026 (3 bln) | Rp 5.000.000 | Rp 30.000.000 |
+| 2027 | Rp 5.000.000 | Rp 120.000.000 |
+| 2028 | Rp 7.500.000 | Rp 180.000.000 |
+| 2029 | Rp 10.000.000 | Rp 240.000.000 |
+| 2030 | Rp 15.000.000 | Rp 360.000.000 |
+| **Total** | | **Rp 930.000.000** |
+
+2026 tidak cukup. Margin 2026 minus Rp 8,1 juta, sementara gaji 2 orang
+untuk 3 bulan sudah Rp 30 juta. 2027 cukup: margin Rp 191,8 juta against
+Rp 120 juta gaji.
+
+### Tiga masalah struktural yang harus diputuskan sekarang
+
+**1. PT Perorangan tidak bisa dipakai untuk pembagian 50:50.**
+
+Perseroan Perorangan didirikan oleh **1 orang** dan punya **1 pemegang
+saham (100%)**, yang merangkap direktur dan pemegang saham. Badan hukum ini
+juga **tidak memerlukan komisaris** — posisinya memang tidak ada di sana.
+
+Rencana "saya 50%, teman saya sebagai komisaris 50%" **tidak dapat
+dilakukan pada PT Perorangan**. Kalau teman Anda menjadi pemegang saham
+kedua, perseroan **wajib berubah status menjadi PT biasa** lewat akta
+perubahan dan pendaftaran ke Kementerian Hukum.
+
+Ini keputusan yang harus diambil sekarang, bukan tahun 2027 atau 2029,
+karena menentukan cara pencatatan, perpajakan, dan tata kelola RUPS.
+
+**2. Melewati Rp 4,8 miliar memaksa perubahan status.** Karena agregasi
+omzet maupun karena ketentuan lain, PT Perorangan wajib menjadi PT biasa.
+Konsekuensinya bukan cuma tarif pajak: PT biasa butuh akta notaris, RUPS
+tahunan, laporan tahunan, dan pemeliharaan saham yang lebih formal.
+
+**3. PPN 11% masih menunggu di depan.** Omzet Rp 4,8 miliar itu sekaligus
+ambang PKP. Saat FurniTech atau agregatnya menyentuhnya, Anda **wajib
+menjadi PKP** dan memungut PPN 11% dari seluruh omzet. Pada omzet 2030
+sebesar Rp 3,26 miliar, itu **Rp 358 juta PPN per tahun** — lebih besar
+dari PPh manapun di dokumen ini.
+
+Perlu dikonfirmasi ke konsultan pajak: ada pengecualian untuk transaksi
+tertentu, dan transaksi lewat payment gateway atau marketplace punya
+aturan tersendiri. Konsekuensi praktisnya bukan cuma pajak, tapi apakah
+harga paket Rp 300.000, Rp 500.000, dan Rp 1.000.000 masih bisa
+dipertahankan setelah PPN masuk. Itu keputusan yang lebih besar daripada
+besarnya PPh.
+
+### Yang belum dihitung
+
+- **PPh Pasal 21 atas gaji Anda sendiri.** Kalau gaji ini resmi sebagai
+  gaji direktur, PPh Pasal 21 berlaku dan tarifnya bergantung pada skema
+  peng-tutorial. Rp 5 juta per bulan berada di bawah PTKP bulanan
+  Rp 4,8 juta, sehingga yang dikenakan pajaknya sangat kecil, tetapi
+  angka pastinya perlu dihitung setelah skema pengajakannya ditentukan.
+- **PPh Pasal 23 atas rekening bank** dan pajak kecil lain.
+- **Pajak pengalihan PT Perorangan menjadi PT** (akta, notaris).
+- **Dampak PPN ke harga dan daya beli** (lihat butir 3 di atas).
+
+**Semua angka PPh di bagian ini dihitung dari tarif yang berlaku saat
+dokumen ini ditulis dan wajib dikonfirmasi ke konsultan pajak sebelum
+dipakai untuk keputusan.** Peraturan PPh UMKM sudah beberapa kali berubah
+(PP 23/2018, PP 30/2020, PP 55/2022, PP 20/2026), dan perubahan berikutnya
+tidak mustahil terjadi.
+
+---
+
+## 10. Asumsi yang dapat diubah
 
 | Asumsi | Nilai | Sumber |
 |---|---|---|
@@ -451,8 +622,9 @@ ketidakpastian jumlah pelanggan — bukan dari harga, bukan dari infrastruktur.
 | PITR Supabase | aktif mulai 2029 | keputusan saya |
 | Fonnte | tidak dipakai | `PRD.md` v1.3 (fakta) |
 | Biaya CAC | nol, diasumsikan organic | **asumsi saya** |
-| Pajak (PPh) | belum dihitung | **di luar lingkup** |
-| Gaji 2 orang | tidak masuk P&L, lihat Bagian 4 | **keputusan Anda** |
+| Pajak (PPh) | Rezim A 0,5% atau Rezim B 22% — lihat Bagian 9 | **perlu konfirmasi konsultan** |
+| Gaji 2 orang | Rp 5 jt → 15 jt per bulan per orang | **keputusan Anda** |
+| Omzet PT Perorangan yang sudah ada | Rp 3,2 miliar (asumsi tetap) | **perlu data Anda** |
 
 Dua koreksi yang sudah masuk ke versi ini. Pertama, versi sebelumnya menghitung
 beban gaji penuh dengan BPJS, THR, dan gaji 13 — asumsi yang tidak sesuai
