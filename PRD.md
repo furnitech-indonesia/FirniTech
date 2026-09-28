@@ -1,11 +1,20 @@
 Product Requirement Document (PRD) — FurniTech
 Nama Produk: FurniTech
 Tipe Platform: SaaS Multi-Tenant (B2B2C E-Commerce & Internal Operations for Furniture Makers)
-Versi PRD: 1.8
+Versi PRD: 1.9
 Status: Approved for Development
 Catatan Revisi:
+ * v1.9 — **Root domain ditetapkan: `mebeltech.com`.** Dipilih `.com` dan bukan
+   `.id`/`.co.id` karena hanya `.com` yang tidak butuh verifikasi legalitas
+   usaha di Pornas. Dicek ke RDAP Verisign (registry `.com` resmi) pada
+   2026-09-28: **HTTP 404 = domain belum terdaftar sama sekali**, jadi nama
+   masih bebas diambil — bukan sekadar "belum ada yang pakai" seperti kalau
+   dicek di dashboard Cloudflare. Biaya pendaftaran Rp 188.667 sekali di 2026, renewal
+   Rp 188.667/tahun 2027–2030; total Rp 943.335 dalam 4,2 tahun (0,01% omzet).
+   `NEXT_PUBLIC_ROOT_DOMAIN` harus diisi `mebeltech.com` dan **build ulang
+   wajib** karena `NEXT_PUBLIC_*` di-inline saat build.
  * v1.8 — Model domain diperjelas menjadi dua lapis. **Subdomain gratis
-   `tokonya.furnitech.com` sudah termasuk di SEMUA paket** (termasuk Basic),
+   `tokonya.mebeltech.com` sudah termasuk di SEMUA paket** (termasuk Basic),
    dan **custom domain `tokonya.com` menjadi add-on tahunan Rp250.000** yang
    dibayar di muka untuk 12 bulan dengan auto renewal. Kolom "Custom Domain"
    di matriks §2.B sebelumnya berarti "kemampuan punya domain sendiri"
@@ -76,7 +85,7 @@ A. Tarif Paket Langganan
 B. Matriks Fitur & Batasan Paket (Feature Differentiation)
 | Fitur / Spesifikasi | Basic (Rp300rb/bln) | Pro (Rp500rb/bln) | Max (Rp1jt/bln) |
 |---|---|---|---|
-| Subdomain gratis (`tokonya.furnitech.com`) | ✅ | ✅ | ✅ |
+| Subdomain gratis (`tokonya.mebeltech.com`) | ✅ | ✅ | ✅ |
 | Custom Domain sendiri (`tokonya.com`) | Add-on Rp250.000/tahun | Add-on Rp250.000/tahun | Add-on Rp250.000/tahun |
 | Kurir (unggah bukti & tanda tangan) | ✅ | ✅ | ✅ |
 | Maksimal Katalog Produk | Hingga 20 Produk | Hingga 100 Produk | Unlimited Produk |
@@ -150,7 +159,11 @@ C. Kebijakan Transaksi & Potongan Biaya (Fees)
 D. Add-on Custom Domain
    Model ditetapkan pemilik produk pada 2026-09-28 (PRD v1.8). Angka lengkap
    di `docs/proyeksi-revenue.md` Bagian 10.
-   * **Subdomain gratis di SEMUA paket** — `tokonya.furnitech.com`. Tidak ada
+   * **Root domain platform: `mebeltech.com`** (PRD v1.9). `.com` dipilih
+     karena tidak butuh verifikasi legalitas usaha; `.id` dan `.co.id`
+     membutuhkannya. Terdaftar di Cloudflare sebagai Zone, DNS
+     di-pointing ke Vercel, dan `NEXT_PUBLIC_ROOT_DOMAIN=mebeltech.com`.
+   * **Subdomain gratis di SEMUA paket** — `tokonya.mebeltech.com`. Tidak ada
      biaya, tidak bisa hilang, dan tidak butuh DNS. Ini yang membuat paket
      Basic Rp300.000 punya sesuatu yang nyata untuk ditawarkan, bukan
      sekadar hosting.
@@ -241,7 +254,7 @@ Aturan yang berlaku untuk semua modul:
 Modul 1: Toko Online Pembeli (Storefront / Front-Office)
  * Dynamic Tenant Rendering:
    * Menampilkan toko berdasarkan host akses. **Subdomain gratis
-     `namatoko.furnitech.com` tersedia di semua paket dan tidak perlu
+     `namatoko.mebeltech.com` tersedia di semua paket dan tidak perlu
      konfigurasi apa pun** — tenant langsung aktif setelah membayar. Custom
      domain `namatoko.com` opsional lewat add-on Rp250.000/tahun (§2.D);
      sampai tagihannya aktif dan terverifikasi, toko tetap hidup di

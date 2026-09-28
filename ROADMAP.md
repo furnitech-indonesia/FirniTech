@@ -743,59 +743,52 @@ YANG MASIH KOSONG DARI SPRINT 6
   - Cache Gambar Cloudflare (Vercel sudah menangani resize sendiri; yang
     tersisa hanya memilih penyedia CDN berizin).
 
-━━━ Sprint 6 — Domain: subdomain gratis & add-on .com (2026-09-28) ━━━
+━━━ Sprint 6 — Root domain `mebeltech.com` (2026-09-28) ━━━
 
-KEPUTUSAN PRODUK (PRD v1.8 §2.D). Angka lengkap di
-`docs/proyeksi-revenue.md` Bagian 10.
+KEPUTUSAN PRODUK (PRD v1.9). Angka lengkap di `docs/proyeksi-revenue.md`
+Bagian 10.
 
-DUA LAPIS DOMAIN, BUKAN SATU
-  - **Subdomain gratis `tokonya.furnitech.com` di SEMUA paket**, termasuk
-    Basic. Tanpa ini paket Rp300.000 terlihat tidak memberi apa-apa, dan
-    kolom "Custom Domain ✅" di tabel fitur berarti sesuatu yang sangat
-    berbeda dari yang asli — yang gratis cuma subdomain.
-  - **Custom domain sendiri = add-on Rp250.000/tahun**, dibayar di muka 12
-    bulan dengan auto renewal. Cloudflare tidak menjual `.id`/`.co.id` di
-    antara 430 TLD-nya, jadi hanya `.com`.
+STATUS DOMAIN
+  mebeltech.com  ->  BELUM TERDAFTAR (dicek ke RDAP Verisign, registry .com
+                     resmi: HTTP 404 = belum terdaftar sama sekali, bukan
+                     sekadar belum dipakai orang di Cloudflare)
+  subdomain      ->  tokonya.mebeltech.com  (gratis, semua paket)
+  add-on .com    ->  Rp250.000/tahun, bayar di muka 12 bln, auto renewal
 
-YANG SUDAH DIHITUNG
-  - Harga Cloudflare at-cost $10,46/tahun (kurs Rp18.037 = Rp188.667).
-  - Marjin per invoice Rp61.333 (24,5%). **Tidak tergerus churn** karena
-    Cloudflare ditagih lunas di muka — pelanggan yang berhenti di bulan ke-5
-    tetap menghasilkan marjin penuh.
-  - Dampak ke proyeksi: +Rp231 juta dalam 4,2 tahun (+2,73%), margin per
-    bulan Rp165.887.781 -> Rp170.420.306. Sudah masuk ke tabel 51 bulan.
-  - Take-up 60% itu asumsi. Di 30% pun margin masih positif — marjin per
-    invoice tidak bergantung pada take-up.
+KENAPA .COM SAJA
+  .id dan .co.id butuh verifikasi legalitas usaha di Pornas. FurniTech belum
+  punya akta perusahaan untuk itu, jadi satu-satunya TLD yang bisa langsung dipakai
+  adalah .com. Ini bukan soal estetika - .id/.co.id akan tertunda berbulan-bulan
+  sampai dokumen perusahaan selesai.
 
-YANG BELUM DIKERJAKAN (Sprint 6 lanjutan)
-  - Kolom `item_type` di `saas_invoices` supaya webhook tahu invoice domain
-    atau langganan. Tanpa itu, satu `orderId` tidak bisa mengaktifkan tenant
-    sekaligus memulai periode domain.
-  - `orderId` berawalan berbeda: `saas-` untuk langganan, `dom-` untuk domain.
-  - Alur verifikasi domain: CNAME + TXT token, lalu Cloudflare for SaaS API.
-    `tenants.custom_domain_verified` sudah ada tapi tidak ada alur yang
-    mengisinya.
-  - **Invoice hanya boleh dibuat setelah `customDomainVerified = true`.**
-    Kalau tidak, FurniTech menagih orang yang tokonya belum bisa diakses
-    lewat domain itu.
-  - **Suspend otomatis setelah 3 bulan tidak dibayar.** Ini bukan detail:
-    tanpa itu, 1.000 domain yang tidak ditagih memakan Rp188 juta per tahun —
-    lebih besar dari seluruh laba add-on (Rp231 juta).
-  - Auto renewal: invoice domain baru dibuat saat `periodEnd` lewat.
-  - Halaman `/dashboard/pengaturan/domain` (khusus owner) + `/admin/pengaturan`
-    untuk harga add-on.
+BIAYA ROOT DOMAIN (tidak bisa dihindari, hanya satu)
+  2026  : Rp 188.667  (sekali, dibayar di Okt 2026)
+  2027- : Rp 188.667/tahun
+  Total : Rp 943.335 dalam 4,2 th  = 0,01% dari omzet
+  Dimasukkan ke tabel 51 bulan sebagai kolom "Legal & root domain".
 
-CATATAN STRUKTUR YANG SUDAH TERLINDUNGI DI KODE
-  - `products` punya `tenant_id` not-null + unique `(tenant_id, slug)`, jadi
-    katalog antar pengrajin tidak pernah bercampur meski slug-nya sama.
-  - `tenants.slug` dan `tenants.custom_domain` masing-masing punya unique
-    index. Domain bentrok ditolak database, bukan menimpa — tanpa itu,
-    pengrajin kedua yang luogo sama akan menghilangkan toko pertama dari
-    radar.
-  - `NEXT_PUBLIC_ROOT_DOMAIN` masih kosong, jadi mode path-based `/t/<slug>`
-    yang aktif. Mode host-based menyala otomatis begitu root domain diisi,
-    tanpa perubahan kode — tapi perlu build ulang karena `NEXT_PUBLIC_*`
-    di-inline saat build.
+YANG BELUM DIKERJAKAN - URUTAN PENTING
+  1. **Daftarkan mebeltech.com di Cloudflare.** Namanya masih available dan
+     nama bagus hilang cepat. Ini satu-satunya langkah yang tidak bisa diulang
+     kalau dilewatkan.
+  2. Daftarkan `mebeltech.com` sebagai domain di project Vercel. Tanpa ini,
+     subdomain tenant tidak akan resolve.
+  3. Isi `NEXT_PUBLIC_ROOT_DOMAIN=mebeltech.com` di `.env`, lalu `npm run
+     build` ULANG. Restart saja tidak berpengaruh - `NEXT_PUBLIC_*` di-inline
+     saat build, jadi gejalanya mode host-based tidak pernah menyala dan tidak
+     ada error sama sekali.
+  4. Buat wildcard cert di Vercel (`*.mebeltech.com`) supaya 1.000 subdomain
+     tidak butuh 1.000 sertifikat. Tanpa ini, jangan daftarkan tenant ke host
+     dulu - wildcard yang baru berlaku setelah deploy.
+  5. Arahkan DNS `*` ke Vercel. `NEXT_PUBLIC_ROOT_DOMAIN` yang terisi tapi
+     wildcard DNS yang tidak ada menghasilkan 404 pada setiap subdomain - dan itu gejalanya mirip dengan
+     "routing-nya belum ditulis".
+  6. Baru setelah 1-5 hijau: aktifkan mode host-based. `/t/<slug>` tetap
+     hidup sebagai jalur cadangan sampai 10 tenant pertama aktif di subdomain.
+
+  Appendix: item_type di saas_invoices, orderId `dom-`, alur verifikasi
+  CNAME+TXT, invoice hanya setelah customDomainVerified, suspend otomatis 3
+  bulan, halaman /dashboard/pengaturan/domain - semuanya ada di bawah.
 
 ━━━ Model Biaya & Payout (keputusan pemilik produk, 2026-09-27) ━━━
 

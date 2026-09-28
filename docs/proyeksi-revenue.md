@@ -7,10 +7,10 @@ pertumbuhan dan biaya yang dinyatakan terbuka di
 halaman pricing resmi yang berlaku saat dokumen ini ditulis, bukan dari ingatan.
 
 Ringkasan satu kalimat: **margin bersihnya naik dari Rp 7,7 juta per bulan
-di 2026 menjadi Rp 359,7 juta per bulan di 2030, total Rp 8,48 miliar dalam
-4,2 tahun (96,9% dari omzet)** — karena tidak ada gaji di P&L, tidak ada
+di 2026 menjadi Rp 368,5 juta per bulan di 2030, total Rp 8,69 miliar dalam
+4,2 tahun (94,8% dari omzet)** — karena tidak ada gaji di P&L, tidak ada
 biaya legal di 2026, admin dikerjakan berdua, dan PPh cukup 0,5% dari omzet
-lewat Rezim A Perseroan Perorangan. Kebutuhan modal hanya sekitar Rp 2,7 juta,
+lewat Rezim A Perseroan Perorangan. Kebutuhan modal hanya sekitar Rp 1,6 juta,
 di bulan pertama. Yang tidak terlihat di angka ini: 106 orang harus mendaftar
 dalam 3 bulan pertama, dan 2 orang tidak mungkin menangani 1.000 pelanggan —
 keduanya tidak akan muncul sebagai rupiah di mana pun.
@@ -170,91 +170,101 @@ nominalnya.
 
 | Tahun | Bln | **Margin bersih/bln** | Pelanggan akhir tahun |
 |---|---|---|---|
-| 2026 | 3 | **Rp 8.725.808** | 100 |
-| 2027 | 12 | **Rp 54.509.174** | 178 |
-| 2028 | 12 | **Rp 103.343.829** | 316 |
-| 2029 | 12 | **Rp 195.780.029** | 562 |
-| 2030 | 12 | **Rp 368.471.819** | 1000 |
+| 2026 | 3 | **Rp 8.662.919** | 100 |
+| 2027 | 12 | **Rp 54.493.451** | 178 |
+| 2028 | 12 | **Rp 103.328.107** | 316 |
+| 2029 | 12 | **Rp 195.764.306** | 562 |
+| 2030 | 12 | **Rp 368.456.096** | 1000 |
 
-Rata-rata 51 bulan: **Rp 170.420.306 per bulan**.
+Rata-rata 51 bulan: **Rp 170.401.810 per bulan**.
 
 ### Total 4,2 tahun
 
 | Komponen | Jumlah |
 |---|---|
-| Omzet bruto | Rp 8.747.955.569 |
+| Omzet langganan | Rp 8.747.955.569 |
 | Fee Midtrans | −Rp 61.368.715 |
 | PPh final 0,5% | −Rp 43.739.778 |
 | Infrastruktur | −Rp 166.070.251 |
 | Legal dan admin (2027–2030 saja) | −Rp 16.500.000 |
+| Root domain `mebeltech.com` | −Rp 943.335 |
 | Add-on domain (60% ambil) | +Rp 417.343.184 |
 | Biaya domain Cloudflare | −Rp 184.096.134 |
-| **Margin bersih** | **Rp 8.691.435.626 (94,8% dari omzet)** |
+| **Margin bersih** | **Rp 8.690.492.291 (94,8% dari omzet)** |
 
 ### Rincian 51 bulan
 
-Biaya legal **tidak ada di 2026** — hanya muncul 2027 sampai 2030.
+Biaya legal **tidak ada di 2026** — hanya muncul 2027 sampai 2030. Root
+domain `mebeltech.com` dibayar **sekali** di Okt 2026, jadi bulan Okt
+2026 yang menanggung Rp 188.667 penuh; bulan setelahnya nol sampai Des
+2026, lalu renewal Rp 15.722/bulan sepanjang 2027–2030.
 Kolom domain sudah termasuk add-on Rp 250.000/tahun dengan take-up 60%.
 
-| Bulan | Aktif | Omzet langganan | Fee | PPh 0,5% | Infrastruktur | Legal | Omzet domain | Biaya domain | **Margin** |
+| Bulan | Aktif | Omzet langganan | Fee | PPh 0,5% | Infrastruktur | Legal & root domain | Omzet domain | Biaya domain | **Margin** |
 |---|---|---|---|---|---|---|---|---|---|
-| 10 2026 | 34 | Rp 0 | Rp 0 | Rp 26.562 | Rp 2.631.087 | Rp 0 | Rp 5.312.418 | Rp 4.009.112 | **Rp -1.354.344** |
+| 10 2026 | 34 | Rp 0 | Rp 0 | Rp 26.562 | Rp 2.631.087 | Rp 188.667 | Rp 5.312.418 | Rp 4.009.112 | **Rp -1.543.011** |
 | 11 2026 | 68 | Rp 10.340.445 | Rp 106.771 | Rp 78.264 | Rp 2.631.087 | Rp 0 | Rp 5.312.418 | Rp 4.009.112 | **Rp 8.827.628** |
 | 12 2026 | 100 | Rp 20.370.676 | Rp 210.339 | Rp 128.415 | Rp 2.631.087 | Rp 0 | Rp 5.312.418 | Rp 4.009.112 | **Rp 18.704.140** |
-| 1 2027 | 108 | Rp 186.018.000 | Rp 444.000 | Rp 1.013.319 | Rp 2.631.087 | Rp 291.667 | Rp 16.645.844 | Rp 1.242.066 | **Rp 197.041.705** |
-| 2 2027 | 115 | Rp 34.020.609 | Rp 334.555 | Rp 178.332 | Rp 2.631.087 | Rp 291.667 | Rp 1.645.844 | Rp 1.242.066 | **Rp 30.988.745** |
-| 3 2027 | 122 | Rp 36.363.749 | Rp 357.597 | Rp 190.048 | Rp 2.631.087 | Rp 291.667 | Rp 1.645.844 | Rp 1.242.066 | **Rp 33.297.128** |
-| 4 2027 | 129 | Rp 38.636.595 | Rp 379.948 | Rp 201.412 | Rp 2.631.087 | Rp 291.667 | Rp 1.645.844 | Rp 1.242.066 | **Rp 35.536.259** |
-| 5 2027 | 136 | Rp 40.841.256 | Rp 401.628 | Rp 212.435 | Rp 2.631.087 | Rp 291.667 | Rp 1.645.844 | Rp 1.242.066 | **Rp 37.708.216** |
-| 6 2027 | 143 | Rp 42.979.776 | Rp 422.658 | Rp 223.128 | Rp 2.631.087 | Rp 291.667 | Rp 1.645.844 | Rp 1.242.066 | **Rp 39.815.014** |
-| 7 2027 | 149 | Rp 45.054.142 | Rp 443.057 | Rp 233.500 | Rp 2.631.087 | Rp 291.667 | Rp 1.645.844 | Rp 1.242.066 | **Rp 41.858.608** |
-| 8 2027 | 155 | Rp 47.066.276 | Rp 462.844 | Rp 243.561 | Rp 2.631.087 | Rp 291.667 | Rp 1.645.844 | Rp 1.242.066 | **Rp 43.840.895** |
-| 9 2027 | 161 | Rp 49.018.046 | Rp 482.038 | Rp 253.319 | Rp 2.631.087 | Rp 291.667 | Rp 1.645.844 | Rp 1.242.066 | **Rp 45.763.713** |
-| 10 2027 | 167 | Rp 50.911.263 | Rp 500.656 | Rp 262.786 | Rp 2.631.087 | Rp 291.667 | Rp 1.645.844 | Rp 1.242.066 | **Rp 47.628.846** |
-| 11 2027 | 173 | Rp 52.747.684 | Rp 518.715 | Rp 271.968 | Rp 2.631.087 | Rp 291.667 | Rp 1.645.844 | Rp 1.242.066 | **Rp 49.438.025** |
-| 12 2027 | 178 | Rp 54.529.012 | Rp 536.232 | Rp 280.874 | Rp 2.631.087 | Rp 291.667 | Rp 1.645.844 | Rp 1.242.066 | **Rp 51.192.929** |
-| 1 2028 | 192 | Rp 347.667.642 | Rp 790.320 | Rp 1.886.423 | Rp 3.460.789 | Rp 291.667 | Rp 29.616.873 | Rp 2.201.271 | **Rp 368.654.046** |
-| 2 2028 | 205 | Rp 63.557.202 | Rp 595.252 | Rp 332.370 | Rp 3.460.789 | Rp 291.667 | Rp 2.916.873 | Rp 2.201.271 | **Rp 59.592.726** |
-| 3 2028 | 217 | Rp 67.910.036 | Rp 636.019 | Rp 354.135 | Rp 3.460.789 | Rp 291.667 | Rp 2.916.873 | Rp 2.201.271 | **Rp 63.883.029** |
-| 4 2028 | 230 | Rp 72.132.285 | Rp 675.563 | Rp 375.246 | Rp 3.460.789 | Rp 291.667 | Rp 2.916.873 | Rp 2.201.271 | **Rp 68.044.622** |
-| 5 2028 | 242 | Rp 76.227.866 | Rp 713.920 | Rp 395.724 | Rp 3.460.789 | Rp 291.667 | Rp 2.916.873 | Rp 2.201.271 | **Rp 72.081.368** |
-| 6 2028 | 253 | Rp 80.200.580 | Rp 751.127 | Rp 415.587 | Rp 3.460.789 | Rp 291.667 | Rp 2.916.873 | Rp 2.201.271 | **Rp 75.997.011** |
-| 7 2028 | 265 | Rp 84.054.112 | Rp 787.218 | Rp 434.855 | Rp 3.460.789 | Rp 291.667 | Rp 2.916.873 | Rp 2.201.271 | **Rp 79.795.185** |
-| 8 2028 | 275 | Rp 87.792.038 | Rp 822.226 | Rp 453.545 | Rp 3.460.789 | Rp 291.667 | Rp 2.916.873 | Rp 2.201.271 | **Rp 83.479.414** |
-| 9 2028 | 286 | Rp 91.417.827 | Rp 856.183 | Rp 471.673 | Rp 3.460.789 | Rp 291.667 | Rp 2.916.873 | Rp 2.201.271 | **Rp 87.053.116** |
-| 10 2028 | 296 | Rp 94.934.842 | Rp 889.122 | Rp 489.259 | Rp 3.460.789 | Rp 291.667 | Rp 2.916.873 | Rp 2.201.271 | **Rp 90.519.607** |
-| 11 2028 | 306 | Rp 98.346.346 | Rp 921.073 | Rp 506.316 | Rp 3.460.789 | Rp 291.667 | Rp 2.916.873 | Rp 2.201.271 | **Rp 93.882.103** |
-| 12 2028 | 316 | Rp 101.655.505 | Rp 952.065 | Rp 522.862 | Rp 3.460.789 | Rp 291.667 | Rp 2.916.873 | Rp 2.201.271 | **Rp 97.143.724** |
-| 1 2029 | 340 | Rp 648.068.110 | Rp 1.403.040 | Rp 3.503.309 | Rp 3.460.789 | Rp 375.000 | Rp 52.593.592 | Rp 3.919.438 | **Rp 688.000.126** |
-| 2 2029 | 363 | Rp 118.508.009 | Rp 1.057.047 | Rp 618.508 | Rp 3.460.789 | Rp 375.000 | Rp 5.193.592 | Rp 3.919.438 | **Rp 114.270.819** |
-| 3 2029 | 386 | Rp 126.655.378 | Rp 1.129.719 | Rp 659.245 | Rp 3.460.789 | Rp 375.000 | Rp 5.193.592 | Rp 3.919.438 | **Rp 122.304.779** |
-| 4 2029 | 408 | Rp 134.558.326 | Rp 1.200.210 | Rp 698.760 | Rp 3.460.789 | Rp 375.000 | Rp 5.193.592 | Rp 3.919.438 | **Rp 130.097.721** |
-| 5 2029 | 430 | Rp 142.224.186 | Rp 1.268.586 | Rp 737.089 | Rp 3.460.789 | Rp 375.000 | Rp 5.193.592 | Rp 3.919.438 | **Rp 137.656.875** |
-| 6 2029 | 450 | Rp 149.660.069 | Rp 1.334.912 | Rp 774.268 | Rp 3.460.789 | Rp 375.000 | Rp 5.193.592 | Rp 3.919.438 | **Rp 144.989.254** |
-| 7 2029 | 470 | Rp 156.872.877 | Rp 1.399.247 | Rp 810.332 | Rp 3.460.789 | Rp 375.000 | Rp 5.193.592 | Rp 3.919.438 | **Rp 152.101.662** |
-| 8 2029 | 490 | Rp 163.869.300 | Rp 1.461.653 | Rp 845.314 | Rp 3.460.789 | Rp 375.000 | Rp 5.193.592 | Rp 3.919.438 | **Rp 159.000.697** |
-| 9 2029 | 509 | Rp 170.655.830 | Rp 1.522.186 | Rp 879.247 | Rp 3.460.789 | Rp 375.000 | Rp 5.193.592 | Rp 3.919.438 | **Rp 165.692.761** |
-| 10 2029 | 527 | Rp 177.238.764 | Rp 1.580.903 | Rp 912.162 | Rp 3.460.789 | Rp 375.000 | Rp 5.193.592 | Rp 3.919.438 | **Rp 172.184.064** |
-| 11 2029 | 545 | Rp 183.624.211 | Rp 1.637.859 | Rp 944.089 | Rp 3.460.789 | Rp 375.000 | Rp 5.193.592 | Rp 3.919.438 | **Rp 178.480.627** |
-| 12 2029 | 562 | Rp 189.818.094 | Rp 1.693.106 | Rp 975.058 | Rp 3.468.125 | Rp 375.000 | Rp 5.193.592 | Rp 3.919.438 | **Rp 184.580.958** |
-| 1 2030 | 605 | Rp 1.210.205.670 | Rp 2.495.280 | Rp 6.518.749 | Rp 3.480.067 | Rp 416.667 | Rp 93.544.186 | Rp 6.976.292 | **Rp 1.283.862.801** |
-| 2 2030 | 647 | Rp 221.320.155 | Rp 1.880.088 | Rp 1.152.822 | Rp 3.509.794 | Rp 416.667 | Rp 9.244.186 | Rp 6.976.292 | **Rp 216.628.678** |
-| 3 2030 | 687 | Rp 236.551.760 | Rp 2.009.479 | Rp 1.228.980 | Rp 3.538.629 | Rp 416.667 | Rp 9.244.186 | Rp 6.976.292 | **Rp 231.625.900** |
-| 4 2030 | 726 | Rp 251.326.418 | Rp 2.134.988 | Rp 1.302.853 | Rp 3.566.598 | Rp 416.667 | Rp 9.244.186 | Rp 6.976.292 | **Rp 246.173.206** |
-| 5 2030 | 764 | Rp 265.657.836 | Rp 2.256.732 | Rp 1.374.510 | Rp 3.593.729 | Rp 416.667 | Rp 9.244.186 | Rp 6.976.292 | **Rp 260.284.092** |
-| 6 2030 | 801 | Rp 279.559.311 | Rp 2.374.823 | Rp 1.444.017 | Rp 3.620.046 | Rp 416.667 | Rp 9.244.186 | Rp 6.976.292 | **Rp 273.971.652** |
-| 7 2030 | 837 | Rp 293.043.742 | Rp 2.489.372 | Rp 1.511.440 | Rp 3.645.573 | Rp 416.667 | Rp 9.244.186 | Rp 6.976.292 | **Rp 287.248.585** |
-| 8 2030 | 871 | Rp 306.123.641 | Rp 2.600.484 | Rp 1.576.839 | Rp 3.670.335 | Rp 416.667 | Rp 9.244.186 | Rp 6.976.292 | **Rp 300.127.210** |
-| 9 2030 | 905 | Rp 318.811.142 | Rp 2.708.263 | Rp 1.640.277 | Rp 3.694.353 | Rp 416.667 | Rp 9.244.186 | Rp 6.976.292 | **Rp 312.619.476** |
-| 10 2030 | 938 | Rp 331.118.018 | Rp 2.812.808 | Rp 1.701.811 | Rp 3.717.651 | Rp 416.667 | Rp 9.244.186 | Rp 6.976.292 | **Rp 324.736.974** |
-| 11 2030 | 969 | Rp 343.055.688 | Rp 2.914.217 | Rp 1.761.499 | Rp 3.740.250 | Rp 416.667 | Rp 9.244.186 | Rp 6.976.292 | **Rp 336.490.948** |
-| 12 2030 | 1000 | Rp 354.635.228 | Rp 3.012.584 | Rp 1.819.397 | Rp 3.762.172 | Rp 416.667 | Rp 9.244.186 | Rp 6.976.292 | **Rp 347.892.302** |
+| 1 2027 | 108 | Rp 186.018.000 | Rp 444.000 | Rp 1.013.319 | Rp 2.631.087 | Rp 307.389 | Rp 16.645.844 | Rp 1.242.066 | **Rp 197.025.983** |
+| 2 2027 | 115 | Rp 34.020.609 | Rp 334.555 | Rp 178.332 | Rp 2.631.087 | Rp 307.389 | Rp 1.645.844 | Rp 1.242.066 | **Rp 30.973.023** |
+| 3 2027 | 122 | Rp 36.363.749 | Rp 357.597 | Rp 190.048 | Rp 2.631.087 | Rp 307.389 | Rp 1.645.844 | Rp 1.242.066 | **Rp 33.281.406** |
+| 4 2027 | 129 | Rp 38.636.595 | Rp 379.948 | Rp 201.412 | Rp 2.631.087 | Rp 307.389 | Rp 1.645.844 | Rp 1.242.066 | **Rp 35.520.537** |
+| 5 2027 | 136 | Rp 40.841.256 | Rp 401.628 | Rp 212.435 | Rp 2.631.087 | Rp 307.389 | Rp 1.645.844 | Rp 1.242.066 | **Rp 37.692.493** |
+| 6 2027 | 143 | Rp 42.979.776 | Rp 422.658 | Rp 223.128 | Rp 2.631.087 | Rp 307.389 | Rp 1.645.844 | Rp 1.242.066 | **Rp 39.799.292** |
+| 7 2027 | 149 | Rp 45.054.142 | Rp 443.057 | Rp 233.500 | Rp 2.631.087 | Rp 307.389 | Rp 1.645.844 | Rp 1.242.066 | **Rp 41.842.886** |
+| 8 2027 | 155 | Rp 47.066.276 | Rp 462.844 | Rp 243.561 | Rp 2.631.087 | Rp 307.389 | Rp 1.645.844 | Rp 1.242.066 | **Rp 43.825.173** |
+| 9 2027 | 161 | Rp 49.018.046 | Rp 482.038 | Rp 253.319 | Rp 2.631.087 | Rp 307.389 | Rp 1.645.844 | Rp 1.242.066 | **Rp 45.747.990** |
+| 10 2027 | 167 | Rp 50.911.263 | Rp 500.656 | Rp 262.786 | Rp 2.631.087 | Rp 307.389 | Rp 1.645.844 | Rp 1.242.066 | **Rp 47.613.124** |
+| 11 2027 | 173 | Rp 52.747.684 | Rp 518.715 | Rp 271.968 | Rp 2.631.087 | Rp 307.389 | Rp 1.645.844 | Rp 1.242.066 | **Rp 49.422.303** |
+| 12 2027 | 178 | Rp 54.529.012 | Rp 536.232 | Rp 280.874 | Rp 2.631.087 | Rp 307.389 | Rp 1.645.844 | Rp 1.242.066 | **Rp 51.177.207** |
+| 1 2028 | 192 | Rp 347.667.642 | Rp 790.320 | Rp 1.886.423 | Rp 3.460.789 | Rp 307.389 | Rp 29.616.873 | Rp 2.201.271 | **Rp 368.638.323** |
+| 2 2028 | 205 | Rp 63.557.202 | Rp 595.252 | Rp 332.370 | Rp 3.460.789 | Rp 307.389 | Rp 2.916.873 | Rp 2.201.271 | **Rp 59.577.004** |
+| 3 2028 | 217 | Rp 67.910.036 | Rp 636.019 | Rp 354.135 | Rp 3.460.789 | Rp 307.389 | Rp 2.916.873 | Rp 2.201.271 | **Rp 63.867.307** |
+| 4 2028 | 230 | Rp 72.132.285 | Rp 675.563 | Rp 375.246 | Rp 3.460.789 | Rp 307.389 | Rp 2.916.873 | Rp 2.201.271 | **Rp 68.028.900** |
+| 5 2028 | 242 | Rp 76.227.866 | Rp 713.920 | Rp 395.724 | Rp 3.460.789 | Rp 307.389 | Rp 2.916.873 | Rp 2.201.271 | **Rp 72.065.646** |
+| 6 2028 | 253 | Rp 80.200.580 | Rp 751.127 | Rp 415.587 | Rp 3.460.789 | Rp 307.389 | Rp 2.916.873 | Rp 2.201.271 | **Rp 75.981.289** |
+| 7 2028 | 265 | Rp 84.054.112 | Rp 787.218 | Rp 434.855 | Rp 3.460.789 | Rp 307.389 | Rp 2.916.873 | Rp 2.201.271 | **Rp 79.779.463** |
+| 8 2028 | 275 | Rp 87.792.038 | Rp 822.226 | Rp 453.545 | Rp 3.460.789 | Rp 307.389 | Rp 2.916.873 | Rp 2.201.271 | **Rp 83.463.692** |
+| 9 2028 | 286 | Rp 91.417.827 | Rp 856.183 | Rp 471.673 | Rp 3.460.789 | Rp 307.389 | Rp 2.916.873 | Rp 2.201.271 | **Rp 87.037.394** |
+| 10 2028 | 296 | Rp 94.934.842 | Rp 889.122 | Rp 489.259 | Rp 3.460.789 | Rp 307.389 | Rp 2.916.873 | Rp 2.201.271 | **Rp 90.503.885** |
+| 11 2028 | 306 | Rp 98.346.346 | Rp 921.073 | Rp 506.316 | Rp 3.460.789 | Rp 307.389 | Rp 2.916.873 | Rp 2.201.271 | **Rp 93.866.381** |
+| 12 2028 | 316 | Rp 101.655.505 | Rp 952.065 | Rp 522.862 | Rp 3.460.789 | Rp 307.389 | Rp 2.916.873 | Rp 2.201.271 | **Rp 97.128.002** |
+| 1 2029 | 340 | Rp 648.068.110 | Rp 1.403.040 | Rp 3.503.309 | Rp 3.460.789 | Rp 390.722 | Rp 52.593.592 | Rp 3.919.438 | **Rp 687.984.404** |
+| 2 2029 | 363 | Rp 118.508.009 | Rp 1.057.047 | Rp 618.508 | Rp 3.460.789 | Rp 390.722 | Rp 5.193.592 | Rp 3.919.438 | **Rp 114.255.096** |
+| 3 2029 | 386 | Rp 126.655.378 | Rp 1.129.719 | Rp 659.245 | Rp 3.460.789 | Rp 390.722 | Rp 5.193.592 | Rp 3.919.438 | **Rp 122.289.057** |
+| 4 2029 | 408 | Rp 134.558.326 | Rp 1.200.210 | Rp 698.760 | Rp 3.460.789 | Rp 390.722 | Rp 5.193.592 | Rp 3.919.438 | **Rp 130.081.999** |
+| 5 2029 | 430 | Rp 142.224.186 | Rp 1.268.586 | Rp 737.089 | Rp 3.460.789 | Rp 390.722 | Rp 5.193.592 | Rp 3.919.438 | **Rp 137.641.153** |
+| 6 2029 | 450 | Rp 149.660.069 | Rp 1.334.912 | Rp 774.268 | Rp 3.460.789 | Rp 390.722 | Rp 5.193.592 | Rp 3.919.438 | **Rp 144.973.532** |
+| 7 2029 | 470 | Rp 156.872.877 | Rp 1.399.247 | Rp 810.332 | Rp 3.460.789 | Rp 390.722 | Rp 5.193.592 | Rp 3.919.438 | **Rp 152.085.939** |
+| 8 2029 | 490 | Rp 163.869.300 | Rp 1.461.653 | Rp 845.314 | Rp 3.460.789 | Rp 390.722 | Rp 5.193.592 | Rp 3.919.438 | **Rp 158.984.975** |
+| 9 2029 | 509 | Rp 170.655.830 | Rp 1.522.186 | Rp 879.247 | Rp 3.460.789 | Rp 390.722 | Rp 5.193.592 | Rp 3.919.438 | **Rp 165.677.039** |
+| 10 2029 | 527 | Rp 177.238.764 | Rp 1.580.903 | Rp 912.162 | Rp 3.460.789 | Rp 390.722 | Rp 5.193.592 | Rp 3.919.438 | **Rp 172.168.342** |
+| 11 2029 | 545 | Rp 183.624.211 | Rp 1.637.859 | Rp 944.089 | Rp 3.460.789 | Rp 390.722 | Rp 5.193.592 | Rp 3.919.438 | **Rp 178.464.905** |
+| 12 2029 | 562 | Rp 189.818.094 | Rp 1.693.106 | Rp 975.058 | Rp 3.468.125 | Rp 390.722 | Rp 5.193.592 | Rp 3.919.438 | **Rp 184.565.236** |
+| 1 2030 | 605 | Rp 1.210.205.670 | Rp 2.495.280 | Rp 6.518.749 | Rp 3.480.067 | Rp 432.389 | Rp 93.544.186 | Rp 6.976.292 | **Rp 1.283.847.079** |
+| 2 2030 | 647 | Rp 221.320.155 | Rp 1.880.088 | Rp 1.152.822 | Rp 3.509.794 | Rp 432.389 | Rp 9.244.186 | Rp 6.976.292 | **Rp 216.612.956** |
+| 3 2030 | 687 | Rp 236.551.760 | Rp 2.009.479 | Rp 1.228.980 | Rp 3.538.629 | Rp 432.389 | Rp 9.244.186 | Rp 6.976.292 | **Rp 231.610.178** |
+| 4 2030 | 726 | Rp 251.326.418 | Rp 2.134.988 | Rp 1.302.853 | Rp 3.566.598 | Rp 432.389 | Rp 9.244.186 | Rp 6.976.292 | **Rp 246.157.483** |
+| 5 2030 | 764 | Rp 265.657.836 | Rp 2.256.732 | Rp 1.374.510 | Rp 3.593.729 | Rp 432.389 | Rp 9.244.186 | Rp 6.976.292 | **Rp 260.268.370** |
+| 6 2030 | 801 | Rp 279.559.311 | Rp 2.374.823 | Rp 1.444.017 | Rp 3.620.046 | Rp 432.389 | Rp 9.244.186 | Rp 6.976.292 | **Rp 273.955.930** |
+| 7 2030 | 837 | Rp 293.043.742 | Rp 2.489.372 | Rp 1.511.440 | Rp 3.645.573 | Rp 432.389 | Rp 9.244.186 | Rp 6.976.292 | **Rp 287.232.863** |
+| 8 2030 | 871 | Rp 306.123.641 | Rp 2.600.484 | Rp 1.576.839 | Rp 3.670.335 | Rp 432.389 | Rp 9.244.186 | Rp 6.976.292 | **Rp 300.111.488** |
+| 9 2030 | 905 | Rp 318.811.142 | Rp 2.708.263 | Rp 1.640.277 | Rp 3.694.353 | Rp 432.389 | Rp 9.244.186 | Rp 6.976.292 | **Rp 312.603.754** |
+| 10 2030 | 938 | Rp 331.118.018 | Rp 2.812.808 | Rp 1.701.811 | Rp 3.717.651 | Rp 432.389 | Rp 9.244.186 | Rp 6.976.292 | **Rp 324.721.252** |
+| 11 2030 | 969 | Rp 343.055.688 | Rp 2.914.217 | Rp 1.761.499 | Rp 3.740.250 | Rp 432.389 | Rp 9.244.186 | Rp 6.976.292 | **Rp 336.475.226** |
+| 12 2030 | 1000 | Rp 354.635.228 | Rp 3.012.584 | Rp 1.819.397 | Rp 3.762.172 | Rp 432.389 | Rp 9.244.186 | Rp 6.976.292 | **Rp 347.876.580** |
 
 ### Titik kas terendah
 
-Kas terendah hanya **Rp -2.631.057**, di Okt 2026 — bulan pertama, dan itu hampir
-seluruhnya biaya infrastruktur. Setelah itu margin positif dan langsung menutup
-seluruh kekurangan. **Kebutuhan modal: sekitar Rp 2,7 juta.**
+Kas terendah hanya **Rp -1.543.011**, di Okt 2026 — bulan pertama. Bendanya
+gabungan **pendaftaran root domain `mebeltech.com` Rp 188.667** (dibayar
+sekali di bulan itu) dan **biaya infrastruktur Rp 2.631.087** untuk tiga
+layanan berbayar. November sudah positif Rp 8,8 juta, jadi seluruh kekurangan
+tertutup sebelum akhir 2026.
+
+**Kebutuhan modal: sekitar Rp 1,6 juta.** Angka ini tidak berubah oleh
+add-on domain — revenue domain sudah masuk sejak bulan pertama, dan
+infrastruktur sudah termasuk $25 + $100 + $20 per bulan sejak awal.
 
 ---
 
@@ -404,20 +414,33 @@ berjadwal. Yang tersisa hanya biaya yang **tidak bisa dikerjakan sendiri**:
 
 | Item | Biaya | Kenapa tidak bisa dikerjakan sendiri |
 |---|---|---|
-| **2026** | **Rp 0** | PT Perorangan sudah berdiri, tidak ada yang perlu didirikan |
+| **2026 (PT)** | **Rp 0** | PT Perorangan sudah berdiri, tidak ada yang perlu didirikan |
 | Laporan tahunan ke Kementerian Hukum (2027–2030) | Rp 3.500.000/tahun | Wajib dinotarisasi |
+| Root domain `mebeltech.com` (2026) | Rp 188.667 | Sekali bayar, tidak bisa dihitung sendiri |
+| Renewal `mebeltech.com` (2027–2030) | Rp 188.667/tahun | Tidak bisa dihindari selama FurniTech hidup |
 
-Domain **tidak ada di sini** — dipindah ke tabel infrastruktur (Bagian 3a)
-karena diurus lewat dashboard Cloudflare, bukan kewajiban hukum.
+Domain add-on pelanggan **tidak ada di sini** — dipindah ke tabel
+infrastruktur (Bagian 3a) karena biayanya variável, mengikuti jumlah domain
+aktif. Yang ada di sini hanya **satu domain milik platform sendiri**, yang
+hanya satu dan tidak pernah bertambah.
 
-| Tahun | Infrastruktur | Legal & admin | **Total biaya** |
-|---|---|---|---|
-| 2026 (3 bln) | Rp 7.893.171 | **Rp 0** | **Rp 7.893.171** |
-| 2027 | Rp 31.555.140 | Rp 3.500.000 | **Rp 35.055.140** |
-| 2028 | Rp 41.535.030 | Rp 3.500.000 | **Rp 45.035.030** |
-| 2029 | Rp 41.542.506 | Rp 4.500.000 | **Rp 46.042.506** |
-| 2030 | Rp 43.544.403 | Rp 5.000.000 | **Rp 48.544.403** |
-| **Total** | **Rp 166.070.251** | **Rp 16.500.000** | **Rp 182.570.251** |
+Biaya root domain sengaja dipisah dari domain add-on. Kalau digabung, biaya
+tetap Rp 190.000 akan tersembunyi di antara ratusan domain pelanggan yang
+juga di-renew annually — padahal justru satu-satunya yang benar-benar wajib.
+
+| Tahun | Infrastruktur | Legal & admin | Root domain | **Total biaya** |
+|---|---|---|---|---|
+| 2026 (3 bln) | Rp 7.893.171 | **Rp 0** | Rp 188.667 | **Rp 8.081.838** |
+| 2027 | Rp 31.555.140 | Rp 3.500.000 | Rp 188.667 | **Rp 35.243.807** |
+| 2028 | Rp 41.535.030 | Rp 3.500.000 | Rp 188.667 | **Rp 45.223.697** |
+| 2029 | Rp 41.542.506 | Rp 4.500.000 | Rp 188.667 | **Rp 46.231.173** |
+| 2030 | Rp 43.544.403 | Rp 5.000.000 | Rp 188.667 | **Rp 48.733.070** |
+| **Total** | **Rp 166.070.251** | **Rp 16.500.000** | **Rp 943.335** | **Rp 183.513.586** |
+
+Kenaikan total biaya hanya **Rp 943.335 dalam 4,2 tahun** — 0,01% dari
+omzet. Root domain murah dibanding apa yang harus dilindungi: tanpa
+`mebeltech.com`, tidak ada `tokonya.mebeltech.com`, dan seluruh model
+subdomain gratis runtuh.
 
 **"Tidak melibatkan orang lain" tidak bisa 100%.** Laporan tahunan wajib
 dinotarisasi — itu melibatkan pihak ketiga setiap tahun, tidak bisa dikerjakan
@@ -457,24 +480,24 @@ Rincian omzet, margin, dan biaya per bulan ada di
 
 | Tahun | Bln | **Margin bersih/bln** | Pelanggan akhir tahun |
 |---|---|---|---|
-| 2026 | 3 | **Rp 8.725.808** | 100 |
-| 2027 | 12 | **Rp 54.509.174** | 178 |
-| 2028 | 12 | **Rp 103.343.829** | 316 |
-| 2029 | 12 | **Rp 195.780.029** | 562 |
-| 2030 | 12 | **Rp 368.471.819** | 1000 |
-| **Total 4,2 th** | | **Rp 8.691.435.626** | |
+| 2026 | 3 | **Rp 8.662.919** | 100 |
+| 2027 | 12 | **Rp 54.493.451** | 178 |
+| 2028 | 12 | **Rp 103.328.107** | 316 |
+| 2029 | 12 | **Rp 195.764.306** | 562 |
+| 2030 | 12 | **Rp 368.456.096** | 1000 |
+| **Total 4,2 th** | | **Rp 8.690.492.291** | |
 
-Rata-rata 51 bulan: **Rp 170.420.306 per bulan**.
+Rata-rata 51 bulan: **Rp 170.401.810 per bulan**.
 
 ### Kapan cukup untuk gaji
 
 | Margin/bln | Pelanggan aktif | Setara gaji per orang (bila 50:50) |
 |---|---|---|
-| Rp 8.725.808 (rata-rata 2026) | 100 | Rp 4.362.904 |
-| Rp 54.509.174 (rata-rata 2027) | 178 | Rp 27.254.587 |
-| Rp 103.343.829 (rata-rata 2028) | 316 | Rp 51.671.914 |
-| Rp 195.780.029 (rata-rata 2029) | 562 | Rp 97.890.014 |
-| Rp 368.471.819 (rata-rata 2030) | 1000 | Rp 184.235.910 |
+| Rp 8.662.919 (rata-rata 2026) | 100 | Rp 4.331.460 |
+| Rp 54.493.451 (rata-rata 2027) | 178 | Rp 27.246.726 |
+| Rp 103.328.107 (rata-rata 2028) | 316 | Rp 51.664.054 |
+| Rp 195.764.306 (rata-rata 2029) | 562 | Rp 97.882.153 |
+| Rp 368.456.096 (rata-rata 2030) | 1000 | Rp 184.228.048 |
 
 **2026 tidak bisa menanggung gaji apa pun.** Mulai 2027 margin rata-rata
 Rp 53,3 juta per bulan, jadi gaji Rp 25 juta per orang sudah tertutup.
@@ -629,7 +652,7 @@ berikutnya:
 | Skenario | Aktif akhir 2026 | Aktif akhir 2030 | Omzet 5 th | Margin 5 th |
 |---|---|---|---|---|
 | 2026 separuh, 2030 tercapai | 50 | 1.000 | Rp 7.088.511.361 | Rp 6.819.589.260 |
-| **Dasar** | **100** | **1.000** | **Rp 9.165.298.753** | **Rp 8.691.435.626** |
+| **Dasar** | **100** | **1.000** | **Rp 9.165.298.753** | **Rp 8.690.492.291** |
 | 2026 naik 50%, 2030 tercapai | 150 | 1.000 | Rp 10.060.087.211 | Rp 9.756.682.564 |
 | 2026 tercapai, 2030 separuh | 100 | 500 | Rp 5.603.624.586 | Rp 5.353.727.402 |
 | keduanya meleset | 50 | 500 | Rp 4.373.977.785 | Rp 4.138.360.850 |
@@ -778,7 +801,7 @@ Dividen yang diterima WP Orang Pribadi dalam negeri dikenai PPh final 10%
 pajak.
 
 Bandingkan dengan Rezim A: bagian Anda **Rp 4.229.892.195** dari margin
-Rp 8.691.435.626. Selisihnya **Rp 320 juta** dalam 4,2 tahun.
+Rp 8.690.492.291. Selisihnya **Rp 320 juta** dalam 4,2 tahun.
 
 ### Catatan singkat soal cara uang keluar dari perusahaan
 
@@ -836,7 +859,7 @@ besarnya PPh.
 
 - **PPh Pasal 21 atas gaji Anda sendiri.** Kalau gaji ini resmi sebagai
   gaji direktur, PPh Pasal 21 berlaku dan tarifnya bergantung pada skema
-  peng-tutorial. Rp 5 juta per bulan berada di bawah PTKP bulanan
+  pengajaian. Rp 5 juta per bulan berada di bawah PTKP bulanan
   Rp 4,8 juta, sehingga yang dikenakan pajaknya sangat kecil, tetapi
   angka pastinya perlu dihitung setelah skema pengajakannya ditentukan.
 - **PPh Pasal 23 atas rekening bank** dan pajak kecil lain.
@@ -853,19 +876,58 @@ tidak mustahil terjadi.
 
 ## 10. Domain: subdomain gratis & add-on .com
 
+### Root domain: `mebeltech.com`
+
+Ditetapkan pemilik produk pada 2026-09-28. **`.com` dipilih, bukan `.id`
+maupun `.co.id`** — satu-satunya alasan adalah `.id` dan `.co.id` butuh
+verifikasi legalitas usaha di Pornas, dan FurniTech belum punya akta
+perusahaan untuk itu. `.com` tidak butuh apa pun.
+
+Status availability, dicek ke **RDAP Verisign (registry `.com` resmi, bukan
+Cloudflare dan bukan registrar)** pada 2026-09-28:
+
+```
+https://rdap.verisign.com/com/v1/domain/mebeltech.com  ->  HTTP 404
+https://rdap.verisign.com/com/v1/domain/google.com     ->  HTTP 200
+```
+
+HTTP 404 dari registry berarti **domain-nya belum terdaftar sama sekali** —
+bukan sekadar tidak dipakai orang. Ini informasi yang lebih baik dari
+"belum ada yang pakai di Cloudflare": kalau sudah terdaftar tapi tidak
+di-pointing, namanya sudah dimiliki orang lain dan tidak bisa diambil.
+
+| | Nilai |
+|---|---|
+| Root domain | `mebeltech.com` |
+| Status | **Belum terdaftar** — tersedia didaftarkan |
+| Subdomain tenant | `tokonya.mebeltech.com` |
+| Platform | `mebeltech.com` |
+| Biaya pendaftaran | ~Rp 190.000 (sekali, dihitung sebagai biaya 2026) |
+| Biaya hosting | Rp 0 — Vercel Hobby |
+| Renewal/tahun | ~Rp 190.000, mulai 2027 |
+
+Pendaftaran domain root adalah **biaya satu kali**, masuk ke pengeluaran 2026
+bukan ke biaya berulang. `NEXT_PUBLIC_ROOT_DOMAIN` harus diisi `mebeltech.com`
+dan **build ulang wajib dilakukan** — `NEXT_PUBLIC_*` di-inline saat build, jadi
+restart saja tidak berpengaruh sama sekali.
+
+Selama `NEXT_PUBLIC_ROOT_DOMAIN` kosong, mode path-based `/t/<slug>` tetap
+aktif dan `mebeltech.com` tidak dipakai. Keduanya boleh hidup berdampingan:
+`/t/tokonya` tetap berfungsi sebagai jalur cadangan kalau DNS gagal.
+
 ### Dua lapisan domain
 
 | | Subdomain (gratis) | Custom domain (add-on) |
 |---|---|---|
-| Bentuk | `tokonya.furnitech.com` | `tokonya.com` |
+| Bentuk | `tokonya.mebeltech.com` | `tokonya.com` |
 | Biaya FurniTech | **Rp 0** | Rp 188.667/tahun |
 | Harga ke pengrajin | **Rp 0 — sudah termasuk semua paket** | **Rp 250.000/tahun** |
 | Dibayar | — | Sekali di awal, berlaku 12 bulan, **auto renewal** |
 | Perlu DNS | tidak | ya (CNAME + TXT verifikasi) |
 | Bisa hilang | tidak pernah | ya, kalau berhenti bayar |
 
-**Paket Basic sudah mendapat `toko-furnitech.com` gratis.** Itu keputusan
-produk, bukanfficiency teknis: tanpa subdomain gratis, paket termurah
+**Paket Basic sudah mendapat `tokonya.mebeltech.com` gratis.** Itu keputusan
+produk, bukan alasan teknis: tanpa subdomain gratis, paket termurah
 Rp 300.000 terlihat seperti tidak memberi apa-apa, dan "custom domain" di
 tabel fitur Basic berarti sesuatu yang sangat berbeda dari yang asli.
 
@@ -956,12 +1018,13 @@ marjin per invoice.
 | PPh final 0,5% (termasuk omzet domain) | −Rp 45.826.494 |
 | Infrastruktur | −Rp 166.070.251 |
 | Legal dan admin | −Rp 16.500.000 |
+| Root domain `mebeltech.com` | −Rp 943.335 |
 | **Biaya domain Cloudflare** | **−Rp 184.096.134** |
-| **Margin bersih** | **Rp 8.691.435.626** |
+| **Margin bersih** | **Rp 8.690.492.291** |
 
 Tanpa add-on, marginnya Rp 8.460.276.826. Jadi add-on menambah
 **Rp 231.158.800 (+2,73%)** dan menaikkan margin per bulan dari
-Rp 165.887.781 menjadi **Rp 170.420.306**.
+Rp 165.887.781 menjadi **Rp 170.401.810**.
 
 Rinciannya sudah masuk ke tabel 51 bulan di Bagian 2 — kolom
 "Omzet domain" dan "Biaya domain".
@@ -1062,12 +1125,14 @@ nilai itu jauh lebih besar dari Rp 231 juta.
 | Kurs USD | **Rp 18.037** | harga real-time 28 Sep 2026 |
 | Interpolasi 2027–2029 | geometris ×1,7783 per tahun | hitungan |
 | Legal dan admin | **Rp 0 (2026)** → 3,5–5 jt/tahun, tanpa domain | **angka tebakan saya** |
+| Root domain | Rp 188.667/tahun, 5 tahun = Rp 943.335 | **harga Cloudflare** |
 | Jam CPU Vercel | **0,3 jam per pelanggan aktif per bulan** | **angka tebakan saya** |
 | PITR Supabase | **aktif sejak Okt 2026** ($100/bln) | keputusan Anda |
 | Fonnte | tidak dipakai | `PRD.md` v1.3 (fakta) |
 | Domain .com (infrastruktur) | $0,87/bln, domain FurniTech sendiri | keputusan Anda |
 | Domain .com (add-on pelanggan) | **Rp 250.000/tahun, flat, bayar di muka, auto renewal** | **keputusan Anda** |
-| Subdomain gratis | `tokonya.furnitech.com` di semua paket | **keputusan Anda** |
+| Root domain | `mebeltech.com` (belum terdaftar) | **keputusan Anda** |
+| Subdomain gratis | `tokonya.mebeltech.com` di semua paket | **keputusan Anda** |
 | Suspend domain | 3 bulan tidak dibayar | **keputusan Anda** |
 | Biaya CAC | nol, diasumsikan organic | **asumsi saya** |
 | Pajak (PPh) | **Rezim A, final 0,5% dari omzet** | **keputusan Anda, perlu konfirmasi konsultan** |
