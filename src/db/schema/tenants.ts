@@ -9,6 +9,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import {
+  customDomainStatusEnum,
   subscriptionPlanEnum,
   subscriptionStatusEnum,
   userRoleEnum,
@@ -44,6 +45,43 @@ export const tenants = pgTable(
     customDomainVerified: boolean("custom_domain_verified")
       .default(false)
       .notNull(),
+
+    /**
+     * Status add-on custom domain (PRD §2.D).
+     *
+     * Pisah dari `saasInvoices.status` karena keduanya menjawab pertanyaan
+     * berbeda: itu menjawab "sudah dibayar?", ini menjawab "domainnya
+     * hidup?". Invoice bisa lunas sementara domainnya sudah `suspended`.
+     *
+     * Kolom ini TIDAK_BOLEH diset `active` hanya karena domain terverifikasi.
+     * Verifikasi CNAME itu soal teknis; domain aktif itu soal uang dibayar.
+     * Menggabungkan keduanya berarti FurniTech menagih orang yang belum bayar.
+     */
+    customDomainStatus: customDomainStatusEnum("custom_domain_status")
+      .default("unpaid")
+      .notNull(),
+
+    /**
+     * Akhir periode add-on domain yang sudah dibayar. NULL = belum pernah
+     * membeli.
+     *
+     * SENGAJA tidak menumpang di `subscriptionExpiresAt`: orang bisa membeli
+     * domain tanpa me-renew langganan, atau sebaliknya. Satu kolom untuk dua
+     * periode membuat masa langganan tidak jelas kalau salah satu
+     * dibayar dan yang lain tidak.
+     */
+    customDomainExpiresAt: timestamp("custom_domain_expires_at", {
+      withTimezone: true,
+    }),
+
+    /**
+     * Kapan domain di-suspend karena tagihan tidak dibayar. NULL = tidak
+     * suspended. Diisi cron, bukan webhook: suspension adalah konsekuensi
+     * dari TAGIANDA yang lewat, bukan dari satu pembayaran yang gagal.
+     */
+    customDomainSuspendedAt: timestamp("custom_domain_suspended_at", {
+      withTimezone: true,
+    }),
 
     /*
      * Rekening tujuan payout TIDAK disimpan di sini.
@@ -81,6 +119,10 @@ export const tenants = pgTable(
   (table) => [
     uniqueIndex("tenant_slug_idx").on(table.slug),
     uniqueIndex("tenant_domain_idx").on(table.customDomain),
+    // Partial index untuk cron renewal: hanya tenant dengan domain aktif.
+    index("tenant_domain_renewal_idx")
+      .on(table.customDomainExpiresAt)
+      .where(sql`${table.customDomainStatus} = 'active'`),
   ],
 );
 

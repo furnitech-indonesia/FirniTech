@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 
 import { db } from "@/db";
 import { integrationAuditLogs, orders, saasInvoices, tenants } from "@/db/schema";
+import { addonKindFromOrderId } from "@/lib/addons";
 import {
   FAILED_STATUSES,
   SETTLED_STATUSES,
@@ -175,7 +176,115 @@ export async function POST(request: Request) {
 
   /*
    * ============================================================
-   * CABANG 2: TAGIHAN LANGGANAN SaaS ("saas-...")
+   * CABANG 2: TAGIHAN ADD-ON ("dom-..." dan "leg-...", migrasi 0023)
+   * ============================================================
+   *
+   * Dicentang SEBELUM cabang langganan, dan alasannya Safety, bukan urutan
+   * frekuensi. Add-on memakai `saas_invoices` yang sama, jadi tanpa cabang
+   * terpisah, `leg-` akan jatuh ke cabang langganan dan -- karena cabang itu
+   * menulis `subscriptionExpiresAt` -- satu pembelian Rp 500.000 memberi
+   * SATU TAHUN LANGGANAN GRATIS.
+   *
+   * Yang BOLEH ditulis oleh cabang ini:
+   *   domain     -> `customDomainStatus`, `customDomainExpiresAt`
+   *   legalitas  -> TIDAK ADA. Hanya status invoice-nya sendiri.
+   *
+   * Kenapa legalitas tidak boleh menyentuh apa pun di `tenants`: tidak ada
+   * dokumen yang perlu diaktifkan di aplikasi, dan setiap kolom yang ditulis
+   * di sini adalah sesuatu yang bisa memberi akses atau masa aktif. Bug
+   * paling mahal di webhook bukan yang menolak pembayaran -- itu kelihatan.
+   * Yang tidak terlihat adalah yang memberi sesuatu.
+   */
+  const addonKind = addonKindFromOrderId(orderId);
+
+  if (addonKind) {
+    const [addonInvoice] = await db
+      .select()
+      .from(saasInvoices)
+      .where(eq(saasInvoices.midtransOrderId, orderId))
+      .limit(1);
+
+    if (!addonInvoice) {
+      console.warn("Webhook add-on untuk order_id tak dikenal:", orderId);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (
+      Number.isNaN(Number(grossAmount)) ||
+      Number(grossAmount) !== addonInvoice.amount
+    ) {
+      await db.insert(integrationAuditLogs).values({
+        tenantId: addonInvoice.tenantId,
+        service: "midtrans",
+        action: "addon_payment_notification",
+        status: "failed",
+        requestMeta: { orderId, itemType: addonInvoice.itemType, grossAmount },
+        errorMessage: "Nominal pada notifikasi tidak sama dengan tagihan add-on.",
+      });
+      return NextResponse.json({ error: "amount mismatch" }, { status: 400 });
+    }
+
+    if (addonInvoice.status === "paid" && settled) {
+      return NextResponse.json({ ok: true, already: true });
+    }
+
+    if (settled) {
+      await db
+        .update(saasInvoices)
+        .set({
+          status: "paid",
+          transactionId: body.transaction_id ?? null,
+          paidAt: new Date(),
+        })
+        .where(eq(saasInvoices.midtransOrderId, orderId));
+
+      // Hanya domain yang menulis ke `tenants`. Dan hanya kolom domain.
+      if (addonKind === "domain") {
+        const periodeEnd = new Date(`${addonInvoice.periodEnd}T00:00:00.000Z`);
+        const sekarang = new Date();
+        //-domain yang baru dibayar tapi periodenya sudah lewat diaktifkan
+        // dengan `suspended` -- bukan `active`. Kalau `active` di sini,
+        // `isDomainActive()` tetap menolak lewat `expiresAt`, jadi DNS
+        // tidak dilepas; tapi statusnya akan berbohong di UI.
+        const masihBerjalan = periodeEnd.getTime() > sekarang.getTime();
+        await db
+          .update(tenants)
+          .set({
+            customDomainStatus: masihBerjalan ? "active" : "suspended",
+            customDomainExpiresAt: periodeEnd,
+            // Domain yang di-suspend sebelumnya dan dibayar lagi harus
+            // dibersihkan. Tanpa ini, pengrajin membayar ulang tapi domainnya
+            // tetap mati -- dan tagihannya sudah jadi.
+            customDomainSuspendedAt: masihBerjalan ? null : tenants.customDomainSuspendedAt,
+          })
+          .where(eq(tenants.id, addonInvoice.tenantId));
+      }
+    } else if (failed) {
+      await db
+        .update(saasInvoices)
+        .set({ status: "failed" })
+        .where(eq(saasInvoices.midtransOrderId, orderId));
+    }
+
+    await db.insert(integrationAuditLogs).values({
+      tenantId: addonInvoice.tenantId,
+      service: "midtrans",
+      action: "addon_payment_notification",
+      status: settled || failed ? "success" : "failed",
+      requestMeta: {
+        orderId,
+        itemType: addonInvoice.itemType,
+        status,
+        transactionId: body.transaction_id ?? null,
+      },
+    });
+
+    return NextResponse.json({ ok: true });
+  }
+
+  /*
+   * ============================================================
+   * CABANG 3: TAGIHAN LANGGANAN SaaS ("saas-...")
    * ============================================================
    */
   const [invoice] = await db

@@ -75,6 +75,7 @@ npm run test:webhook   # 46 uji: skema, signature, gerbang tenant, e2e webhook
 npm run test:visual   # 27 pemeriksaan visual Playwright (butuh server jalan)
 npm run db:seed:sprint3  # bahan, variasi, pesanan kustom, percakapan contoh
 npm run check:proyeksi  # 56 pemeriksaan konsistensi docs/proyeksi-revenue.md
+npm run test:addons    # 41 pemeriksaan add-on domain & paket pendirian PT
 ```
 
 **`test:visual` satu-satunya alat yang bisa melihat halaman.** Semua test lain
@@ -732,6 +733,49 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
   tidak ada satu pun nominal rupiah. Data keuangan tidak relevan di bengkel,
   dan `test:carpenter` mengunci "tidak ada nominal" itu — yang mustahil
   dibuktikan dari source code.
+
+## Add-on domain & paket pendirian PT (Sprint 6)
+
+- **`src/lib/addons.ts` adalah satu-satunya sumber harga add-on**, dan
+  sengaja TIDAK memakai `server-only` — sama seperti `fees.ts`. Halaman
+  harga dan server harus membaca angka yang persis sama.
+- **`order_id` add-on WAJIB pakai tanda hubung setelah prefix**
+  (`leg-abc12345-...`, bukan `legabc12345-...`). Webhook mengenali jenis
+  tagihan dengan `startsWith(prefix)`, dan `leg` tanpa hubung tidak cocok
+  dengan `leg-` — artinya setiap invoice legalitas jatuh ke cabang
+  langganan dan **memberi satu tahun langganan gratis**. `test:addons`
+  mengunci ini, dan cara menguncinya adalah menyalin rumus `addonOrderId`
+  ke dalam tes lalu mengirim orderId hasil rumus itu.
+- **Cabang webhook add-on dicek SEBELUM cabang langganan.** Add-on memakai
+  tabel `saas_invoices` yang sama; tanpa cabang terpisah, `leg-` akan
+  ditulis ke `subscriptionExpiresAt`.
+- **Invoice `leg-` yang lunas TIDAK BOLEH menulis apa pun ke `tenants`.**
+  Bukan `subscriptionExpiresAt`, bukan `subscriptionStatus`, bukan
+  `isActive`, bukan kolom domain. Yang boleh: status invoice-nya sendiri.
+- **Domain periode lewat diaktifkan sebagai `suspended`, bukan `active`.**
+  `active` akan berbohong di UI meski `isDomainActive()` tetap menolak
+  lewat `expiresAt`.
+- **Tagihan domain hanya boleh dibuat setelah `customDomainVerified`.**
+  Menagih domain yang belum bisa diakses berarti menagih atas sesuatu yang
+  belum berfungsi. Pemeriksaan di halaman bukan pengaman — yang benar
+  ada di `purchaseDomainAddon`.
+- **`customDomainStatus` ≠ `saasInvoices.status`.** Satu menjawab "sudah
+  dibayar?", satu menjawab "domainnya hidup?". Invoice bisa lunas
+  sementara domainnya sudah `suspended`.
+- **Renewal dan suspend keduanya cron, bukan webhook.** Renewal adalah
+  tagihan yang harus terbit sendiri; suspend adalah konsekuensi waktu
+  yang habis, bukan dari satu pembayaran yang gagal.
+- **`CRON_SECRET` wajib diisi di produksi.** Tanpa itu route menolak
+  semua request di produksi — dan kalau tidak ditolak, siapa pun bisa
+  memicu renewal untuk seluruh tenant.
+- **`nextDomainPeriod` lanjut dari periode lama kalau masih berjalan.**
+  Kalau mulai dari `now`, orang yang membayar 3 bulan sebelum periode habis
+  kehilangan 3 bulan yang sudah dibayar.
+- **`npm run test:addons` harus lewat `NODE_OPTIONS='--conditions=react-server'`**
+  karena mengimpor `@/db`, sama seperti `test:rekening` dan `test:payout`.
+- **`npm run test:kurir` sedang rusak** (`22P02: invalid input value for
+  uuid: ''`) dan itu SEBELUM add-on masuk — sudah diverifikasi dengan
+  `git stash`. Bukan regresi.
 
 ## Dokumen proyeksi revenue
 

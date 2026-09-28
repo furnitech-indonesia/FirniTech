@@ -4,8 +4,10 @@ import type { Icon } from "@phosphor-icons/react";
 import {
   ArmchairIcon,
   BankIcon,
+  BuildingsIcon,
   ChartBarIcon,
   ChatIcon,
+  GlobeIcon,
   HammerIcon,
   PackageIcon,
   ReceiptIcon,
@@ -86,6 +88,18 @@ const ALL_NAV: NavItem[] = [
     label: "Rekening Pencairan",
     shortLabel: "Rekening",
     icon: WalletIcon,
+  },
+  {
+    href: "/dashboard/pengaturan/domain",
+    label: "Domain Toko",
+    shortLabel: "Domain",
+    icon: GlobeIcon,
+  },
+  {
+    href: "/dashboard/pendirian",
+    label: "Pendirian PT",
+    shortLabel: "PT",
+    icon: BuildingsIcon,
   },
 ];
 

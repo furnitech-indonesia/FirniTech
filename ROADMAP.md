@@ -886,6 +886,67 @@ YANG BELUM DIKERJAKAN (urutan)
      terlalu murah untuk dipakai sebagai patokan; kalau 30 menit, terlalu
      mahal. Ukur dulu di 10 order pertama, baru tetapkan.
 
+━━━ Sprint 6 — Add-on domain & Paket Pendirian PT (implementasi) ━━━
+
+STATUS: KODE SELESAI, terverifikasi `npm run test:addons` (41 pemeriksaan).
+Catatan ekonomi & rekomendasi nama ada di `docs/proyeksi-revenue.md` Bagian 10
+dan 11.
+
+YANG DIKERJAKAN
+
+  - Migrasi 0023: `saas_invoices.item_type` (subscription/domain/legalitas),
+    `saas_invoices.plan` jadi NULLABLE, `tenants.custom_domain_status` +
+    `_expires_at` + `_suspended_at`, unique index anti-duplikat add-on, dan
+    partial index untuk cron.
+  - `src/lib/addons.ts` — harga & aturan kedua add-on, TANPA `server-only`
+    supaya halaman dan server membaca angka yang sama.
+  - `src/lib/midtrans/addons.ts` — pembuatan invoice domain, legalitas, dan
+    renewal. Tidak ada nilai uang dari klien di seluruh jalur ini.
+  - `src/lib/addons/actions.ts` — Server Action, owner-only, lewat
+    `requireTenantWrite`.
+  - Halaman `/dashboard/pengaturan/domain` dan `/dashboard/pendirian`.
+  - `app/api/cron/addons` — renewal (30 hari sebelum habis) + suspend (3
+    bulan setelah habis), didaftarkan di `vercel.json` harian. Dilindungi
+    `CRON_SECRET`.
+  - Cabang webhook terpisah untuk `dom-` dan `leg-`, dicek SEBELUM cabang
+    langganan.
+
+BUG YANG HARUS TERTANGKAP SEBELUM INI DITIMPA
+
+  `addonOrderId` menulis `${prefix}${tenantId}` dan prefix-nya `leg-`,
+  jadi orderId yang terbentuk adalah `leg5f64b9f7-...`. Webhook
+  mengenali jenis tagihan dengan `startsWith("leg-")` — yang bernilai
+  FALSE. Akibatnya SETIAP invoice legalitas jatuh ke cabang langganan dan
+  menulis `subscriptionExpiresAt` dari `invoice.periodEnd`: satu
+  pembelian Rp 500.000 memberi satu tahun langganan gratis.
+
+  Tidak ada satu pun pemeriksaan lama yang menangkapnya, karena semuanya
+  menguji `saas-` dan `ord-`. `test:addons` menangkapnya di percobaan
+  pertama, dan sekarang mengunci dua hal: (1) `startsWith` cocok untuk
+  orderId yang benar-benar dihasilkan rumus kode, dan (2) webhook `leg-`
+  tidak mengubah `subscriptionExpiresAt`.
+
+  Cara mengunci (1) adalah menyalin rumus `addonOrderId` ke dalam tes.
+  Menyalin rumus biasanya rapuh — tapi di sini justru yang benar: kalau
+  rumusnya berubah dan tesnya tidak, itu tanda tesnya sudah tidak
+  menguji jalur yang sama.
+
+  Cara mengunci (2) sudah dibuktikan dengan sabotase: `const addonKind =
+  null` membuat 5 pemeriksaan gagal dengan pesan yang tepat
+  ("leg- lunas TIDAK menambah subscriptionExpiresAt"). Tes yang tidak
+  pernah gagal belum tentu menguji apa pun.
+
+MASIH BELUM DIKERJAKAN
+
+  - Verifikasi domain via Cloudflare for SaaS (CNAME + TXT). Kolom
+    `custom_domain_verified` sudah ada tapi TIDAK ADA alur yang
+    mengisinya — jadi tidak ada yang bisa membeli tagihan domain, karena
+    action menolak domain yang belum terverifikasi. Ini yang membuat
+    add-on domain belum bisa dites end-to-end.
+  - Penagihan otomatis renewal belum punya notifikasi ke pengrajin.
+  - Laporan keuangan tahunan PT Perorangan tidak termasuk paket; perlu
+    keputusan apakah dijual terpisah.
+
 ━━━ Konsistensi dokumen proyeksi (2026-09-28) ━━━
 
 MASALAH YANG DISELESAIKAN

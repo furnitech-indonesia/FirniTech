@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   bigint,
   date,
@@ -16,6 +17,7 @@ import {
   integrationStatusEnum,
   invoiceStatusEnum,
   notificationChannelEnum,
+  saasInvoiceItemTypeEnum,
   subscriptionPlanEnum,
 } from "./enums";
 import { tenants } from "./tenants";
@@ -36,9 +38,23 @@ export const saasInvoices = pgTable(
     tenantId: uuid("tenant_id")
       .notNull()
       .references(() => tenants.id, { onDelete: "cascade" }),
-    plan: subscriptionPlanEnum("plan").notNull(),
+    /**
+     * NULL untuk invoice add-on (domain / legalitas).
+     *
+     * Semula NOT NULL, jadi invoice add-ondipaksa mengarang salah satu dari
+     * basic/pro/max -- dan itu membohongi data: tagihan Rp 250.000 domain
+     * akan tercatat sebagai "paket basic". NULL lebih jujur.
+     */
+    plan: subscriptionPlanEnum("plan"),
     period: billingPeriodEnum("period").notNull(),
-    /** Nominal langganan dalam rupiah penuh. */
+    /**
+     * Jenis tagihan. `subscription` = paket; `domain` = add-on custom
+     * domain tahunan; `legalitas` = paket pendirian PT Perorangan.
+     */
+    itemType: saasInvoiceItemTypeEnum("item_type")
+      .default("subscription")
+      .notNull(),
+    /** Nominal tagihan dalam rupiah penuh. */
     amount: bigint("amount", { mode: "number" }).notNull(),
     status: invoiceStatusEnum("status").default("pending").notNull(),
     midtransOrderId: text("midtrans_order_id"),
@@ -54,6 +70,12 @@ export const saasInvoices = pgTable(
     index("saas_invoice_tenant_idx").on(table.tenantId),
     index("saas_invoice_status_idx").on(table.status, table.periodEnd),
     uniqueIndex("saas_invoice_midtrans_idx").on(table.midtransOrderId),
+    // Mencegah dua invoice add-on untuk periode yang sama. SENGaja tidak
+    // berlaku untuk langganan: pembayaran bulanan yang terlambat sah punya
+    // beberapa invoice dengan period_start sama. Lihat migrasi 0023.
+    uniqueIndex("saas_invoice_addon_period_uniq")
+      .on(table.tenantId, table.itemType, table.periodStart)
+      .where(sql`${table.itemType} <> 'subscription' and ${table.status} <> 'refunded'`),
   ],
 );
 

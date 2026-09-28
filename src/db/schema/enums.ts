@@ -158,6 +158,36 @@ export const invoiceStatusEnum = pgEnum("invoice_status", [
   "refunded",
 ]);
 
+/**
+ * Jenis tagihan di `saas_invoices` (PRD §2.D dan §2.E, migrasi 0023).
+ *
+ * Default `subscription` supaya baris yang sudah ada tidak berubah
+ * artinya dan sisipkan tanpa kolom ini tetap aman.
+ *
+ * `legalitas` bukan langganan dan bukan domain: paket pendirian PT
+ * Perorangan dibayar SEKALI, dan invoice-nya tidak boleh menyentuh periode
+ * langganan sama sekali. Webhook yang menjaga aturan itu ada di
+ * `app/api/webhooks/midtrans/route.ts`.
+ */
+export const saasInvoiceItemTypeEnum = pgEnum("saas_invoice_item_type", [
+  "subscription",
+  "domain",
+  "legalitas",
+]);
+
+/**
+ * Status add-on custom domain.
+ *
+ * Pisah dari `saas_invoices.status` karena keduanya menjawab pertanyaan
+ * berbeda: `status` menjawab "sudah dibayar?", yang ini menjawab "domainnya
+ * hidup?". Invoice bisa lunas sementara domainnya sudah suspended.
+ */
+export const customDomainStatusEnum = pgEnum("custom_domain_status", [
+  "unpaid",
+  "active",
+  "suspended",
+]);
+
 /** Integrasi pihak ketiga yang diaudit di Super Admin Panel (ROADMAP Sprint 2). */
 export const integrationServiceEnum = pgEnum("integration_service", [
   "midtrans",
