@@ -743,6 +743,60 @@ YANG MASIH KOSONG DARI SPRINT 6
   - Cache Gambar Cloudflare (Vercel sudah menangani resize sendiri; yang
     tersisa hanya memilih penyedia CDN berizin).
 
+━━━ Sprint 6 — Domain: subdomain gratis & add-on .com (2026-09-28) ━━━
+
+KEPUTUSAN PRODUK (PRD v1.8 §2.D). Angka lengkap di
+`docs/proyeksi-revenue.md` Bagian 10.
+
+DUA LAPIS DOMAIN, BUKAN SATU
+  - **Subdomain gratis `tokonya.furnitech.com` di SEMUA paket**, termasuk
+    Basic. Tanpa ini paket Rp300.000 terlihat tidak memberi apa-apa, dan
+    kolom "Custom Domain ✅" di tabel fitur berarti sesuatu yang sangat
+    berbeda dari yang asli — yang gratis cuma subdomain.
+  - **Custom domain sendiri = add-on Rp250.000/tahun**, dibayar di muka 12
+    bulan dengan auto renewal. Cloudflare tidak menjual `.id`/`.co.id` di
+    antara 430 TLD-nya, jadi hanya `.com`.
+
+YANG SUDAH DIHITUNG
+  - Harga Cloudflare at-cost $10,46/tahun (kurs Rp18.037 = Rp188.667).
+  - Marjin per invoice Rp61.333 (24,5%). **Tidak tergerus churn** karena
+    Cloudflare ditagih lunas di muka — pelanggan yang berhenti di bulan ke-5
+    tetap menghasilkan marjin penuh.
+  - Dampak ke proyeksi: +Rp231 juta dalam 4,2 tahun (+2,73%), margin per
+    bulan Rp165.887.781 -> Rp170.420.306. Sudah masuk ke tabel 51 bulan.
+  - Take-up 60% itu asumsi. Di 30% pun margin masih positif — marjin per
+    invoice tidak bergantung pada take-up.
+
+YANG BELUM DIKERJAKAN (Sprint 6 lanjutan)
+  - Kolom `item_type` di `saas_invoices` supaya webhook tahu invoice domain
+    atau langganan. Tanpa itu, satu `orderId` tidak bisa mengaktifkan tenant
+    sekaligus memulai periode domain.
+  - `orderId` berawalan berbeda: `saas-` untuk langganan, `dom-` untuk domain.
+  - Alur verifikasi domain: CNAME + TXT token, lalu Cloudflare for SaaS API.
+    `tenants.custom_domain_verified` sudah ada tapi tidak ada alur yang
+    mengisinya.
+  - **Invoice hanya boleh dibuat setelah `customDomainVerified = true`.**
+    Kalau tidak, FurniTech menagih orang yang tokonya belum bisa diakses
+    lewat domain itu.
+  - **Suspend otomatis setelah 3 bulan tidak dibayar.** Ini bukan detail:
+    tanpa itu, 1.000 domain yang tidak ditagih memakan Rp188 juta per tahun —
+    lebih besar dari seluruh laba add-on (Rp231 juta).
+  - Auto renewal: invoice domain baru dibuat saat `periodEnd` lewat.
+  - Halaman `/dashboard/pengaturan/domain` (khusus owner) + `/admin/pengaturan`
+    untuk harga add-on.
+
+CATATAN STRUKTUR YANG SUDAH TERLINDUNGI DI KODE
+  - `products` punya `tenant_id` not-null + unique `(tenant_id, slug)`, jadi
+    katalog antar pengrajin tidak pernah bercampur meski slug-nya sama.
+  - `tenants.slug` dan `tenants.custom_domain` masing-masing punya unique
+    index. Domain bentrok ditolak database, bukan menimpa — tanpa itu,
+    pengrajin kedua yang luogo sama akan menghilangkan toko pertama dari
+    radar.
+  - `NEXT_PUBLIC_ROOT_DOMAIN` masih kosong, jadi mode path-based `/t/<slug>`
+    yang aktif. Mode host-based menyala otomatis begitu root domain diisi,
+    tanpa perubahan kode — tapi perlu build ulang karena `NEXT_PUBLIC_*`
+    di-inline saat build.
+
 ━━━ Model Biaya & Payout (keputusan pemilik produk, 2026-09-27) ━━━
 
 STATUS: model final (PRD v1.7) + rumus di `src/lib/fees.ts` + modal kalkulator

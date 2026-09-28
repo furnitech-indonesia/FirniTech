@@ -1,9 +1,17 @@
 Product Requirement Document (PRD) — FurniTech
 Nama Produk: FurniTech
 Tipe Platform: SaaS Multi-Tenant (B2B2C E-Commerce & Internal Operations for Furniture Makers)
-Versi PRD: 1.7
+Versi PRD: 1.8
 Status: Approved for Development
 Catatan Revisi:
+ * v1.8 — Model domain diperjelas menjadi dua lapis. **Subdomain gratis
+   `tokonya.furnitech.com` sudah termasuk di SEMUA paket** (termasuk Basic),
+   dan **custom domain `tokonya.com` menjadi add-on tahunan Rp250.000** yang
+   dibayar di muka untuk 12 bulan dengan auto renewal. Kolom "Custom Domain"
+   di matriks §2.B sebelumnya berarti "kemampuan punya domain sendiri"
+   padahal yang gratis hanya subdomain — sekarang keduanya dibedakan secara
+   eksplisit. Angka, harga Cloudflare, dan economics-nya di
+   `docs/proyeksi-revenue.md` Bagian 10. Tidak ada perubahan harga paket.
  * v1.7 — Model final: Platform Service Fee **0%** (dihapus), seluruh biaya
    gateway ditanggung pengrajin (Rp 4.440 saat terima pembayaran + Rp 5.550
    saat pencairan, per penerima), pencairan dipicu bukti pengiriman yang
@@ -56,6 +64,10 @@ A. Tarif Paket Langganan
  * Paket Basic: Rp300.000 / bulan (atau Rp3.420.000 / tahun)
  * Paket Pro: Rp500.000 / bulan (atau Rp5.700.000 / tahun)
  * Paket Max: Rp1.000.000 / bulan (atau Rp11.400.000 / tahun)
+ * **Add-on Custom Domain `.com`: Rp250.000 / tahun**, dibayar di muka untuk
+   12 bulan, auto renewal setiap 12 bulan, suspend otomatis setelah 3 bulan
+   tidak dibayar. Subdomain gratis sudah termasuk di semua paket — add-on
+   ini menjual pilihan memakai nama sendiri, bukan kemampuan punya domain.
  * Diskon tahunan 5%. Semua harga BELUM termasuk PPN 11% karena perusahaan
    berstatus belum PKP, jadi PPN tidak diodeser ke pengrajin maupun pembeli.
  * Harga paket dapat diubah owner dari panel super admin; harga yang sudah
@@ -64,7 +76,8 @@ A. Tarif Paket Langganan
 B. Matriks Fitur & Batasan Paket (Feature Differentiation)
 | Fitur / Spesifikasi | Basic (Rp300rb/bln) | Pro (Rp500rb/bln) | Max (Rp1jt/bln) |
 |---|---|---|---|
-| Custom Domain (namatoko.com) | Tersedia | Tersedia | Tersedia |
+| Subdomain gratis (`tokonya.furnitech.com`) | ✅ | ✅ | ✅ |
+| Custom Domain sendiri (`tokonya.com`) | Add-on Rp250.000/tahun | Add-on Rp250.000/tahun | Add-on Rp250.000/tahun |
 | Kurir (unggah bukti & tanda tangan) | ✅ | ✅ | ✅ |
 | Maksimal Katalog Produk | Hingga 20 Produk | Hingga 100 Produk | Unlimited Produk |
 | Jumlah Akun Staf (RBAC) | 2 Akun (Owner + 1 Staf) | 5 Akun Staf/Tukang | Unlimited Akun Staf/Tukang |
@@ -133,6 +146,28 @@ C. Kebijakan Transaksi & Potongan Biaya (Fees)
      `harga paket − Rp 4.440` (Basic Rp 300.000 → Rp 295.560).
    * Tidak ada minimum nilai pesanan dan tidak ada ambang minimum pencairan.
      Keduanya konsisten dengan model "biaya dibebankan ke pengrajin".
+
+D. Add-on Custom Domain
+   Model ditetapkan pemilik produk pada 2026-09-28 (PRD v1.8). Angka lengkap
+   di `docs/proyeksi-revenue.md` Bagian 10.
+   * **Subdomain gratis di SEMUA paket** — `tokonya.furnitech.com`. Tidak ada
+     biaya, tidak bisa hilang, dan tidak butuh DNS. Ini yang membuat paket
+     Basic Rp300.000 punya sesuatu yang nyata untuk ditawarkan, bukan
+     sekadar hosting.
+   * **Custom domain sendiri adalah add-on berbayar**, bukan fitur paket.
+     Cloudflare tidak menjual `.id` maupun `.co.id`, jadi hanya `.com` yang
+     ditawarkan; biaya at-cost $10,46/tahun, dijual Rp250.000/tahun dengan
+     marjin 24,5%.
+   * **Dibayar di muka untuk 12 bulan, auto renewal.** Biaya Cloudflare juga
+     ditagih di muka, jadi marjin per invoice tidak pernah tergerus churn —
+     pelanggan yang berhenti di bulan ke-5 tetap menghasilkan marjin penuh.
+   * **Tiga syarat yang tidak boleh dilewati:** (1) invoice tahunan dibuat
+     otomatis saat `periodEnd` lewat, (2) suspend otomatis setelah 3 bulan
+     tidak dibayar, (3) invoice hanya dibuat setelah `customDomainVerified
+     = true`. Tanpa (2), 1.000 domain yang tidak ditagih memakan Rp188 juta
+     per tahun — lebih besar dari seluruh laba add-on.
+   * Add-on ini menambah omzet platform, jadi PPh Rezim A 0,5% juga diterapkan
+     pada omzet domain.
 
 3. Tech Stack & Arsitektur Sistem
 ┌────────────────────────────────────────────────────────────────────────┐
@@ -205,7 +240,12 @@ Aturan yang berlaku untuk semua modul:
 4. Spesifikasi Modul & Fitur Platform
 Modul 1: Toko Online Pembeli (Storefront / Front-Office)
  * Dynamic Tenant Rendering:
-   * Menampilkan toko berdasarkan host akses (namatoko.com atau namatoko.furnitech.id).
+   * Menampilkan toko berdasarkan host akses. **Subdomain gratis
+     `namatoko.furnitech.com` tersedia di semua paket dan tidak perlu
+     konfigurasi apa pun** — tenant langsung aktif setelah membayar. Custom
+     domain `namatoko.com` opsional lewat add-on Rp250.000/tahun (§2.D);
+     sampai tagihannya aktif dan terverifikasi, toko tetap hidup di
+     subdomain.
  * Katalog Produk & Variansi:
    * Detail dimensi (P \times L \times T), pilihan jenis kayu, warna finishing, dan kain pelapis.
  * Kalkulasi Ongkir Otomatis (All-In Shipping Pricing):
@@ -352,7 +392,10 @@ Modul 5: Super Admin Panel & SaaS Billing Engine (FurniTech sebagai SaaS Owner)
    * Registrasi pengrajin + pemilihan paket (Basic/Pro/Max) dengan pembayaran
      Midtrans Core di awal pendaftaran. Tetap tanpa free trial.
    * Riwayat invoice, renewal, serta upgrade/downgrade plan.
-   * Manajemen Custom Domain melalui Cloudflare for SaaS API.
+   * **Manajemen Custom Domain**: verifikasi domain (CNAME + TXT) via
+     Cloudflare for SaaS API, penagihan add-on tahunan, dan suspend otomatis
+     setelah 3 bulan tidak dibayar (§2.D). Invoice add-on TIDAK boleh dibuat
+     sebelum `customDomainVerified = true`.
  * Audit & Keamanan:
    * Audit log integrasi pihak ketiga (Midtrans Core/Payouts, Cloudflare, Meta/
      WhatsApp Business API bila notifikasi otomatis-poorongan diaktifkan nanti).
@@ -365,7 +408,8 @@ Rancangan tabel utama dengan isolasi tenant_id. Kolom uang memakai bigint
 stok bahan tetap numeric karena satuannya dapat pecahan (m3, Liter).
  * tenants: Data pengrajin, domain (slug & custom domain + status verifikasinya),
    paket langganan (Basic/Pro/Max), periode langganan, dan data rekening bank
-   tujuan payout.
+   tujuan payout. `custom_domain` punya unique index: satu tenant satu domain,
+   dan domain yang bentrok ditolak database, bukan menimpa.
  * users: Profil pengguna (Super Admin, Owner, Admin Penjualan, Tukang) terhubung
    ke auth.users.id; tenant_id kosong untuk super_admin.
  * products: Katalog mebel terisolasi per tenant_id (dimensi P x L x T, jenis kayu,
@@ -383,7 +427,11 @@ stok bahan tetap numeric karena satuannya dapat pecahan (m3, Liter).
  * payout_logs & payout_items: Riwayat eksekusi payout pada pukul 06.00 & 18.00 WIB
    beserta rincian order yang tercakup dalam setiap batch payout, dan biaya
    pencairan Rp 5.000 per eksekusi.
- * saas_invoices: Tagihan langganan SaaS (paket, periode, nominal, status, Midtrans).
+ * saas_invoices: Tagihan langganan SaaS (paket, periode, nominal, status,
+   Midtrans). Table yang sama juga dipakai untuk tagihan add-on custom domain — perlu
+   `item_type` supaya webhook tahu invoice itu domain atau langganan, dan
+   `orderId` berawalan berbeda (`saas-` vs `dom-`) supaya aktivasi tenant
+   tidak ikut tersalut.
  * integration_audit_logs: Jejak integrasi Midtrans, Cloudflare, Meta/WhatsApp
    Business API, Firebase.
  * notification_usage: Pemakaian kuota notifikasi WhatsApp per bulan per tenant.
