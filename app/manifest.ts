@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 
+import { iconUrl } from "@/lib/icon-version";
+
 /**
  * Manifest PWA (ROADMAP Sprint 6).
  *
@@ -37,11 +39,26 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#0F172A",
     theme_color: "#0F172A",
     categories: ["business", "shopping", "productivity"],
+    /*
+     * `?v=<hash>` di sini juga. Chrome meng-cache manifest-nya sendiri,
+     * jadi tanpa versi, aplikasi yang sudah terpasang akan terus memakai
+     * ikon lama meskipun manifest yang tersimpan sudah yang baru.
+     */
     icons: [
-      { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
       {
-        src: "/icon-maskable-512.png",
+        src: iconUrl("/icon-192.png"),
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: iconUrl("/icon-512.png"),
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: iconUrl("/icon-maskable-512.png"),
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",

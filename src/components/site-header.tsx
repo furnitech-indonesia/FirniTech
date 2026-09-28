@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ListIcon } from "@phosphor-icons/react";
+import { BrandMark } from "@/components/brand-mark";
 
 import {
   Sheet,
@@ -86,12 +87,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border bg-card shadow-card">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <Link href="/" className="flex min-h-11 items-center gap-2">
-          <span
-            aria-hidden
-            className="grid size-8 place-items-center rounded-xl bg-primary text-label-sm font-semibold text-primary-foreground"
-          >
-            F
-          </span>
+          <BrandMark />
           <span className="flex flex-col leading-tight">
             <span className="text-title-md text-foreground">FurniTech</span>
             <span className="text-body-sm text-muted-foreground">

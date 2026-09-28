@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandMark } from "@/components/brand-mark";
 import {
   ArrowRightIcon,
   BankIcon,
@@ -556,7 +557,10 @@ export default function Home() {
           <Container className="py-10">
             <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
               <div>
-                <p className="text-title-md text-foreground">FurniTech</p>
+                <p className="flex items-center gap-2 text-title-md text-foreground">
+                  <BrandMark className="size-7 rounded-lg" />
+                  FurniTech
+                </p>
                 <p className="mt-2 max-w-xs text-body-sm text-muted-foreground">
                   Sistem operasional untuk pengrajin dan toko mebel: katalog,
                   produksi, inventaris, dan pembayaran.

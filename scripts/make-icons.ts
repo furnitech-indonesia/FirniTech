@@ -29,6 +29,10 @@ import { chromium } from "playwright";
  * diekspor ulang dengan proporsi berbeda, angka itu harus diukur ulang dengan
  * `npm run make:icons:measure`.
  *
+ * `brand-mark.png` sengaja punya `fill` lebih besar dari ikon PWA: di header
+ * logo tampil sebagai lempeng 32px, dan ruang kosong yang terlalu banyak
+ * membuatnya terlihat kecil dan tidak seimbang dengan teks di sebelahnya.
+ *
  * Jalankan: npm run make:icons
  */
 
@@ -65,6 +69,15 @@ type Spec = {
 
 const SPECS: readonly Spec[] = [
   { file: "favicon.png", size: 64, radius: 0.18, fill: 0.7 },
+  /*
+   * Untuk dipakai DI DALAM APLIKASI (header, halaman masuk, back-office), bukan
+   * untuk dipasang ke layar utama.
+   *
+   * 128px dipilih karena mark ditampilkan pada 32px di header: itu 4x, jadi
+   * tetap tajam di layar Retina tanpa membesarkan berkas. 32px sendiri
+   * terlihat pecah saat zoom browser, dan zoom diizinkan sampai 5x.
+   */
+  { file: "brand-mark.png", size: 128, radius: 0.18, fill: 0.8 },
   { file: "apple-touch-icon.png", size: 180, radius: 0, fill: 0.82 },
   { file: "icon-192.png", size: 192, radius: 0.18, fill: 0.7 },
   { file: "icon-512.png", size: 512, radius: 0.18, fill: 0.7 },
@@ -87,7 +100,7 @@ const SPECS: readonly Spec[] = [
 ];
 
 /**
- * Isi file sumber,准备好 untuk disisipkan.
+ * Isi file sumber, disiapkan untuk disisipkan.
  *
  * Dua kasus, keduanya harus ditangani:
  *   - `<image xlink:href="data:image/png;base64,…">` — logo FurniTech

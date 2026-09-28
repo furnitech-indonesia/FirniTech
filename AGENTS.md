@@ -473,6 +473,25 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 - **`test:pwa` memeriksa ukuran SEBENARNYA file ikon**, bukan hanya string
   `sizes` di manifest. Tanpa itu, regenerate dengan ukuran salah tetap
   membuat manifest terlihat benar.
+- **URL ikon WAJIB berversi: `?v=<hash isi kelima berkas ikon>`.**
+  Tanpa itu, ikon yang sudah ter-cache tidak pernah diambil ulang — nama file
+  tetap, URL tetap, cache tetap. Gejalanya sangat menyesatkan: `favicon.png`
+  di server sudah benar (terbukti dari hash) tapi tab browser tetap yang
+  lama, tanpa jejak apa pun bahwa ini cache. `iconUrl()` di
+  `src/lib/icon-version.ts` (server-only) dipakai di `layout.tsx` dan
+  `manifest.ts`; `test:pwa` mengunci keduanya. Hash dari KELIMA berkas, bukan
+  satu — kalau hanya `favicon.png` yang di-hash, mengubah `icon-192.png`
+  tidak mengubah URL favicon, dan itu perubahan yang mustahil dilacak.
+- **Logo di dalam aplikasi pakai `<BrandMark>`** (`/brand-mark.png`, 128px,
+  ditampilkan 32px). SATU komponen untuk semua tempat. Sebelumnya tiap
+  tempat menulis markup sendiri, dan penulisan ulang di satu tempat berarti
+  ada tempat lain yang lupa diperbarui.
+- **Header storefront TIDAK memakai logo FurniTech.** Di sana tampil nama
+  TOKO, dan logo platform di sana akan membuat pembeli mengira dia membeli
+  dari FurniTech. Yang tampil di situ tetap glyph storefront generik.
+- **Dark mode belum diimplementasikan** (body bg identik untuk
+  `prefers-color-scheme: light` dan `dark`). Klaim "terverifikasi di terang
+  dan gelap" belum bisa dibuat sampai itu ada.
 
 ## PWA & luring (Sprint 6)
 

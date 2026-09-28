@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 
 import { Toaster } from "@/components/ui/sonner";
 import { ServiceWorkerRegistrar } from "@/components/service-worker-registrar";
+import { iconUrl } from "@/lib/icon-version";
 import "./globals.css";
 
 const inter = Inter({
@@ -52,12 +53,23 @@ export const metadata: Metadata = {
     title: "FurniTech",
     statusBarStyle: "black-translucent",
   },
+  /*
+   * URL ikon diberi `?v=<hash isi berkas>`.
+   *
+   * Tanpa itu, ikon yang sudah ter-cache di browser TIDAK PERNAH diambil
+   * ulang — nama file-nya tetap, jadi URL-nya tetap. Gejalanya sangat
+   * membingungkan: `favicon.png` di server sudah benar (terbukti dari
+   * hash-nya), tapi tab browser masih menampilkan yang lama, dan tidak ada
+   * jejaknya bahwa ini cache. "Solusi" yang sering orang pilih adalah
+   * menyuruh pengguna mengosongkan cache — itu memindahkan pekerjaan ke
+   * orang lain, bukan memperbaiki masalahnya.
+   */
   icons: {
     icon: [
-      { url: "/favicon.png", sizes: "64x64", type: "image/png" },
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: iconUrl("/favicon.png"), sizes: "64x64", type: "image/png" },
+      { url: iconUrl("/icon-192.png"), sizes: "192x192", type: "image/png" },
     ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    apple: [{ url: iconUrl("/apple-touch-icon.png"), sizes: "180x180" }],
   },
 };
 

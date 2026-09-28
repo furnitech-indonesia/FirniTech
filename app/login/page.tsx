@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { BrandMark } from "@/components/brand-mark";
 import Link from "next/link";
 import {
   BankIcon,
@@ -52,12 +53,7 @@ export default async function LoginPage({
       <aside className="hidden flex-col bg-foreground p-10 lg:flex">
         <div>
           <p className="flex items-center gap-2 text-title-md text-background">
-            <span
-              aria-hidden
-              className="grid size-8 place-items-center rounded-xl bg-primary text-label-sm font-semibold text-primary-foreground"
-            >
-              F
-            </span>
+            <BrandMark />
             FurniTech
           </p>
 
@@ -132,12 +128,7 @@ export default async function LoginPage({
           {/* Di mobile panel kiri tidak tampil, jadi brand harus muncul di
               sini — kalau tidak, pengguna tidak tahu sedang di mana. */}
           <p className="mb-8 flex items-center gap-2 lg:hidden">
-            <span
-              aria-hidden
-              className="grid size-8 place-items-center rounded-xl bg-primary text-label-sm font-semibold text-primary-foreground"
-            >
-              F
-            </span>
+            <BrandMark />
             <span className="text-title-md text-foreground">FurniTech</span>
           </p>
 

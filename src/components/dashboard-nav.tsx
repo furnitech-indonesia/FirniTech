@@ -2,6 +2,8 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
+
+import { BrandMark } from "@/components/brand-mark";
 import { usePathname } from "next/navigation";
 import {
   ListIcon,
@@ -114,9 +116,12 @@ export function DashboardNav({
 
             <Link
               href={home}
-              className="truncate text-base font-semibold text-foreground sm:text-lg"
+              className="flex min-w-0 items-center gap-2"
             >
-              FurniTech
+              <BrandMark className="size-7 rounded-lg" />
+              <span className="truncate text-base font-semibold text-foreground sm:text-lg">
+                FurniTech
+              </span>
             </Link>
           </div>
 

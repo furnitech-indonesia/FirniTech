@@ -110,6 +110,45 @@ async function checkManifest(): Promise<void> {
     `display=${manifest.display}`,
   );
 
+  /*
+   * URL ikon WAJIB berversi (`?v=…`).
+   *
+   * Tanpa itu, ikon yang sudah ter-cache di browser tidak pernah diambil
+   * ulang: nama file tetap, jadi URL tetap, jadi cache tetap. Gejalanya sangat
+   * menyesatkan — `favicon.png` di server sudah berisi benar (terbukti dari
+   * hash-nya) tapi tab browser tetap menampilkan yang lama, dan tidak ada
+   * jejaknya bahwa ini cache. "Solusi" yang sering dipilih adalah menyuruh
+   * pengguna mengosongkan cache, yang cuma memindahkan masalah ke mereka.
+   *
+   * Diperiksa di `<link rel="icon">` DAN di manifest, karena keduanya punya
+   * cache sendiri: Chrome meng-cache `favicon.png` jauh lebih lama dari aset
+   * biasa, dan meng-cache `manifest.webmanifest` sendiri.
+   */
+  const html = await (await fetch(`${BASE}/`)).text();
+  const linkIcons = [...html.matchAll(/<link[^>]+rel="(?:icon|apple-touch-icon)"[^>]*>/g)].map(
+    (m) => m[0],
+  );
+  const unversionedLinks = linkIcons.filter((tag) => !/href="[^"]+\?v=[0-9a-f]{6,}"/.test(tag));
+  check(
+    "URL ikon di <head> berversi (cache-busting)",
+    linkIcons.length > 0 && unversionedLinks.length === 0,
+    linkIcons.length === 0
+      ? "tidak ada <link rel=icon>"
+      : unversionedLinks.length
+        ? `tanpa ?v=: ${unversionedLinks.length}`
+        : `${linkIcons.length} link berversi`,
+  );
+  const unversionedManifest = (manifest.icons ?? []).filter(
+    (icon) => !/\?v=[0-9a-f]{6,}/.test(icon.src),
+  );
+  check(
+    "URL ikon di manifest berversi (cache-busting)",
+    unversionedManifest.length === 0,
+    unversionedManifest.length
+      ? `tanpa ?v=: ${unversionedManifest.map((i) => i.src).join(", ")}`
+      : "semua berversi",
+  );
+
   const sizes = (manifest.icons ?? []).map((icon) => icon.sizes);
   check(
     "manifest punya ikon 192px dan 512px (syarat installability Chrome)",
