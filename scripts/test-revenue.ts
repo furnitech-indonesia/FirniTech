@@ -101,6 +101,7 @@ async function buatInvoice(
       plan: opsi.itemType === "subscription" ? "basic" : null,
       period: opsi.period,
       amount: opsi.amount,
+      midtransAmount: opsi.amount,
       status: opsi.dibayarPada ? "paid" : "pending",
       midtransOrderId: randomUUID(),
       transactionId: opsi.dibayarPada ? randomUUID() : null,

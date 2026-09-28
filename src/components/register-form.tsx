@@ -12,6 +12,7 @@ import {
 
 import { ZodForm, type ZodFormContext } from "@/components/zod-form";
 import { TextField } from "@/components/rhf-fields";
+import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Field, FieldLegend } from "@/components/ui/field";
 import { registerFormSchema } from "@/lib/schemas/register";
@@ -206,17 +207,19 @@ function SlugField({ ctx }: { ctx: ZodFormContext }) {
  * subtree-nya sudah dimemoisasi. `useWatch` + `useFormContext` adalah pola
  * yang benar dan sudah dipakai di src/components/payment-breakdown-live.tsx.
  */
-function StepSummary() {
+function StepSummary({ legalitasPrice }: { legalitasPrice: number }) {
   const { control } = useFormContext();
-  const [workshopName, slug, plan, period] = useWatch({
+  const [workshopName, slug, plan, period, tambahLegalitas] = useWatch({
     control,
-    name: ["workshopName", "slug", "plan", "period"],
+    name: ["workshopName", "slug", "plan", "period", "tambahLegalitas"],
   });
 
   const planId = (plan ?? "pro") as keyof typeof PLANS;
   const per = (period ?? "monthly") as Period;
-  const price =
+  const hargaPaket =
     per === "yearly" ? PLANS[planId].priceYearly : PLANS[planId].priceMonthly;
+  const pakaiLegalitas = tambahLegalitas === true;
+  const total = hargaPaket + (pakaiLegalitas ? legalitasPrice : 0);
 
   return (
     <dl className="grid gap-3 rounded-2xl border border-border bg-card p-4">
@@ -238,15 +241,46 @@ function StepSummary() {
           {PLANS[planId].label} · {per === "yearly" ? "tahunan" : "bulanan"}
         </dd>
       </div>
+      {/*
+       * Add-on ditampilkan sebagai BARIS TERPISAH, bukan langsung
+       * ditambah ke harga paket.
+       *
+       * Alasannya bukan kerapian. Orang yang melihat "Pro bulanan
+       * Rp 1.200.000" tidak bisa memisahkan berapa yang untuk paket dan
+       * berapa untuk add-on -- dan kalau dua angka tidak bisa
+       * dipisahkan, orang tidak bisa memutuskan. Dua baris yang
+       * dijumlahkan di bawahnya bisa.
+       */}
+      {pakaiLegalitas ? (
+        <div className="flex items-center justify-between gap-3">
+          <dt className="text-body-md text-muted-foreground">
+            Paket Pendirian PT
+          </dt>
+          <dd className="text-body-md text-foreground">
+            {formatRupiah(legalitasPrice)}
+            <span className="text-body-sm text-muted-foreground">
+              {" "}
+              sekali bayar
+            </span>
+          </dd>
+        </div>
+      ) : null}
       <div className="flex items-center justify-between gap-3 border-t border-border pt-3">
         <dt className="text-body-md text-muted-foreground">Total dibayar</dt>
-        <dd className="text-code-tabular text-foreground">{formatRupiah(price)}</dd>
+        <dd className="text-code-tabular text-foreground">
+          {formatRupiah(total)}
+        </dd>
       </div>
+      <p className="text-body-sm text-muted-foreground">
+        {pakaiLegalitas
+          ? "Satu pembayaran untuk keduanya. Tanpa free trial: langganan dan paket pendirian diaktifkan setelah uang masuk."
+          : "Tidak ada free trial. Langganan dibayar saat pendaftaran."}
+      </p>
     </dl>
   );
 }
 
-export function RegisterForm() {
+export function RegisterForm({ legalitasPrice }: { legalitasPrice: number }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [plan, setPlan] = useState<keyof typeof PLANS>("pro");
@@ -266,6 +300,17 @@ export function RegisterForm() {
         slug: "",
         plan: "pro",
         period: "monthly",
+        /*
+         * WAJIB ada di `defaultValues`, tidak boleh diserahkan ke `.default()`
+         * skema saja.
+         *
+         * Checkbox ini tidak terdaftar ke RHF lewat `register` (lihat
+         * catatan di `onCheckedChange`), jadi RHF tidak pernah diberi nilai
+         * awal untuk field itu. Tanpa entri di sini, validasi zod akan
+         * melihat `undefined` pada submit dan skema tidak bisa membedakan
+         * "tidak dicentang" dari "tidak dikirim".
+         */
+        tambahLegalitas: false,
       }}
       submitLabel="Buat akun"
       onSuccess={(state) => {
@@ -459,6 +504,84 @@ export function RegisterForm() {
               <p className="text-body-sm text-muted-foreground">
                 Tidak ada free trial. Langganan dibayar saat pendaftaran.
               </p>
+
+              {/*
+               * Add-on offered DI DALAM wizard, bukan sebagai halaman
+               * terpisah (PRD §2.E).
+               *
+               * Halaman `/dashboard/pendirian` hanya bisa dijangkau setelah
+               * langganan aktif, jadi menawarkannya di sana berarti
+               * missed momennya: seseorang yang sedang menekan tombol bayar               * tidak akan pernah melihatnya, dan FurniTech sudah mendapat
+               * Rp 750.000 tanpa hubungan apa pun dengan PT Perorangan --
+               * yang berarti orang itu tidak akan pernah kembali.
+               *
+               * Harga dikirim sebagai PROP, bukan konstanta yang diimpor
+               * di sini. Owner bisa mengubah harga add-on dari panel, jadi
+               * angka yang tampil harus yang benar-benar akan ditagih.
+               * Konstanta di `@/lib/addons` hanya nilai bawaan.
+               */}
+              <Field>
+                <FieldLegend className="text-body-md text-foreground">
+                  Tambahkan saat pendaftaran
+                </FieldLegend>
+                <label
+                  htmlFor="tambahLegalitas"
+                  className="flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-border bg-card p-3 transition-colors hover:bg-muted has-data-checked:border-primary has-data-checked:bg-accent/40"
+                >
+                  <Checkbox
+                    id="tambahLegalitas"
+                    className="mt-0.5"
+                    /*
+                     * `name` ditulis eksplisit, BUKAN lewat
+                     * `{...ctx.register("tambahLegalitas")}`.
+                     *
+                     * Dua hal harus benar untuk satu checkbox:
+                     *   - `name` supaya input native-nya masuk FormData.
+                     *     Tanpa itu, klik berhasil secara visual tapi server
+                     *     membaca "tidak dicentang" dan tidak pernah membuat
+                     *     invoice legalitas. Tidak ada error apa pun.
+                     *   - state RHF, supaya `useWatch` di ringkasan bergerak.
+                     *
+                     * `register` hanya bisa menyediakan yang pertama, karena
+                     * `onChange`-nya diarahkan ke elemen yang dirender:
+                     * Base UI merender `<span role="checkbox">` yang
+                     * dikendalikan, dan input native 1x1px di sebelahnya
+                     * tidak menerima event klik. Akibatnya RHF tidak pernah
+                     * diberi tahu nilainya berubah — ringkasan tetap
+                     * menampilkan Rp 500.000 sementara yang ditagih
+                     * Rp 1.000.000, dan orang melihat angka yang salah tepat
+                     * sebelum ia menyerahkan uang.
+                     *
+                     * Jadi: `name` untuk FormData, `onCheckedChange` untuk
+                     * ringkasan. Keduanya berubah dari satu klik Base UI,
+                     * jadi tidak ada state yang bisa tidak sinkron.
+                     */
+                    name="tambahLegalitas"
+                    onCheckedChange={(checked: boolean) =>
+                      ctx.setValue("tambahLegalitas", checked)
+                    }
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-baseline justify-between gap-x-3">
+                      <span className="text-title-md text-foreground">
+                        Paket Pendirian PT Perorangan
+                      </span>
+                      <span className="text-code-tabular text-foreground">
+                        {formatRupiah(legalitasPrice)}
+                        <span className="text-body-sm text-muted-foreground">
+                          {" "}
+                          sekali bayar
+                        </span>
+                      </span>
+                    </span>
+                    <span className="mt-1 block text-body-sm text-muted-foreground">
+                      Pendaftaran di AHU, Pernyataan Pendirian, NIB, NPWP
+                      Elektronik, dan logo perusahaan. Dikerjakan sebagai
+                      pengurusan administratif, bukan konsultasi hukum.
+                    </span>
+                  </span>
+                </label>
+              </Field>
             </section>
 
             {/* ---------- Langkah 4 ---------- */}
@@ -468,7 +591,7 @@ export function RegisterForm() {
               aria-label="Ringkasan"
               data-step={4}
             >
-              <StepSummary />
+              <StepSummary legalitasPrice={legalitasPrice} />
               {/*
                * Copy ini pernah menyebut "super admin perlu mengaktifkannya".
                * Salah sejak webhook Midtrans dibuat (app/api/webhooks/midtrans):
@@ -481,6 +604,14 @@ export function RegisterForm() {
                 diarahkan ke halaman pembayaran. Back-office terbuka otomatis
                 setelah pembayaran masuk — tidak perlu menghubungi admin.
               </p>
+              {/*
+               * Pernyataan "satu pembayaran" hanya ditampilkan kalau add-on
+               * benar-benar dipilih. Tanpa syarat itu, kalimatnya
+               * promising sesuatu yang tidak terjadi untuk mayoritas
+               * pendaftar yang tidak mengambil paket pendirian -- dan
+               * kalimat yang tidak benar membuat orang berhenti membaca
+               * kalimat lain di halaman yang sama.
+               */}
             </section>
 
             {/* ---------- Navigasi ---------- */}
@@ -507,15 +638,24 @@ export function RegisterForm() {
               ) : null}
             </div>
 
-            {step === lastStep ? (
-              <button
-                type="submit"
-                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-label-lg text-primary-foreground transition-colors hover:bg-primary-hover"
-              >
-                Buat akun
-                <ArrowRightIcon size={16} weight="light" aria-hidden />
-              </button>
-            ) : null}
+            {/*
+             * Tombol submit TIDAK diulang di sini.
+             *
+             * `ZodForm` sudah merender tombol `submitLabel` sendiri, di
+             * bawah children. Versi lama menambahkan tombol "Buat akun"
+             * kedua secara manual, jadi pada langkah terakhir ada DUA
+             * tombol identik yang berdempetan — persis seperti yang
+             * terlihat di `screenshots/daftar-dengan-addon.png`.
+             *
+             * Dua tombol submit bukan kosmetik: yang atas men-chip step
+             * sebelum form benar-benar divalidasi, yang bawah divalidasi.
+             * Orangnya tidak bisa tahu mana yang solemn, dan pressed state
+             * `isSubmitting` hanya menempel ke yang bawah. Selain itu, tes
+             * apa pun yang menghitung tombol submit akan menghitung
+             * dua.
+             *
+             * `test:register` sekarang mengunci jumlah tombol submit = 1.
+             */}
           </>
         );
       }}

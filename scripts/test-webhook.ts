@@ -60,6 +60,20 @@ function fd(input: Record<string, string>): FormData {
   return data;
 }
 
+/**
+ * Isi zod dari hasil parse yang gagal, untuk pesan error.
+ *
+ * `ParseResult` narrowed ke `{ success: false }` tidak menyimpan objek error
+ * aslinya -- hanya `fieldErrors` yang sudah diterjemahkan. Itu yang
+ * ditampilkan ke pengguna, jadi itu juga yang harus terlihat di sini.
+ */
+function issuesOf(result: {
+  success: false;
+  fieldErrors: Record<string, string>;
+}): Record<string, string> {
+  return result.fieldErrors;
+}
+
 const VALID = {
   fullName: "Budi Santoso",
   phone: "+6281234567890",
@@ -418,6 +432,7 @@ async function main() {
     plan: "pro",
     period: "monthly",
     amount: AMOUNT,
+    midtransAmount: AMOUNT,
     status: "pending",
     midtransOrderId: ORDER,
     periodStart: "2026-10-01",
@@ -546,6 +561,321 @@ async function main() {
     "order_id tak dikenal dibalas 200, bukan 404",
     unknownOrder === 200,
     `status ${unknownOrder} — 404 akan membuat Midtrans mengulang terus`,
+  );
+
+  /* ---------- 7. ADD-ON YANG DIBAYAR BARENG (PRD §2.E) ---------- */
+  //
+  // Alur ini satu-satunya tempat dua invoice dilunasi oleh SATU charge, dan
+  // pemeriksaan nominalnya adalah tempat kesalahan yang paling mahal di
+  // seluruh sistem: kalau `gross_amount` dibandingkan dengan `invoice.amount`
+  // (Rp 750.000) sementara yang dikirim Rp 1.250.000, webhook membalas 400
+  // ATAS PEMBAYARAN YANG SUDAH SUKSES. Tenant tidak pernah aktif, uang
+  // hilang, dan tidak ada yang bisa memperbaikinya tanpa pengembalian manual.
+  //
+  // Semua pemeriksaan di sini memanggil POST() sungguhan dengan signature
+  // asli, bukan menyalin logikanya. Menyalinnya berarti tes menguji salinan.
+
+  const BUNDLE_SLUG = "uji-webhook-bundled";
+  await db.delete(tenants).where(eq(tenants.slug, BUNDLE_SLUG));
+
+  const BUNDLE_ORDER = "saas-bundled-uji";
+  const SUB_AMOUNT = PLANS.pro.priceMonthly; // 750.000
+  const LEG_AMOUNT = 500_000;
+  const BUNDLE_GROSS = `${SUB_AMOUNT + LEG_AMOUNT}.00`;
+
+  const [bundleTenant] = await db
+    .insert(tenants)
+    .values({
+      name: "Uji Webhook Bundled",
+      slug: BUNDLE_SLUG,
+      plan: "pro",
+      subscriptionStatus: "pending",
+      subscriptionExpiresAt: new Date("2020-01-01T00:00:00.000Z"),
+      isActive: false,
+    })
+    .returning({ id: tenants.id });
+
+  const [bundleInvoice] = await db
+    .insert(saasInvoices)
+    .values({
+      tenantId: bundleTenant.id,
+      plan: "pro",
+      period: "monthly",
+      amount: SUB_AMOUNT,
+      // Inilah inti kolom baru: nominal yang DITAGIH, bukan nilai invoice ini.
+      midtransAmount: SUB_AMOUNT + LEG_AMOUNT,
+      status: "pending",
+      midtransOrderId: BUNDLE_ORDER,
+      periodStart: "2026-10-01",
+      periodEnd: "2026-11-01",
+    })
+    .returning({ id: saasInvoices.id });
+
+  const [bundleLegalitas] = await db
+    .insert(saasInvoices)
+    .values({
+      tenantId: bundleTenant.id,
+      itemType: "legalitas",
+      plan: null,
+      period: "monthly",
+      amount: LEG_AMOUNT,
+      midtransAmount: LEG_AMOUNT,
+      status: "pending",
+      // TIDAK memakai `BUNDLE_ORDER`: `saas_invoice_midtrans_idx` UNIQUE,
+      // dan dua baris dengan order_id sama membuat webhook tidak tahu
+      // invoice mana yang harus ditulis.
+      bundledWith: bundleInvoice.id,
+      periodStart: "2026-10-01",
+      periodEnd: "2026-10-01",
+    })
+    .returning({ id: saasInvoices.id });
+
+  const bundleState = async () => {
+    const [row] = await db
+      .select({
+        active: tenants.isActive,
+        status: tenants.subscriptionStatus,
+        expires: tenants.subscriptionExpiresAt,
+      })
+      .from(tenants)
+      .where(eq(tenants.id, bundleTenant.id))
+      .limit(1);
+    const invoices = await db
+      .select({
+        id: saasInvoices.id,
+        itemType: saasInvoices.itemType,
+        status: saasInvoices.status,
+        amount: saasInvoices.amount,
+      })
+      .from(saasInvoices)
+      .where(eq(saasInvoices.tenantId, bundleTenant.id));
+    return { tenant: row, invoices };
+  };
+
+  const bundleNotify = (body: Record<string, unknown>, signature: string) =>
+    POST(
+      new Request("http://localhost/api/webhooks/midtrans", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-midtrans-signature": signature,
+        },
+        body: JSON.stringify(body),
+      }),
+    ).then((r: { status: number }) => r.status);
+
+  const rp = (n: number) => `Rp ${n.toLocaleString("id-ID")}`;
+
+  // 1. Nominal langganan saja harus DITOLAK. Ini yang membuktikan
+  //    pemeriksaan berjalan terhadap `midtransAmount`: kalau ia membaca
+  //    `amount`, angka ${rp(SUB_AMOUNT)} ini justru akan COCOK dan melunasi
+  //    tagihan ${rp(SUB_AMOUNT + LEG_AMOUNT)} setengah jalan.
+  const subOnly = await bundleNotify(
+    {
+      order_id: BUNDLE_ORDER,
+      transaction_status: "settlement",
+      status_code: "200",
+      gross_amount: `${SUB_AMOUNT}.00`,
+      transaction_id: "trx-bundle-sub",
+    },
+    sign(BUNDLE_ORDER, "200", `${SUB_AMOUNT}.00`),
+  );
+  check(
+    "nominal langganan saja ditolak (add-on belum ikut dibayar)",
+    subOnly === 400,
+    `status ${subOnly} — 200 berarti tagihan ${rp(SUB_AMOUNT + LEG_AMOUNT)} dilunasi ${rp(SUB_AMOUNT)}`,
+  );
+  let bs = await bundleState();
+  check(
+    "notifikasi dengan nominal salah tidak mengubah apa pun",
+    bs.invoices.every((i) => i.status === "pending") &&
+      bs.tenant!.active === false,
+    bs.invoices.map((i) => `${i.itemType}=${i.status}`).join(", "),
+  );
+
+  // 2. Nominal gabungan diterima.
+  const bundleSettled = await bundleNotify(
+    {
+      order_id: BUNDLE_ORDER,
+      transaction_status: "settlement",
+      status_code: "200",
+      gross_amount: BUNDLE_GROSS,
+      transaction_id: "trx-bundle-1",
+    },
+    sign(BUNDLE_ORDER, "200", BUNDLE_GROSS),
+  );
+  check(
+    "satu charge untuk dua invoice diterima",
+    bundleSettled === 200,
+    `status ${bundleSettled}`,
+  );
+
+  bs = await bundleState();
+  const legRow = bs.invoices.find((i) => i.id === bundleLegalitas.id)!;
+  const subRow = bs.invoices.find((i) => i.id === bundleInvoice.id)!;
+  check(
+    "invoice add-on ikut lunas bersama langganan",
+    legRow.status === "paid",
+    `status=${legRow.status}`,
+  );
+  check(
+    "langganan juga lunas",
+    subRow.status === "paid",
+    `status=${subRow.status}`,
+  );
+  check(
+    "nilai invoice TIDAK berubah jadi penjumlahan",
+    subRow.amount === SUB_AMOUNT && legRow.amount === LEG_AMOUNT,
+    `sub=${subRow.amount}, legalitas=${legRow.amount}`,
+  );
+  check(
+    "langganan jadi aktif",
+    bs.tenant!.active === true && bs.tenant!.status === "active",
+    `isActive=${bs.tenant!.active}, status=${bs.tenant!.status}`,
+  );
+  check(
+    "masa langganan TIDAK ditambah oleh add-on legalitas",
+    bs.tenant!.expires.toISOString().slice(0, 10) === "2026-11-01",
+    `${bs.tenant!.expires.toISOString().slice(0, 10)} — kalau berubah, ada bug satu tahun gratis`,
+  );
+
+  // 3. Idempoten untuk tagihan bareng. Midtrans mengirim notifikasi yang
+  //    sama berulang kali, dan di sini ada DUA baris yang harus tetap
+  //    konsisten — bukan satu.
+  const bundleAgain = await bundleNotify(
+    {
+      order_id: BUNDLE_ORDER,
+      transaction_status: "settlement",
+      status_code: "200",
+      gross_amount: BUNDLE_GROSS,
+      transaction_id: "trx-bundle-1",
+    },
+    sign(BUNDLE_ORDER, "200", BUNDLE_GROSS),
+  );
+  bs = await bundleState();
+  check(
+    "notifikasi berulang untuk tagihan bareng tidak merusak",
+    bundleAgain === 200 && bs.invoices.every((i) => i.status === "paid"),
+    `status ${bundleAgain}, ${bs.invoices.map((i) => i.status).join(",")}`,
+  );
+
+  // 4. Gagal bayar menutup KEDUA invoice.
+  //
+  //    Kalau add-on dibiarkan `pending`, `purchaseLegalitasAddon` menganggap
+  //    paket sudah dibeli -- pemeriksaannya menolak status `pending` dan
+  //    `paid` -- lalu orang yang tagihannya ditolak bank tidak akan pernah
+  //    bisa membeli ulang. Satu status yang tidak konsisten menutup satu
+  //    jalan pembelian seumur tenant.
+  const BUNDLE_ORDER_2 = "saas-bundled-uji-2";
+  const BUNDLE_SLUG_2 = "uji-webhook-bundled-2";
+  await db.delete(tenants).where(eq(tenants.slug, BUNDLE_SLUG_2));
+  const [t2] = await db
+    .insert(tenants)
+    .values({
+      name: "Uji Webhook Bundled Gagal",
+      slug: BUNDLE_SLUG_2,
+      plan: "pro",
+      subscriptionStatus: "pending",
+      subscriptionExpiresAt: new Date("2020-01-01T00:00:00.000Z"),
+      isActive: false,
+    })
+    .returning({ id: tenants.id });
+  const [inv2] = await db
+    .insert(saasInvoices)
+    .values({
+      tenantId: t2.id,
+      plan: "pro",
+      period: "monthly",
+      amount: SUB_AMOUNT,
+      midtransAmount: SUB_AMOUNT + LEG_AMOUNT,
+      status: "pending",
+      midtransOrderId: BUNDLE_ORDER_2,
+      periodStart: "2026-10-01",
+      periodEnd: "2026-11-01",
+    })
+    .returning({ id: saasInvoices.id });
+  const [leg2] = await db
+    .insert(saasInvoices)
+    .values({
+      tenantId: t2.id,
+      itemType: "legalitas",
+      plan: null,
+      period: "monthly",
+      amount: LEG_AMOUNT,
+      midtransAmount: LEG_AMOUNT,
+      status: "pending",
+      bundledWith: inv2.id,
+      periodStart: "2026-10-01",
+      periodEnd: "2026-10-01",
+    })
+    .returning({ id: saasInvoices.id });
+
+  await bundleNotify(
+    {
+      order_id: BUNDLE_ORDER_2,
+      transaction_status: "expire",
+      status_code: "400",
+      gross_amount: BUNDLE_GROSS,
+      transaction_id: null,
+    },
+    sign(BUNDLE_ORDER_2, "400", BUNDLE_GROSS),
+  );
+  const [afterFail2] = await db
+    .select({ status: saasInvoices.status })
+    .from(saasInvoices)
+    .where(eq(saasInvoices.id, leg2.id))
+    .limit(1);
+  const [tenant2] = await db
+    .select({ active: tenants.isActive })
+    .from(tenants)
+    .where(eq(tenants.id, t2.id))
+    .limit(1);
+  check(
+    "gagal bayar menandai invoice add-on failed, bukan pending",
+    afterFail2?.status === "failed",
+    `status=${afterFail2?.status} — pending akan mengunci pembelian ulang`,
+  );
+  check(
+    "gagal bayar tidak mengaktifkan tenant",
+    tenant2?.active === false,
+    `isActive=${tenant2?.active}`,
+  );
+
+  await db.delete(tenants).where(eq(tenants.slug, BUNDLE_SLUG));
+  await db.delete(tenants).where(eq(tenants.slug, BUNDLE_SLUG_2));
+
+  /* ---------- 8. SKEMA PENDAFTARAN: CHECKBOX ADD-ON ---------- */
+  //
+  // Checkbox yang TIDAK dicentang tidak ada di FormData sama sekali --
+  // `formData.get()` mengembalikan `null` dan kuncinya hilang dari objek.
+  // Tanpa `.default(false)` di skema, `z.boolean()` menolak field yang
+  // memang tidak dikirim, dan pendaftaran gagal untuk semua orang yang
+  // tidak ingin add-on, yaitu hampir semua orang.
+  const tanpaAddon = parseForm(registerFormSchema, fd(VALID));
+  check(
+    "pendaftaran tanpa add-on tetap valid (checkbox tidak dikirim)",
+    tanpaAddon.success,
+    tanpaAddon.success ? "" : JSON.stringify(issuesOf(tanpaAddon)),
+  );
+  check(
+    "tanpa add-on, tambahLegalitas = false",
+    tanpaAddon.success && tanpaAddon.data.tambahLegalitas === false,
+    tanpaAddon.success ? `nilai=${tanpaAddon.data.tambahLegalitas}` : "parse gagal",
+  );
+
+  const denganAddon = parseForm(
+    registerFormSchema,
+    fd({ ...VALID, tambahLegalitas: "on" }),
+  );
+  check(
+    "checkbox add-on dicentang diterima (nilai `on` dinormalkan)",
+    denganAddon.success,
+    denganAddon.success ? "" : JSON.stringify(issuesOf(denganAddon)),
+  );
+  check(
+    "dicentang, tambahLegalitas = true",
+    denganAddon.success && denganAddon.data.tambahLegalitas === true,
+    denganAddon.success ? `nilai=${denganAddon.data.tambahLegalitas}` : "parse gagal",
   );
 
   if (e2ePrevKey === undefined) delete process.env.MIDTRANS_SERVER_KEY;

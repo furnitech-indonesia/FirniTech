@@ -259,6 +259,7 @@ async function main() {
       period: "monthly",
       // Nominal SAAT INI, sebelum tarif diubah.
       amount: plansKode.basic.priceMonthly,
+      midtransAmount: plansKode.basic.priceMonthly,
       status: "pending",
       midtransOrderId: `saas-uji-${SUFFIX}`,
       periodStart: periodStart.toISOString().slice(0, 10),

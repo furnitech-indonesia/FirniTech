@@ -1087,6 +1087,123 @@ REGRESI
   test:webhook, test:rekening, test:payout, test:cod, test:settings,
   test:sprint3 16/16, test:responsive 23/23.
 
+━━━ Sprint 6 — Add-on legalitas dipindah ke wizard (2026-09-28) ━━━
+
+STATUS: SELESAI. `test:register` 16 pemeriksaan, `test:webhook` 51.
+
+KENAPA DIPINDAH
+
+  PRD §2.E: "diperkenalkan di langkah Paket atau Bayar wizard
+  pendaftaran — tempat orang sedang bertransaksi — dan setelah
+  pembayaran langganan berhasil. Setelah dibayar, tokonya dibuat
+  dalam sesi yang sama."
+
+  Versi sebelumnya hanya halaman /dashboard/pendirian, yang butuh
+  langganan aktif dulu -- jadi tidak pernah dilihat orang yang sedang
+  menekan tombol bayar. FurniTech sudah mendapat Rp 500.000 tanpa
+  hubungan apa pun dengan PT Perorangan, dan orang itu tidak akan
+  pernah kembali.
+
+DESAIN: SATU PEMBAYARAN, DUA INVOICE
+
+  Meminta orang membayar dua kali di tengah pendaftaran hampir pasti
+  membuat orang membatalkan. Jadi Midtrans menerima SATU charge, dan
+  dua invoice dibuat dalam satu transaksi yang tertaut.
+
+  Dua kolom baru (migrasi 0025), masing-masing menjawab masalah
+  yang berbeda:
+
+  midtrans_amount  Berapa yang BENAR-BENAR dikirim ke Midtrans.
+                   Untuk semua invoice yang berdiri sendiri sama
+                   dengan amount. Beda hanya kalau digabung.
+
+  bundled_with     Invoice add-on yang ikut tagihan ini. midtrans_
+                   order_id-nya sendiri NULL.
+
+  Kenapa bukan `amount` yang langsung berisi penjumlahan: `amount`
+  adalah apa yang TAGIHAN INI bernilai -- dipakai MRR, dipakai rekap
+  pendapatan, dipakai rincian. Kalau isinya penjumlahan, invoice
+  legalitas Rp 500.000 tercatat di MRR sebagai Rp 1.000.000.
+
+  Kenapa bukan satu `order_id` untuk keduanya: saas_invoice_midtrans_
+  idx UNIQUE, dan order_id adalah satu-satunya kunci pencarian
+  webhook. Dua baris dengan order_id sama berarti webhook tidak tahu
+  invoice mana yang harus ditulis.
+
+BUG YANG TERNYATA SAAT MEMBANGUNNYA
+
+  1. Webhook akan menolak pembayaran yang SUDAH SUKSES.
+     Membandingkan gross_amount (Rp 1.000.000) dengan invoice.amount
+     (Rp 500.000) mengembalikan 400. Tenant tidak pernah aktif, uang
+     hilang, tidak ada yang bisa memperbaikinya tanpa refund manual.
+     Yang membuat ini berbahaya: tidak ada satu pun gejala lokal --
+     provisioning sukses, tagihan Made, tidak ada error di log.
+
+  2. `register()` dari react-hook-form tidak bisa dipakai pada
+     checkbox Base UI. Base UI merender <span role="checkbox"> yang
+     DIKENDALIKAN, jadi onChange RHF tidak pernah terpicu; input
+     native 1x1px di sebelahnya tidak menerima klik.
+     Gejalanya sangat menyesatkan: FormData tetap benar (server
+     tetap menagih dengan benar), tapi useWatch di ringkasan mati --
+     total menampilkan Rp 500.000 sementara yang ditagih Rp 1.000.000.
+     Orang melihat angka yang salah tepat sebelum menyerahkan uang.
+     Diperbaiki: `name` eksplisit untuk FormData, `onCheckedChange`
+     untuk state RHF.
+
+  3. Halaman /dashboard/pendirian TIDAK memfilter item_type.
+     Komentarnya menulis "item_type difilterkan di kueri" padahal
+     tidak ada filter. Tenant yang baru memperbarui langganannya
+     melihat badge "Sudah dibayar" untuk paket pendirian yang tidak
+     pernah dibeli, dan tombol belinya hilang. Urutan invoice berubah
+     tiap bulan, jadi bug muncul dan hilang sendiri.
+
+  4. Invoice add-on yang dibayar bareng harus ikut `failed` saat tagihan
+     langganannya gagal. Kalau dibiarkan `pending`,
+     purchaseLegalitasAddon menganggap paket sudah beli -- orang
+     yang tagihannya ditolak bank tidak akan pernah bisa membeli
+     ulang, seumur tenant.
+
+  5. Wizard punya DUA tombol "Buat akun" di langkah terakhir.
+     ZodForm merender tombol submitLabel-nya sendiri, dan
+     RegisterForm menambahkan yang kedua secara manual. Keduanya
+     "berfungsi", tapi yang tidak menampilkan status Memproses.
+     Bug lama yang tidak pernah dilaporkan karena tidak dramatis.
+
+PROVEN: TES DI-SABOTASE
+
+  Sabotase 1 -- kembalikan webhook ke `invoice.amount`:
+    FAIL  nominal langganan saja ditolak -- status 200, tagihan
+          Rp 1.000.000 dilunasi Rp 500.000
+    FAIL  notifikasi dengan nominal salah tidak mengubah apa pun
+    FAIL  satu charge untuk dua invoice diterima -- status 400
+    FAIL  notifikasi berulang untuk tagihan bareng tidak merusak
+    FAIL  gagal bayar menandai invoice add-on failed -- status=pending
+  Dikembalikan -> semua lulus.
+
+  Sabotase 2 -- hapus `name` dari checkbox:
+    FAIL  langkah paket menawarkan add-on -- input native tidak ada
+    FAIL  mengklik add-on membuatnya masuk FormData -- FormData=null
+    FAIL  state visual dan isi FormData berjalan seiring
+  Dikembalikan -> semua lulus.
+
+  Sabotase 3 -- total ringkasan diketik tangan ("Rp 1.250.000"):
+    GAGAL karena harga Pro bulanan Rp 500.000, bukan Rp 750.000.
+    Tesnya yang salah, bukan wizardnya. Sekarang nominal dibaca dari
+    teks yang tampil, bukan dari angka yang diketik di skrip.
+
+REGRESI
+  test:register 16/16, test:webhook 51, test:addons 51/51,
+  test:revenue 18/18, test:rekening, test:payout, test:cod,
+  test:settings, test:ongkir 13/13, test:lacak 17/17,
+  test:sprint3 16/16, test:responsive 23/23, check:proyeksi 57/57.
+  test:kurir masih rusak (22P02) -- sudah diverifikasi sebelumnya
+  rusak sebelum add-on masuk.
+
+CATATAN PROYEKSI
+  Angka di docs/proyeksi-revenue.md TIDAK berubah. Take-up 20% dari
+  rekrut dan Rp 500.000 per order sudah diasumsikan model sejak awal;
+  perubahan ini hanya soal KAPAN dan BAGAIMANA dibayar.
+
 ━━━ Konsistensi dokumen proyeksi (2026-09-28) ━━━
 
 MASALAH YANG DISELESAIKAN

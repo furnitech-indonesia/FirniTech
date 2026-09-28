@@ -197,9 +197,27 @@ export async function purchaseLegalitasAddon(
     };
   }
 
-  // Satu kali seumur tenant. Dokumen pendirian tidak perlu diurus ulang,
-  // dan membolehinya berulang berarti PNBP Rp 50.000 dibayar dua kali
-  // untuk sesuatu yang sama.
+  /*
+   * Satu kali seumur tenant. Dokumen pendirian tidak perlu diurus ulang,
+   * dan membolehinya berulang berarti PNBP Rp 50.000 dibayar dua kali
+   * untuk sesuatu yang sama.
+   *
+   * Rentang status: `pending` dan `paid` sama-sama mengunci. `pending`
+   * dihitung karena tagihan yang sudah terbit tapi belum dibayar ITU SUDAH
+   * invoice -- membiarkan orang membayar dua kali untuk satu dokumen adalah
+   * cara paling langsung kehilangan kepercayaan.
+   *
+   * Yang TIDAK mengunci: `failed`. Invoice yang ditolak bank atau kedaluwarsa
+   * tidak menghasilkan apa pun, jadi mengunci pembelian ulang kalau begitu
+   * berarti pemilik toko tidak pernah bisa membeli lagi. Ini yang membuat
+   * webhook menandai add-on yang dibayar bareng ikut `failed` saat tagihan
+   * langganannya gagal -- kalau dibiarkan `pending`, jalan ini tertutup
+   * permanen tanpa ada yang bisa memperbaikinya sendiri.
+   *
+   * Invoice yang dibayar bareng saat pendaftaran (migrasi 0025) ikut
+   * terhitung di sini, jadi paket yang sudah diambil di wizard tidak bisa
+   * diambil lagi dari halaman ini.
+   */
   const [existing] = await db
     .select({ id: saasInvoices.id })
     .from(saasInvoices)

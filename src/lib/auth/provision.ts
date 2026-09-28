@@ -5,6 +5,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/db";
 import { saasInvoices, tenants, users } from "@/db/schema";
 import { PLANS, type PlanId } from "@/lib/plans";
+import { effectiveAddonPriceNumber } from "@/lib/addons/settings";
 import { createSupabaseAdmin } from "@/lib/supabase/admin";
 
 /**
@@ -35,6 +36,14 @@ export type ProvisionInput = {
   slug: string;
   plan: PlanId;
   period: "monthly" | "yearly";
+  /**
+   * Paket Pendirian PT Perorangan dibeli sekalian di langkah paket (PRD §2.E).
+   *
+   * `false` berarti TIDAK ADA invoice legalitas sama sekali. Bukan invoice
+   *Rp 0: tagihan Rp 0 yang tercatat adalah barang yang tidak bisa dibaca
+   * bedanya dari barang yang ditagih dan tidak dibayar.
+   */
+  tambahLegalitas: boolean;
 };
 
 export type ProvisionFailure = {
@@ -51,7 +60,20 @@ export type ProvisionSuccess = {
   invoiceId: string;
   /** Tagihan sudah tercatat di Midtrans; pengguna tinggal membayar. */
   midtransOrderId: string;
+  /** Total yang harus dikirim ke Midtrans: langganan + add-on, kalau ada. */
   amount: number;
+  /**
+   * Nominal langganan saja, TANPA add-on.
+   *
+   * Dipakai untuk mencetak label invoice, yang menjelaskan APA yang dibeli.
+   * Kalau
+   * `itemName` memakai `amount` dan isinya sudah termasuk add-on, pengguna
+   * melihat "FurniTech Pro bulanan" di halaman pembayaran dengan nominal
+   * Rp 1.250.000 -- dan tidak ada baris yang menjelaskan selisihnya.
+   */
+  langgananAmount: number;
+  /** Invoice legalitas yang dibuat bareng, kalau ada. */
+  legalitasInvoiceId: string | null;
 };
 
 export type ProvisionResult = ProvisionSuccess | ProvisionFailure;
@@ -65,6 +87,11 @@ function addMonths(from: Date, months: number): Date {
 /** Periode tagihan dalam hitungan hari, mengikuti `PLANS`. */
 function periodMonths(period: "monthly" | "yearly"): number {
   return period === "yearly" ? 12 : 1;
+}
+
+/** Kolom `date` disimpan sebagai `YYYY-MM-DD`, bukan objek Date. */
+function toTanggal(d: Date): string {
+  return d.toISOString().slice(0, 10);
 }
 
 /**
@@ -98,6 +125,12 @@ function isSlugConflict(error: unknown): boolean {
  * Tenant TIDAK diaktifkan di sini. Yang menyalakannya adalah webhook Midtrans
  * (app/api/webhooks/midtrans), jadi satu-satunya jalan menuju "langganan
  * aktif" tetap uangnya benar-benar masuk.
+ *
+ * INVOICE ADD-ON YANG DIBAYAR BARENG (PRD §2.E): kalau pemilik toko memilih
+ * Paket Pendirian PT di langkah paket, DUA invoice dibuat dalam satu
+ * transaksi dan dibayar dengan SATU charge. Yang menautkannya adalah
+ * `bundledWith` + `midtransAmount` (migrasi 0025), bukan `order_id` yang
+ * sama -- lihat penjelasan lengkapnya di `app/api/webhooks/midtrans/route.ts`.
  *
  * SOAL KREDENTIAL MIDTRANS YANG KOSONG: provisioning TIDAK berhenti hanya
  * karena `MIDTRANS_SERVER_KEY` belum diisi. Tenant tetap dibuat dan ditandai
@@ -144,7 +177,7 @@ export async function provisionOwner(
 
   const userId = created.user.id;
 
-  // 2-4. Tenant, owner, dan tagihan. Tiga hal yang tidak boleh terpisah:
+  // 2-4. Tenant, owner, dan tagihan. Empat hal yang tidak boleh terpisah:
   //     kalau tenant tertulis tanpa invoice, tidak ada yang bisa ditagih;
   //     kalau invoice tanpa tenant, tidak ada yang bisa diaktifkan.
   const amount =
@@ -157,6 +190,19 @@ export async function provisionOwner(
   // Saat pending, kolom ini baru berisi tanggal mulai yang AKAN berlaku.
   // Nilainya baru berarti setelah webhook mengaktifkan tenant.
   const periodStart = now;
+
+  /*
+   * Harga add-on dibaca di sini, dari server, BUKAN dari FormData.
+   *
+   * Owner bisa mengubah harga add-on dari panel (migrasi 0024), jadi angka
+   * yang tampil di wizard bisa berbeda dari `LEGALITAS_ADDON.price`. Yang
+   * ditagih harus yang berlaku sekarang, dan yang berlaku sekarang hanya
+   * bisa dibaca dari database.
+   */
+  const legalitasAmount = input.tambahLegalitas
+    ? await effectiveAddonPriceNumber("legalitas")
+    : 0;
+  const totalDitagih = amount + legalitasAmount;
 
   // Punya payor, harus punya tagihan yang bisa dicari lewat order_id.
   const midtransOrderId = `saas-${userId.slice(0, 8)}-${now.getTime()}`;
@@ -198,6 +244,16 @@ export async function provisionOwner(
         );
       }
 
+      /*
+       * `midtransAmount` = `totalDitagih`, bukan `amount`.
+       *
+       * Kalau Paket Pendirian PT dibeli sekalian, Midtrans menerima SATU
+       * charge untuk kedua invoice. `gross_amount` di notifikasi nanti
+       * adalah penjumlahannya, jadi inilah yang harus dibandingkan webhook.
+       * Dan kalau add-onnya tidak diambil, nilainya tetap sama dengan
+       * `amount` -- tidak ada jalur kode yang menghasilkan tagihan
+       * wikipedia tanpa add-on.
+       */
       const [invoice] = await tx
         .insert(saasInvoices)
         .values({
@@ -205,6 +261,7 @@ export async function provisionOwner(
           plan: input.plan,
           period: input.period,
           amount,
+          midtransAmount: totalDitagih,
           status: "pending",
           midtransOrderId,
           periodStart: periodStart.toISOString().slice(0, 10),
@@ -212,7 +269,38 @@ export async function provisionOwner(
         })
         .returning();
 
-      return { tenant, invoice };
+      /*
+       * Invoice add-on yang dibayar bareng (PRD §2.E).
+       *
+       * `midtransOrderId` sengaja NULL. Order-nya milik invoice langganan,
+       * dan `saas_invoice_midtrans_idx` adalah UNIQUE -- dua baris dengan
+       * order_id yang sama membuat webhook tidak bisa tahu invoice mana
+       * yang harus ditulis. Yang menautkannya adalah `bundledWith`.
+       *
+       * `period` satu hari, sama seperti `createLegalitasInvoice`. Periode
+       * 12 bulan di sini akan membuat invoice ini masuk MRR DAN terlihat
+       * seperti langganan yang sudah dibayar -- dan `legalitas` bukan
+       * pendapatan berulang sama sekali.
+       */
+      const [legalitasInvoice] = legalitasAmount
+        ? await tx
+            .insert(saasInvoices)
+            .values({
+              tenantId: tenant.id,
+              itemType: "legalitas",
+              plan: null,
+              period: "monthly",
+              amount: legalitasAmount,
+              midtransAmount: legalitasAmount,
+              status: "pending",
+              bundledWith: invoice.id,
+              periodStart: toTanggal(now),
+              periodEnd: toTanggal(now),
+            })
+            .returning()
+        : [undefined];
+
+      return { tenant, invoice, legalitasInvoice };
     });
 
     return {
@@ -220,7 +308,9 @@ export async function provisionOwner(
       tenantId: result.tenant.id,
       invoiceId: result.invoice.id,
       midtransOrderId,
-      amount,
+      amount: totalDitagih,
+      langgananAmount: amount,
+      legalitasInvoiceId: result.legalitasInvoice?.id ?? null,
     };
   } catch (error) {
     // Kompensasi: hapus user Auth yang barusan dibuat, supaya emailnya bisa

@@ -6,6 +6,7 @@ import { RegisterForm } from "@/components/register-form";
 import { getSession } from "@/lib/auth/session";
 import { PLANS, type PlanId } from "@/lib/plans";
 import { isMidtransConfigured } from "@/lib/midtrans/snap";
+import { effectiveAddonPrice } from "@/lib/addons/settings";
 import { formatRupiah } from "@/lib/format";
 
 export const metadata = { title: "Daftar — FurniTech" };
@@ -29,6 +30,17 @@ export default async function RegisterPage() {
   if (session) {
     redirect("/dashboard");
   }
+
+  /*
+   * Harga Paket Pendirian PT dibaca di sini, di server.
+   *
+   * Owner bisa mengubahnya dari panel (migrasi 0024), jadi angka yang
+   * tampil di wizard harus yang benar-benar akan ditagih. Mengimpor
+   * `LEGALITAS_ADDON` di komponen klien akan menampilkan harga bawaan
+   * sementara tagihannya memakai harga override -- dan pengguna hanya
+   * menemukan selisihnya SETELAH menekan tombol bayar.
+   */
+  const hargaLegalitas = await effectiveAddonPrice("legalitas");
 
   return (
     <main
@@ -99,7 +111,7 @@ export default async function RegisterPage() {
           ) : null}
 
           <div className="mt-8">
-            <RegisterForm />
+            <RegisterForm legalitasPrice={hargaLegalitas.price} />
           </div>
 
           <Link

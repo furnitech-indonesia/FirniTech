@@ -201,6 +201,47 @@ Tiga jebakan yang sudah pernah menyakitkan, jangan diulang:
 - **Harus `#konten-utama`** di `app/daftar/page.tsx` dan
   `app/menunggu-pembayaran/page.tsx` — `test:responsive` mewajibkannya
   untuk setiap halaman.
+- **Paket Pendirian PT sudah pindah ke wizard, dibayar SEKALI**
+  (migrasi 0025). `provisionOwner` membuat dua invoice dalam satu
+  transaksi: langganan + legalitas yang `bundled_with` invoice langganan,
+  dan Midtrans menerima satu charge untuk keduanya.
+
+## Add-on yang dibayar bareng langganan (migrasi 0025)
+
+- **`midtrans_amount` BUKAN `amount`.** `amount` = apa yang TAGIHAN INI
+  bernilai (dipakai MRR, rekap pendapatan, rincian). `midtransAmount` =
+  apa yang TAGIHAN ITU KIRIM ke Midtrans. Kalau webhook membandingkan
+  `gross_amount` dengan `amount` saat keduanya beda, dia membalas **400
+  atas pembayaran yang sudah sukses** — tenant tidak aktif, uang hilang,
+  tidak ada yang bisa memperbaikinya tanpa refund manual. `test:webhook`
+  mengunci kedua arah: nominal langganan saja DITOLAK, nominal gabungan
+  DITERIMA.
+- **`bundled_with`, bukan `order_id` yang sama.** `saas_invoice_midtrans_idx`
+  UNIQUE, dan `order_id` adalah satu-satunya kunci pencarian webhook.
+  Dua baris dengan `order_id` sama = webhook tidak tahu invoice mana yang
+  ditulis. `midtrans_order_id` invoice add-on jadi NULL.
+- **Invoice yang dibayar bareng TIDAK boleh menyentuh `tenants`.** Sama
+  seperti aturan add-on: paket pendirian tidak menambah satu hari pun masa
+  langganan. Kalau ia menulis `subscriptionExpiresAt`, orang membayar
+  Rp 500.000 dan dapat satu tahun gratis.
+- **Gagal bayar harus menandai add-on `failed`, bukan membiarkan `pending`.**
+  `purchaseLegalitasAddon` menolak status `pending` dan `paid`, jadi
+  `pending` yang menggantung mengunci pembelian ulang SEUMUR TENANT —
+  orang yang tagihannya ditolak bank tidak akan pernah bisa membeli lagi.
+- **Checkbox Base UI: `name` eksplisit + `onCheckedChange`, BUKAN
+  `register()`.** Base UI merender `<span role="checkbox">` yang
+  dikendalikan; `register` mengaitkan `onChange` ke elemen itu dan input
+  native 1×1px di sebelahnya tidak menerima klik. Akibatnya FormData tetap
+  benar (server tetap menagih dengan benar) tapi `useWatch` di ringkasan
+  mati — total menampilkan Rp 500.000 sementara yang ditagih Rp 1.000.000.
+  `test:register` membaca FormData lewat `new FormData(form)` sungguhan;
+  hasilnya tidak bisa dijawab dari source code.
+- **Halaman `/dashboard/pendirian` WAJIB memfilter `item_type` di kueri.**
+  Versi lama mengambil invoice terbaru milik tenant apa pun tipenya dengan
+  komentar yang menyatakan sebaliknya. Akibatnya tenant yang baru
+  memperbarui langganannya melihat badge "Sudah dibayar" untuk paket
+  pendirian yang tidak pernah dibeli, dan tombol beli hilang. Urutan invoice
+  berubah tiap bulan, jadi bug itu muncul dan hilang sendiri.
 
 ## Halaman lacak pesanan (Sprint 5 bagian 4)
 

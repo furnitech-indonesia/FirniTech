@@ -97,6 +97,23 @@ export const workshopFormSchema = z.object({
 export const planFormSchema = z.object({
   plan: z.enum(PLAN_IDS, { message: "Pilih paket langganan." }),
   period: z.enum(["monthly", "yearly"], { message: "Pilih periode pembayaran." }),
+  /**
+   * Paket Pendirian PT Perorangan, dibeli sekalian di langkah ini (PRD §2.E).
+   *
+   * `.default(false)` itu wajib, bukan permesinan. Checkbox yang tidak
+   * dicentang TIDAK ADA di FormData sama sekali -- `formData.get()` mengembalikan
+   * `null` dan kuncinya hilang dari objek hasil `formDataToObject`. Tanpa
+   * default, `z.boolean()` menolak field yang memang tidak dikirim, dan
+   * pendaftaran gagal untuk semua orang yang tidak ingin add-on -- yaitu
+   * HAMPIR semua orang.
+   *
+   * Bentuk nilainya tidak pernah dipercaya: kalau ada yang mengirim
+   * `tambahLegalitas: true` tanpa centang, yang terjadi adalah dia
+   * ditagih Rp 500.000 yang tidak dia minta. Sebaliknya, tidak ada jalan
+   * mendapatkan add-on tanpa dibayar -- invoice-nya dibuat dari nilai yang
+   * sama dengan yang jadi nominal charge.
+   */
+  tambahLegalitas: z.boolean().default(false),
 });
 
 /** Bentuk lengkap yang dikirim Server Action. */

@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { CheckCircleIcon, InfoIcon } from "@phosphor-icons/react/dist/ssr";
 
 import { LegalitasPurchaseForm } from "@/components/legalitas-purchase-form";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { db } from "@/db";
 import { saasInvoices, tenants } from "@/db/schema";
 import { requireTenantWrite } from "@/lib/auth/guard";
-import { LEGALITAS_ADDON, legalitasBreakdown } from "@/lib/addons";
+import { legalitasBreakdown } from "@/lib/addons";
 import { effectiveAddonPrice } from "@/lib/addons/settings";
 import { formatDateID, formatRupiah } from "@/lib/format";
 
@@ -42,6 +42,21 @@ export default async function PendirianPage() {
     .where(eq(tenants.id, actor.tenantId))
     .limit(1);
 
+  /*
+   * Invoice PAKET PENDIRIAN saja, disaring di kueri.
+   *
+   * Versi lama mengambil invoice terbaru milik tenant apa pun tipenya lalu
+   * komentarnya menulis "item_type difilterkan di kueri" -- padahal tidak
+   * ada filter sama sekali. Akibatnya tenant yang baru memperbarui
+   * langganannya melihat badge "Sudah dibayar" untuk paket pendirian yang
+   * tidak pernah dibeli, dan tombol belinya hilang. Urutan invoice berubah
+   * setiap bulan, jadi bug ini muncul dan hilang sendiri -- jenis yang
+   * paling jarang dilaporkan.
+   *
+   * `midtrans_order_id IS NULL` tidak dipakai sebagai penanda add-on yang
+   * dibayar bareng (migrasi 0025). Invoice itu `item_type`-nya tetap
+   * `legalitas`, jadi penyaring `item_type` sudah menanganinya.
+   */
   const [invoice] = await db
     .select({
       status: saasInvoices.status,
@@ -50,16 +65,14 @@ export default async function PendirianPage() {
       amount: saasInvoices.amount,
     })
     .from(saasInvoices)
-    .where(eq(saasInvoices.tenantId, actor.tenantId))
+    .where(
+      and(
+        eq(saasInvoices.tenantId, actor.tenantId),
+        eq(saasInvoices.itemType, "legalitas"),
+      ),
+    )
     .orderBy(desc(saasInvoices.createdAt))
-    .limit(1)
-    .then((rows) =>
-      // `item_type` difilterkan di kueri, bukan setelahnya: seluruh baris
-      // invoice tenant bisa berjumlah puluhan, dan mengambil yang terbaru
-      // dulu lalu memeriksa tipenya bisa mengembalikan invoice langganan
-      // sebagai "paket pendirian yang sudah dibeli".
-      rows,
-    );
+    .limit(1);
 
   // Harga efektif, bukan konstanta: owner bisa mengubahnya dari panel, dan
   // halaman harus menampilkan angka yang sama dengan yang ditagih.

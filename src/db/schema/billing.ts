@@ -10,6 +10,7 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import {
   billingPeriodEnum,
@@ -56,8 +57,44 @@ export const saasInvoices = pgTable(
       .notNull(),
     /** Nominal tagihan dalam rupiah penuh. */
     amount: bigint("amount", { mode: "number" }).notNull(),
+    /**
+     * Nominal yang benar-benar ditagih ke Midtrans untuk `midtransOrderId`
+     * ini (migrasi 0025).
+     *
+     * Sama dengan `amount` untuk setiap tagihan yang berdiri sendiri.
+     * BEDA hanya kalau invoice ini digabung ke tagihan lain -- misalnya
+     * langganan Rp 750.000 ditambah Paket Pendirian PT Rp 500.000, dibayar
+     * sekali lewat satu charge Rp 1.250.000.
+     *
+     * Kenapa kolom terpisah, dan bukan `amount` yang langsung berisi
+     * penjumlahan: `amount` adalah apa yang TAGIHAN INI bernilai --
+     * dipakai MRR, dipakai rekap pendapatan, dipakai rincian di tagihan.
+     * `midtransAmount` adalah apa yang TAGIHAN ITU KIRIM. Mencampurkan
+     * keduanya berarti invoice legalitas Rp 500.000 tercatat di MRR
+     * sebagai Rp 1.250.000.
+     *
+     * Dan kenapa webhook membandingkan terhadap kolom ini, bukan `amount`:
+     * `gross_amount` di notifikasi adalah nominal charge, bukan nominal
+     * invoice. Membandingkannya dengan `amount` akan menolak pembayaran
+     * yang sudah benar-benar dikirim uangnya.
+     */
+    midtransAmount: bigint("midtrans_amount", { mode: "number" }).notNull(),
     status: invoiceStatusEnum("status").default("pending").notNull(),
     midtransOrderId: text("midtrans_order_id"),
+    /**
+     * Invoice yang membayarnya, kalau invoice ini tidak punya tagihan
+     * sendiri (migrasi 0025).
+     *
+     * `NULL` = tagihan berdiri sendiri, dan `midtransOrderId` terisi.
+     * Terisi = ikut tagihan yang disebut, dan `midtransOrderId` NULL.
+     *
+     * Sifat NULL yang tidak boleh dilupakan: Postgres mengizinkan BANYAK
+     * NULL pada unique index, jadi banyak invoice add-on yang digabung ke
+     * invoice yang sama tidak bertabrakan.
+     */
+    bundledWith: uuid("bundled_with").references((): AnyPgColumn => saasInvoices.id, {
+      onDelete: "cascade",
+    }),
     transactionId: text("transaction_id"),
     periodStart: date("period_start").notNull(),
     periodEnd: date("period_end").notNull(),
@@ -70,6 +107,10 @@ export const saasInvoices = pgTable(
     index("saas_invoice_tenant_idx").on(table.tenantId),
     index("saas_invoice_status_idx").on(table.status, table.periodEnd),
     uniqueIndex("saas_invoice_midtrans_idx").on(table.midtransOrderId),
+    // Webhook mencari invoice-add-on-yang-digabung dengan satu kueri saat
+    // tagihan langganannya lunas. Tanpa index ini, satu notifikasi
+    // melunasi semua invoice tenant yang menunjuk order itu.
+    index("saas_invoice_bundled_idx").on(table.bundledWith),
     // Mencegah dua invoice add-on untuk periode yang sama. SENGaja tidak
     // berlaku untuk langganan: pembayaran bulanan yang terlambat sah punya
     // beberapa invoice dengan period_start sama. Lihat migrasi 0023.

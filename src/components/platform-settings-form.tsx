@@ -251,8 +251,8 @@ export function PlatformSettingsForm({
           Fee masuk dan fee pencairan sudah dikonfirmasi ke Midtrans dan
           hanya berubah kalau Midtrans mengubahnya. PNBP pendaftaran AHU
           ditetapkan PP 30/2026 pasal 33 — itu tarif negara, dan
-         ubahannya berarti FurniTech mengarang tarif yang ditampilkan ke
-          pelanggan sebagai "biaya negara". Menjadikannya bisa diubah berarti
+          ubahannya berarti FurniTech mengarang tarif yang ditampilkan ke
+          pelanggan sebagai &quot;biaya negara&quot;. Menjadikannya bisa diubah berarti
           tarif yang sedang berjalan bisa bergerak tanpa ada yang memutuskan — dan
           pengrajin yang sudah menghitung ulang biayanya akan menemukan angka
           berbeda saat menekan tombol bayar.

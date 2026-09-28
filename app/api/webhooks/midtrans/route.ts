@@ -211,7 +211,7 @@ export async function POST(request: Request) {
 
     if (
       Number.isNaN(Number(grossAmount)) ||
-      Number(grossAmount) !== addonInvoice.amount
+      Number(grossAmount) !== addonInvoice.midtransAmount
     ) {
       await db.insert(integrationAuditLogs).values({
         tenantId: addonInvoice.tenantId,
@@ -286,6 +286,21 @@ export async function POST(request: Request) {
    * ============================================================
    * CABANG 3: TAGIHAN LANGGANAN SaaS ("saas-...")
    * ============================================================
+   *
+   * `midtransAmount`, bukan `amount` (migrasi 0025). Kalau pemilik toko
+   * membeli Paket Pendirian PT di wizard, invoice langganan menulis
+   * Rp 750.000 sementara Midtrans menerima charge Rp 1.250.000 untuk dua
+   * invoice. Membandingkan `gross_amount` dengan `amount` akan mengembalikan
+   * 400 ATAS PEMBAYARAN YANG SUDAH BERHASIL -- tenant tidak pernah aktif,
+   * uang sudah hilang, dan tidak ada yang bisa memperbaikinya tanpa
+   * pengembalian manual. Itu kegagalan paling merusak yang mungkin ada di
+   * webhook.
+   *
+   * Yang boleh ditulis saat invoice langganan lunas: status invoice itu,
+   * `subscription_status`, `is_active`, `subscription_expires_at`, dan
+   * status invoice add-on yang menunjuk invoice ini. TIDAK ADA kolom lain
+   * di `tenants` -- invoice legalitas yang dibayar bareng tidak menambah
+   * satu hari pun masa langganan.
    */
   const [invoice] = await db
     .select()
@@ -301,13 +316,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  if (Number.isNaN(Number(grossAmount)) || Number(grossAmount) !== invoice.amount) {
+  if (
+    Number.isNaN(Number(grossAmount)) ||
+    Number(grossAmount) !== invoice.midtransAmount
+  ) {
     await db.insert(integrationAuditLogs).values({
       tenantId: invoice.tenantId,
       service: "midtrans",
       action: "notification",
       status: "failed",
-      requestMeta: { orderId, status, grossAmount },
+      requestMeta: {
+        orderId,
+        status,
+        grossAmount,
+        // Kedua nominal dicatat karena selisihnya yang dicari, dan satu
+        // angka saja tidak menjelaskan apa yang sebenarnya terjadi.
+        midtransAmount: invoice.midtransAmount,
+        invoiceAmount: invoice.amount,
+      },
       errorMessage: "Nominal pada notifikasi tidak sama dengan tagihan.",
     });
     return NextResponse.json({ error: "amount mismatch" }, { status: 400 });
@@ -345,6 +371,29 @@ export async function POST(request: Request) {
         })
         .where(eq(tenants.id, updated.tenantId));
     }
+
+    /*
+     * Invoice add-on yang dibayar bareng (PRD §2.E, migrasi 0025).
+     *
+     * Yang ditulis HANYA kolom status invoice. Tidak ada satu pun kolom
+     * `tenants` yang disentuh -- sama seperti aturan cabang add-on: paket
+     * pendirian tidak memberi akses, tidak menambah masa langganan, dan
+     * tidak punya dokumen di dalam aplikasi yang perlu diaktifkan.
+     *
+     * `transaction_id` yang sama di sini disengaja: kedua invoice dibayar
+     * dengan satu transfer, jadi satu bukti pembayaran berlaku untuk
+     * keduanya. Kalau reconciliation nanti mencocokkan `transaction_id`
+     * ke mutasi bank, satu baris yang benar lebih berguna dari dua baris
+     * yang tidak bisa dipertanggungjawabkan.
+     */
+    await db
+      .update(saasInvoices)
+      .set({
+        status: "paid",
+        transactionId: body.transaction_id ?? null,
+        paidAt: new Date(),
+      })
+      .where(eq(saasInvoices.bundledWith, invoice.id));
   } else if (failed) {
     // Gagal bayar TIDAK menghapus tenant: tagihannya masih bisa dicoba lagi,
     // dan menghapusnya akan membuang riwayat di `saas_invoices` yang justru
@@ -353,6 +402,20 @@ export async function POST(request: Request) {
       .update(saasInvoices)
       .set({ status: "failed" })
       .where(eq(saasInvoices.midtransOrderId, orderId));
+
+    /*
+     * Invoice add-on yang ikut gagal ikut ditandai `failed`.
+     *
+     * Kalau dibiarkan `pending`, `purchaseLegalitasAddon` akan menganggap
+     * paket itu sudah dibeli -- pemeriksaannya menolak status `pending` dan
+     * `paid` -- lalu orang yang tagihannya DITOLAK bank tidak akan pernah
+     * bisa membeli ulang setelah tagihannya diperbaiki. Satu status yang
+     * tidak konsisten di sini menutup satu jalan pembelian seumur tenant.
+     */
+    await db
+      .update(saasInvoices)
+      .set({ status: "failed" })
+      .where(eq(saasInvoices.bundledWith, invoice.id));
   }
 
   await db.insert(integrationAuditLogs).values({

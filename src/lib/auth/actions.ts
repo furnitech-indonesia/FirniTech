@@ -146,8 +146,10 @@ export async function registerOwner(
 
   /*
    * Tagihan Midtrans. Nominal `result.amount` dihitung ulang di server dari
-   * `PLANS` (lihat `priceFor` di src/lib/auth/provision.ts) — angka dari
-   * klien tidak pernah dipakai.
+   * `PLANS` dan `effectiveAddonPriceNumber` (lihat `provisionOwner`) — angka
+   * dari klien tidak pernah dipakai. Kalau pemilik toko memilih Paket
+   * Pendirian PT di langkah paket, nominal itu sudah termasuk add-on, dan
+   * Midtrans menerima satu charge untuk keduanya.
    *
    * PENTING: `try/catch` di sini bukan sekadar defensif. Tanpa itu, satu
    * `throw` dari `createSaasCharge` jadi halaman error 500, padahal
@@ -163,15 +165,29 @@ export async function registerOwner(
    *     dan butuh dilihat admin.
    */
   try {
+    /*
+     * `itemName` menjelaskan APA yang dibeli, dan `amount` menjelaskan
+     * BERAPA. Kalau labelnya hanya paket sementara nominalnya sudah
+     * termasuk add-on, pengguna melihat "FurniTech Pro bulanan" seharga
+     * Rp 1.250.000 tanpa baris yang menunjukkan Rp 500.000 berikutnya --
+     * dan langkah terakhir yang perlu ia percaya adalah yang sedang
+     * memegang uangnya.
+     *
+     * Midtrans v1 tidak menerima nama item dengan tanda `-` kalau dipisah
+     * jadi beberapa item, jadi di sini tetap satu baris.
+     */
+    const labelPaket = `FurniTech ${PLANS[parsed.data.plan].label} — ${
+      parsed.data.period === "yearly" ? "tahunan" : "bulanan"
+    }`;
     const charge = await createSaasCharge({
       orderId: result.midtransOrderId,
       amount: result.amount,
       customerName: parsed.data.fullName,
       customerEmail: parsed.data.email,
       customerPhone: parsed.data.phone,
-      itemName: `FurniTech ${PLANS[parsed.data.plan].label} — ${
-        parsed.data.period === "yearly" ? "tahunan" : "bulanan"
-      }`,
+      itemName: result.legalitasInvoiceId
+        ? `${labelPaket} + Paket Pendirian PT Perorangan`
+        : labelPaket,
       finishUrl: `${appUrl()}/login?next=/dashboard`,
     });
 
