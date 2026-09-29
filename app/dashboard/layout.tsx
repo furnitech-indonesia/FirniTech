@@ -6,6 +6,7 @@ import { tenants } from "@/db/schema";
 import { requireSession } from "@/lib/auth/session";
 import { ROLE_LABELS } from "@/lib/auth/permissions";
 import { DashboardNav } from "@/components/dashboard-nav";
+import { loadBillingNotice } from "@/lib/billing/notice";
 
 export const metadata = { title: "Dashboard — FurniTech" };
 
@@ -55,6 +56,26 @@ export default async function DashboardLayout({
     redirect("/menunggu-pembayaran");
   }
 
+  /*
+   * Banner tagihan (Sprint 6).
+   *
+   * Hanya untuk `owner`. Alasannya bukan sekadar markup yang disembunyikan:
+   * role lain tidak butuh tahu nominal langganan, jadi memamerkannya di
+   * layar yang mereka buka setiap hari menambah kebisingan tanpa menambah
+   * informasi.
+   *
+   * Yang TIDAK dilakukan di sini adalah penyaringan data. `loadBillingNotice`
+   * sudah menyaring `tenant_id` di kuerinya, dan itu lapisan yang
+   * sesungguhnya menahan. Filter peran di sini lapisan kedua: kalau suatu
+   * saat longgar, yang bocor pertama adalah banner ini.
+   *
+   * Halaman `/dashboard/tagihan` sendiri tetap terbuka untuk semua role
+   * tenant. Menyembunyikan halaman dari menu lebih mudah disalin daripada
+   * pintunya ditutup, dan yang menutup pintu adalah guard di halaman.
+   */
+  const notif =
+    role === "owner" && tenantId ? await loadBillingNotice(tenantId) : null;
+
   return (
     <DashboardNav
       role={role}
@@ -64,6 +85,14 @@ export default async function DashboardLayout({
         roleLabel: ROLE_LABELS[role],
         scope: tenant?.name ?? "Tenant tidak ditemukan",
       }}
+      billingNotice={
+        notif && notif.pending.length > 0
+          ? {
+              count: notif.pending.length,
+              total: notif.totalDue,
+            }
+          : null
+      }
     >
       {children}
     </DashboardNav>

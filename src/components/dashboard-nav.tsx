@@ -14,6 +14,7 @@ import {
 
 import { signOut } from "@/lib/auth/actions";
 import { navForRole, type NavItem } from "@/lib/nav";
+import { formatRupiah } from "@/lib/format";
 import type { UserRole } from "@/lib/auth/permissions";
 import { cn } from "@/lib/utils";
 
@@ -79,11 +80,18 @@ export function DashboardNav({
   role,
   home,
   who,
+  billingNotice,
   children,
 }: {
   role: UserRole;
   home: string;
   who: { fullName: string; roleLabel: string; scope: string };
+  /**
+   * Ada tagihan yang menunggu. Datanya dikirim dari Server Component --
+   * navigator TIDAK menghitung tagihan dari role atau dari klien, karena
+   * yang menentukan "ada tagihan" adalah invoice di database.
+   */
+  billingNotice: { count: number; total: number } | null;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -146,6 +154,26 @@ export function DashboardNav({
               <StorefrontIcon size={18} weight="light" aria-hidden />
               Toko
             </Link>
+
+            {/*
+             * Pintasan ke tagihan yang menunggu.
+             *
+             * Ditempatkan di HEADER, bukan sebagai banner di atas konten,
+             * supaya tidak pernah menutupi apa pun dan tetap terlihat dari
+             * halaman mana pun. Ikonnya punya `aria-label` dengan NOMINAL
+             * karena bentuknya saja (angka di dalam lingkaran) tidak
+             * terbaca oleh pembaca layar.
+             */}
+            {billingNotice ? (
+              <Link
+                href="/dashboard/tagihan"
+                aria-label={`Tagihan menunggu: ${billingNotice.count} tagihan, total ${formatRupiah(billingNotice.total)}. Buka halaman tagihan.`}
+                className="relative flex min-h-11 min-w-11 items-center justify-center rounded-xl border border-status-pending bg-status-pending/10 text-sm font-semibold text-status-pending transition-colors hover:bg-status-pending/20"
+              >
+                {billingNotice.count}
+                <span className="sr-only"> tagihan menunggu pembayaran</span>
+              </Link>
+            ) : null}
 
             <form action={signOut}>
               <button

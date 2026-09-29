@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   bigint,
+  boolean,
   date,
   index,
   integer,
@@ -42,7 +43,7 @@ export const saasInvoices = pgTable(
     /**
      * NULL untuk invoice add-on (domain / legalitas).
      *
-     * Semula NOT NULL, jadi invoice add-ondipaksa mengarang salah satu dari
+     * Semula NOT NULL, jadi invoice add-on dipaksa mengarang salah satu dari
      * basic/pro/max -- dan itu membohongi data: tagihan Rp 250.000 domain
      * akan tercatat sebagai "paket basic". NULL lebih jujur.
      */
@@ -95,6 +96,32 @@ export const saasInvoices = pgTable(
     bundledWith: uuid("bundled_with").references((): AnyPgColumn => saasInvoices.id, {
       onDelete: "cascade",
     }),
+    /**
+     * Invoice ini perpanjangan, bukan tagihan baru (migrasi 0026).
+     *
+     * Tanpa penanda ini, "ini perpanjangan" hanya bisa ditebak dari
+     * membandingkan `created_at` dengan tanggal tenant dibuat -- dan
+     * tebakan itu salah tepat di kasus yang paling penting: tenant yang
+     * DAUR ULANG karena berhenti bayar, lalu berbayar lagi. Tebakan itu
+     * akan mengklasifikasikannya sebagai tagihan baru, dan halaman tagihan
+     * menampilkan kalimat "tagihan ini belum pernah dibayar" untuk
+     * sesuatu yang sebenarnya sedang di-tagih untuk kedua kalinya.
+     */
+    isRenewal: boolean("is_renewal").default(false).notNull(),
+    /**
+     * URL halaman pembayaran Midtrans (Snap) untuk invoice ini (migrasi 0027).
+     *
+     * Invoice yang terbit karena orang menekan tombol tidak butuh kolom ini:
+     * `redirectTo` langsung dipakai frontend. Invoice renewal berbeda -- cron
+     * yang membuatnya, dan cron tidak punya layar untuk mengarahkan orang ke
+     * sana, jadi tanpa kolom ini URL-nya dibuang dan invoice itu tidak bisa
+     * dibayar dari mana pun.
+     *
+     * Disimpan utuh, bukan disusun ulang dari `token`: nomor versi jalannya
+     * (`snap/v4/...`) berubah dari waktu ke waktu, dan menyusunnya ulang dari
+     * token menghasilkan URL yang salah tanpa error.
+     */
+    midtransRedirectUrl: text("midtrans_redirect_url"),
     transactionId: text("transaction_id"),
     periodStart: date("period_start").notNull(),
     periodEnd: date("period_end").notNull(),
@@ -107,16 +134,55 @@ export const saasInvoices = pgTable(
     index("saas_invoice_tenant_idx").on(table.tenantId),
     index("saas_invoice_status_idx").on(table.status, table.periodEnd),
     uniqueIndex("saas_invoice_midtrans_idx").on(table.midtransOrderId),
+    /*
+     * Predicate-nya `status IN ('pending','paid')`, bukan `<> 'refunded'`.
+     *
+     * Yang harus mencegah tagihan ganda adalah invoice yang MASIH HIDUP.
+     * Invoice `failed` justru harus MEMBEBASKAN periode supaya bisa dicoba
+     * lagi -- dan itulah yang tidak bisa terjadi dengan predicate lama:
+     * urutan di `createDomainRenewal` adalah "insert invoice dulu, baru
+     * panggil Midtrans", jadi satu kali Midtrans menolak menyisakan invoice
+     * `failed` yang memblokir SELURUH perpanjangan berikutnya untuk periode
+     * itu. Permanen, dan tidak ada yang bisa memperbaikinya tanpa
+     * intervensi manual.
+     *
+     * Sengaja DITARUH DI SCHEMA, bukan di route cron: pemeriksaan "sudah
+     * ada tagihan hidup untuk periode ini?" tidak bisa dilewati oleh
+     * jalur penulisan lain, dan dua request cron yang tumpang tindih
+     * adalah kejadian nyata -- bukan kasus teoritis.
+     */
+    uniqueIndex("saas_invoice_addon_live_period_uniq")
+      .on(table.tenantId, table.itemType, table.periodStart)
+      .where(
+        sql`${table.itemType} <> 'subscription' and ${table.status} in ('pending', 'paid')`,
+      ),
+    /*
+     * Pengaman yang sama untuk LANGGANAN, dengan kolom yang berbeda.
+     *
+     * Index di atas sengaja mengecualikan `subscription` karena pembayaran
+     * bulanan yang terlambat sah punya beberapa invoice dengan
+     * `period_start` sama. Tapi konsekuensinya, perpanjangan langganan
+     * tidak punya pengaman apa pun -- cron harian bisa menerbitkan 30
+     * invoice untuk bulan yang sama.
+     *
+     * Yang dikunci `period_end`, bukan `period_start`: "sudah ada tagihan
+     * hidup untuk periode yang berakhir bulan depan" persis menggambarkan
+     * hal yang tidak boleh terjadi -- pengrajin ditagih dua kali untuk bulan
+     * yang sama.
+     */
+    uniqueIndex("saas_invoice_subscription_live_period_uniq")
+      .on(table.tenantId, table.periodEnd)
+      .where(
+        sql`${table.itemType} = 'subscription' and ${table.status} in ('pending', 'paid')`,
+      ),
     // Webhook mencari invoice-add-on-yang-digabung dengan satu kueri saat
     // tagihan langganannya lunas. Tanpa index ini, satu notifikasi
     // melunasi semua invoice tenant yang menunjuk order itu.
     index("saas_invoice_bundled_idx").on(table.bundledWith),
-    // Mencegah dua invoice add-on untuk periode yang sama. SENGaja tidak
-    // berlaku untuk langganan: pembayaran bulanan yang terlambat sah punya
-    // beberapa invoice dengan period_start sama. Lihat migrasi 0023.
-    uniqueIndex("saas_invoice_addon_period_uniq")
-      .on(table.tenantId, table.itemType, table.periodStart)
-      .where(sql`${table.itemType} <> 'subscription' and ${table.status} <> 'refunded'`),
+    // Digantikan `saas_invoice_addon_live_period_uniq` di atas (migrasi
+    // 0026). Yang lama tidak dihapus dari sini supaya tidak ada yang
+    // menjalankan `db:generate` dan membuat ulang index yang predicate-nya
+    // sudah terbukti memblokir percobaan ulang.
   ],
 );
 

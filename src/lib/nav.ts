@@ -101,6 +101,21 @@ const ALL_NAV: NavItem[] = [
     shortLabel: "PT",
     icon: BuildingsIcon,
   },
+  /*
+   * Tagihan: halaman yang dibuat cron (Sprint 6).
+   *
+   * Hanya di nav owner, dan itu soal ISI halaman, bukan hanya navigasi --
+   * halaman ini menampilkan nominal langganan dan saldo tagihan. Peran lain
+   * boleh Membuka URL-nya (dan boleh melihat datanya), tapi tidak diberi
+   * pintasan, supaya nominal yang tidak relevan dengan pekerjaannya tidak
+   * muncul di layar yang dibukanya setiap hari.
+   */
+  {
+    href: "/dashboard/tagihan",
+    label: "Tagihan",
+    shortLabel: "Tagihan",
+    icon: ReceiptIcon,
+  },
 ];
 
 /**

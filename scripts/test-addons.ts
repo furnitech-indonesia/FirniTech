@@ -16,6 +16,8 @@
  *
  * Jalankan: `npm run test:addons`
  */
+import "dotenv/config";
+
 import { createHash, randomUUID } from "crypto";
 import { eq } from "drizzle-orm";
 

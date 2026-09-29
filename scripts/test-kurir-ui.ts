@@ -26,6 +26,7 @@ import { db, sqlClient as sql } from "../src/db/client";
 import {
   deliveryProofs,
   orders,
+  saasInvoices,
   tenants,
   users,
 } from "../src/db/schema";
@@ -85,6 +86,13 @@ async function makeUser(
   return { userId: data.user.id, email };
 }
 
+/** Tanggal `YYYY-MM-DD` relatif terhadap hari ini, untuk kolom `date`. */
+function hariIShift(hari: number): string {
+  return new Date(Date.now() + 86_400_000 * hari)
+    .toISOString()
+    .slice(0, 10);
+}
+
 /** Tunggu `<html data-sw-ready>`: tanpa itu klik terjadi sebelum hydrasi. */
 async function waitForHydration(page: Page) {
   await page.waitForSelector("html[data-sw-ready]", { timeout: 15_000 });
@@ -136,6 +144,40 @@ async function main() {
   // "bukti bisa dilihat pengrajin" hanya akan dibuktikan sebagai klaim di
   // dalam komentar kode.
   const owner = await makeUser(tenant.id, "ui-owner", "owner");
+
+  /*
+   * Dua invoice untuk tenant ini: satu lunas, satu masih menunggu.
+   *
+   * Tanpa keduanya, halaman tagihan merender keadaan kosong, dan pemeriksaan
+   * "riwayat punya padanan kartu di mobile" punya dua jalan keluar yang sama
+   * buruk: ia gagal terus pada fikstur yang tidak pernah berubah, atau ia
+   * ditulis longgar sampai selalu lulus tanpa pernah melihat tabelnya.
+   * Yang diuji justru jalur yang paling mungkin salah -- riwayat yang nyata.
+   */
+  await db.insert(saasInvoices).values([
+    {
+      tenantId: tenant.id,
+      plan: "pro",
+      period: "monthly",
+      amount: 500_000,
+      midtransAmount: 500_000,
+      status: "paid",
+      paidAt: new Date(Date.now() - 86_400_000 * 20),
+      periodStart: hariIShift(-40),
+      periodEnd: hariIShift(-10),
+    },
+    {
+      tenantId: tenant.id,
+      plan: "pro",
+      period: "monthly",
+      amount: 500_000,
+      midtransAmount: 500_000,
+      status: "pending",
+      isRenewal: true,
+      periodStart: hariIShift(10),
+      periodEnd: hariIShift(40),
+    },
+  ]);
 
   const [order] = await db
     .insert(orders)
@@ -398,6 +440,124 @@ async function main() {
       ownerFailed.slice(0, 3).join(" | ") || "bersih",
     );
     await ownerPage.screenshot({ path: "screenshots/bukti-penerimaan-375.png", fullPage: true });
+
+    /*
+     * Halaman tagihan (Sprint 6).
+     *
+     * Yang diperiksa di sini hanya apa yang HANYA bisa dilihat lewat render:
+     * scroll horizontal di 375px, target sentuh, dan tagihan yang muncul
+     * sebagai kartu, bukan tabel. Tabel riwayat punya empat kolom, dan di
+     * 375px kolom yang keluar dari layar justru NOMINALNYA.
+     */
+    await ownerPage.goto(`${BASE}/dashboard/tagihan`, { waitUntil: "networkidle" });
+    await ownerPage.waitForTimeout(800);
+    const tagihan = await ownerPage.evaluate(() => {
+      const main = document.querySelector("main");
+      const overflow =
+        document.documentElement.scrollWidth - window.innerWidth;
+      const terlaluPendek = [...main!.querySelectorAll("a, button")]
+        .map((el) => ({
+          teks: (el.textContent ?? "").trim().slice(0, 40),
+          h: Math.round(el.getBoundingClientRect().height),
+        }))
+        .filter((x) => x.h > 0 && x.h < 44);
+
+      /*
+       * "Terlihat" berarti MELEBAR DI LAYAR, bukan sekadar ada di DOM.
+       *
+       * Versi pertama pemeriksaan ini memakai `querySelector("ul li")` dan
+       * selalu lulus, termasuk saat kelas `md:hidden` dihapus -- karena
+       * `querySelector` tidak tahu apa-apa soal `display`. Itu tes yang
+       * tidak menguji apa pun, dan inesperada: ia terlihat bukti bahwa
+       * riwayat punya padanan kartu padahal yang dicek hanya keberadaan
+       * elemen.
+       *
+       * Dihitung inline, bukan lewat fungsi pembantu. Kode di dalam
+       * `page.evaluate` diserialisasi jadi teks lalu dijalankan di browser,
+       * dan transformasi `tsx` menyisipkan pemanggil `__name` pada setiap
+       * fungsi bernama -- yang tidak ada di browser, jadi hasilnya
+       * `__name is not defined` sebelum satu pun sempat diuji.
+       */
+      const kartu = main!.querySelector("ul li.rounded-xl");
+      const tabel = main!.querySelector("table");
+      const kotakKartu = kartu ? kartu.getBoundingClientRect() : null;
+      const kotakTabel = tabel ? tabel.getBoundingClientRect() : null;
+
+      return {
+        overflow,
+        terlaluPendek,
+        kartuTerlihat: Boolean(
+          kotakKartu && kotakKartu.width > 0 && kotakKartu.height > 0,
+        ),
+        kartuJumlah: main!.querySelectorAll("ul li.rounded-xl").length,
+        tabelTerlihat: Boolean(
+          kotakTabel && kotakTabel.width > 0 && kotakTabel.height > 0,
+        ),
+        teks: main!.innerText.replace(/\s+/g, " ").trim(),
+      };
+    });
+
+    check(
+      "halaman tagihan memuat judul yang benar",
+      /Tagihan/.test(tagihan.teks),
+      tagihan.teks.slice(0, 80),
+    );
+    check(
+      "halaman tagihan tidak scroll horizontal di 375px",
+      tagihan.overflow <= 0,
+      `luar ${tagihan.overflow}px`,
+    );
+    check(
+      "semua target sentuh halaman tagihan minimal 44px",
+      tagihan.terlaluPendek.length === 0,
+      tagihan.terlaluPendek.map((x) => `${x.teks}=${x.h}px`).join(" | ") || "semua ok",
+    );
+    check(
+      "di 375px yang tampil KARTU riwayat, bukan tabel",
+      tagihan.kartuTerlihat && tagihan.kartuJumlah === 2 && !tagihan.tabelTerlihat,
+      tagihan.tabelTerlihat
+        ? "tabel masih tampil — 4 kolom tidak muat di 375px"
+        : `${tagihan.kartuJumlah} kartu, tabel ${
+            tagihan.tabelTerlihat ? "tampil" : "tersembunyi"
+          }`,
+    );
+    await ownerPage.screenshot({ path: "screenshots/tagihan-375.png", fullPage: true });
+
+    /*
+     * Arah yang sama, di lebar desktop.
+     *
+     * Tanpa ini, kelas `md:hidden` pada daftar kartu bisa dihapus tanpa
+     * satu pun pemeriksaan gagal -- persis yang terjadi saat pemeriksaan ini
+     * pertama ditulis. Dua tampilan sekaligus bukan kerusakan yang terlihat
+     * dari kode, tapi pengrajin di laptop melihat riwayat tagihannya dua
+     * kali.
+     */
+    await ownerPage.setViewportSize({ width: 1024, height: 900 });
+    await ownerPage.waitForTimeout(400);
+    const desktop = await ownerPage.evaluate(() => {
+      const main = document.querySelector("main");
+      const kartu = main!.querySelector("ul li.rounded-xl");
+      const tabel = main!.querySelector("table");
+      const kotakKartu = kartu ? kartu.getBoundingClientRect() : null;
+      const kotakTabel = tabel ? tabel.getBoundingClientRect() : null;
+      return {
+        kartuTerlihat: Boolean(
+          kotakKartu && kotakKartu.width > 0 && kotakKartu.height > 0,
+        ),
+        tabelTerlihat: Boolean(
+          kotakTabel && kotakTabel.width > 0 && kotakTabel.height > 0,
+        ),
+      };
+    });
+    check(
+      "di 1024px yang tampil TABEL riwayat, bukan kartu",
+      desktop.tabelTerlihat && !desktop.kartuTerlihat,
+      `tabel ${desktop.tabelTerlihat ? "tampil" : "tersembunyi"}, kartu ${
+        desktop.kartuTerlihat ? "tampil" : "tersembunyi"
+      }`,
+    );
+    await ownerPage.setViewportSize({ width: 375, height: 812 });
+
     await ownerContext.close();
 
     check("tidak ada error konsol", consoleErrors.length === 0, consoleErrors.slice(0, 2).join(" | ") || "bersih");

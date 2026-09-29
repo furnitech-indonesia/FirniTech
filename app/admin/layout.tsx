@@ -27,6 +27,11 @@ export default async function AdminLayout({
         roleLabel: "Super Admin",
         scope: "Seluruh tenant",
       }}
+      // Super admin punya `tenant_id` NULL, jadi tidak ada tagihan miliknya
+      // sendiri. `billingNotice` WAJIB di sini: menjadikannya opsional
+      // berarti setiap pemanggil baru bisa melewatkannya, dan itu persis
+      // jenis pemeriksaan yang hilang tanpa terasa.
+      billingNotice={null}
     >
       {children}
     </DashboardNav>

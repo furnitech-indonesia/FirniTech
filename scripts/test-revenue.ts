@@ -23,6 +23,8 @@
  *
  * Jalankan: `npm run test:revenue`
  */
+import "dotenv/config";
+
 import { randomUUID } from "crypto";
 import { eq } from "drizzle-orm";
 

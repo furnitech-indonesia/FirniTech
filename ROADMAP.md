@@ -943,7 +943,6 @@ MASIH BELUM DIKERJAKAN
     mengisinya — jadi tidak ada yang bisa membeli tagihan domain, karena
     action menolak domain yang belum terverifikasi. Ini yang membuat
     add-on domain belum bisa dites end-to-end.
-  - Penagihan otomatis renewal belum punya notifikasi ke pengrajin.
   - Laporan keuangan tahunan PT Perorangan tidak termasuk paket; perlu
     keputusan apakah dijual terpisah.
 
@@ -1600,3 +1599,102 @@ rekening milik orang lain karena layanan tidak mengirim field yang kita kira
 ada. Daftar bank cadangan di `src/lib/banks.ts` juga belum diverifikasi;
 `verifyBankCodesAgainstMidtrans()` ada untuk membandingkannya dengan
 `GET /beneficiary_banks` sebelum produksi.
+
+━━━ Sprint 6 — Notifikasi tagihan perpanjangan ke pengrajin (2026-09-29) ━━━
+
+STATUS: SELESAI. `test:renewal` 53 pemeriksaan, `test:kurir-ui` 29.
+
+MASALAH YANG DISELESAIKAN
+  Tagihan perpanjangan terbit sendiri dari cron harian. Sebelum halaman ini
+  ada, satu-satunya cara pengrajin tahu dia ditagih adalah membuka
+  dashboard -- dan hanya kalau ia kebetulan salah masuk menu. Tagihan yang
+  sudah lewat masa aktifnya tanpa dibayar membuat langganannya berhenti,
+  dan orangtuanya baru tahu setelah storefront-nya tidak bisa diakses.
+
+KENAPA DALAM APLIKASI, BUKAN EMAIL ATAU WHATSAPP
+  Tidak ada kanal keluar yang bisa dipakai hari ini, dan mengarang yang
+  tidak bisa mengirim lebih buruk daripada tidak ada: kode yang terlihat
+  selesai tapi tidak pernah mengirim. Secara rinci:
+    - Tidak ada penyedia email yang dikonfigurasi.
+    - Tidak ada gateway WhatsApp — PRD §4 modul 4 melarangnya dengan
+      alasan biaya dan bukti.
+    - Tidak ada VAPID key, jadi push notification tidak bisa diuji.
+  Banner di dashboard tidak kedaluwarsa: email tagihan yang masuk spam hilang
+  selamanya, sedangkan banner muncul setiap kali orang masuk sampai lunas.
+
+YANG DIKERJAKAN
+  - `src/lib/renewal.ts` (murni, tanpa `server-only`): `RENEWAL_LEAD_DAYS`,
+    `nextSubscriptionPeriod`, `monthsForPeriod`, `nextExpiryDate`,
+    `shouldIssueRenewal`, `daysUntil`, `hariPada`, `isUniqueViolation`.
+    Satu sumber angka untuk cron DAN untuk teks yang dilihat pengrajin.
+  - `src/lib/midtrans/renewal.ts`: `createSubscriptionRenewal()`. Perpanjangan
+    langganan dikerjakan di cron yang sama dengan domain; menyisakannya
+    berarti MRR hanya bisa turun dan tidak pernah naik sendiri.
+  - `app/api/cron/addons/route.ts`: tiga pekerjaan berurutan — suspend domain
+    yang lewat, perpanjangan domain, perpanjangan langganan. Masing-masing
+    dibungkus `jalankan()`.
+  - `src/lib/billing/notice.ts` + `app/dashboard/tagihan/page.tsx` +
+    `src/components/billing-invoices.tsx`: banner di layout dashboard (hanya
+    `owner`) dan halaman tagihan lengkap dengan tombol bayar.
+  - Badge jumlah tagihan di header, dengan `aria-label` berisi nominal
+    karena bentuknya saja (angka di dalam lingkaran) tidak terbaca pembaca
+    layar.
+  - Migrasi 0026: `saas_invoices.is_renewal` + DUA unique index parsial.
+  - Migrasi 0027: `saas_invoices.midtrans_redirect_url`.
+  - `scripts/test-renewal.ts` — 53 pemeriksaan.
+
+ATURAN PERIODE, DAN MENGAPA BUKAN "SEBULAN DARI HARI INI"
+  1. Periode baru LANJUT dari periode lama. Kalau bulanan dibayar tanggal 5
+     dan invoice terbit tanggal 28, periode barunya 5 tanggal 5 berikutnya.
+     Kalau dihitung dari tanggal 28, orang kehilangan 23 hari yang sudah
+     dibayar.
+  2. Periode yang sudah lewat TIDAK dipanjangkan dari tanggal lamanya. Hari
+     yang sudah lewat tidak bisa dibayar di muka.
+  3. Bulanan atau tahunan dibaca dari invoice langganan terakhir yang LUNAS,
+     bukan dari `tenants` — tenant tidak menyimpan informasi itu.
+
+TIGA BUG YANG TERNYATA SAAT MEMBANGUNNYA
+
+  1. `createDomainRenewal` MELEMPAR pada pemanggilan cron kedua.
+     Unique index menolak insert kedua, dan tanpa `try/catch` di loop, satu
+     tenant meledak dan 999 sisanya tidak pernah ditagih. Yang terlihat
+     cuma satu baris di log cron.
+  2. Invoice yatim `pending` memblokir perpanjangan SELAMANYA.
+     Predicate unique index lama `status <> 'refunded'` ikut menahan
+     invoice `failed` — padahal `failed` justru harus MEMBEBASKAN periode
+     supaya bisa dicoba lagi. Satu kali Midtrans menolak, dan tenant itu
+     tidak akan pernah ditagih lagi tanpa intervensi manual. Sekarang
+     predicate-nya `status IN ('pending','paid')`.
+  3. `headers()` di dalam fungsi penerbit tagihan membuatnya tidak bisa
+     diuji dari skrip, dan `finishUrl` bisa saja menunjuk ke host yang
+     salah. Sekarang origin dioperkan sebagai parameter dari pemanggil,
+     yang membacanya dari Host request.
+
+KENAPA PENGAMANNYA DI DATABASE
+  `if (!sudahAda)` tidak menutup dua request bersamaan, dan dua pemanggilan
+  cron yang tumpang tindih adalah kejadian nyata. Dua unique index parsial
+  — `saas_invoice_addon_live_period_uniq` (tenant, item_type, period_start)
+  dan `saas_invoice_subscription_live_period_uniq` (tenant, period_end) —
+  adalah satu-satunya tempat yang tidak bisa dilewati jalur penulisan lain.
+
+KENAPA `isUniqueViolation` DIJADIKAN FUNSI TERPISA
+  `err.code` sering `undefined` karena Drizzle membungkus error postgres.js
+  di `cause`. Pembacaan yang hanya melihat `err.code` menyimpulkan "tidak
+  ada pelanggaran" lalu melempar — di dalam loop cron itu berarti berhenti
+  di tenant pertama. Tapi pre-check "sudah ada invoice" di setiap pemanggil
+  menutup jalur ini sebelum insert terjadi, jadi lewat fungsi publik ia
+  selalu lulus tanpa pernah disentuh. Dipindah ke `src/lib/renewal.ts`,
+  diekspor, dan diuji langsung dengan error asli dari database.
+
+CATATAN LINGKUNGAN
+  `MIDTRANS_SERVER_KEY` kosong/tidak sah di sini, jadi setiap charge gagal →
+  invoice jadi `failed` → periode bebas → percobaan berikutnya membuat
+  invoice baru. Itu perilaku yang BENAR: satu gangguan jaringan tidak boleh
+  mengunci tagihan selamanya. Tes "panggil 30x = 1 invoice" tidak berlaku
+  di lingkungan ini; yang diuji sebagai gantinya adalah mekanismenya —
+  pre-check, balapan dua proses, dan unique index langsung.
+
+KEPUTUSAN YANG SENGAJA TIDAK DIAMBIL
+  Tidak ada keputusan tenggat otomatis untuk langganan yang tidak dibayar.
+  Mematikan storefront adalah keputusan bisnis, dan cron tidak boleh
+  mengambilnya diam-diam.
